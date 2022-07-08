@@ -1,22 +1,22 @@
-import {CloseButton, Group, Paper, Tabs, Text} from "@mantine/core";
-import {ChartDots3, CodePlus} from "tabler-icons-react";
-import Atom from "./Atom";
+import {Group} from "@mantine/core";
 import {useState} from "react";
-import TabCanvasContent from "./TabCanvasContent";
+import {AtomSource} from "./AtomSource";
+import {v4 as uuidv4} from "uuid";
+import {ItemTypes} from "./ItemTypes";
 
 
 
 function AtomsSidebarTab() {
 
-    const [atoms, setAtoms] = useState([
-        {id: 1, title: "List", color: "#CC5DE8"},
-        {id: 2, title: "Node", color: "#20C997"}
-    ]);
+    const [atoms, setAtoms] = useState({
+        [uuidv4()]: {title: "List", color: "#CC5DE8", top: 40, left: 40},
+        [uuidv4()]: {title: "Node", color: "#20C997", top: 0, left: 0}
+    });
 
     return (
         <Group p={"lg"}>
-            {atoms.map((atom) => (
-                <Atom id={atom.id} title={atom.title} color={atom.color} />
+            {Object.keys(atoms).map((key) => (
+                <AtomSource key={key} id={key} {...atoms[key]} />
             ))}
         </Group>
     );

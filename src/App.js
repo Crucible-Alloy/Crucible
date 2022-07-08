@@ -1,8 +1,8 @@
 import logo from './logo.svg';
 import './App.css';
-import {AppShell, Header, Navbar, Title} from "@mantine/core";
+import {AppShell, Container, Header, Navbar, Title} from "@mantine/core";
 import SidebarWrapper from "./components/SidebarWrapper";
-import CanvasWrapper from "./components/CanvasWrapper";
+import BodyWrapper from "./components/BodyWrapper";
 import {useViewportSize} from "@mantine/hooks";
 import {useState} from "react";
 import {DndProvider} from "react-dnd";
@@ -26,20 +26,33 @@ function App() {
         }
     ]);
 
+    const headerHeight = 60;
+    const sidebarWidth = 500;
+
     return (
         <DndProvider backend={HTML5Backend}>
             <AppShell
-                sx={{height: `${viewHeight}`,
+                sx={{
+                     height: `${viewHeight}`,
                      width: `${viewWidth}`,
                 }}
-                padding="md"
-                navbar={<Navbar width={{ base: 500 }} height={{viewHeight}} p="xs">{<SidebarWrapper />}</Navbar>}
-                header={<Header height={60} p="xs">{<Title>Alloy Sketch</Title>}</Header>}
+                padding="xs"
+                navbar={<Navbar width={{ base: sidebarWidth }} height={viewHeight} p="xs">{<SidebarWrapper />}</Navbar>}
+                header={<Header height={headerHeight} p="xs">{<Title>Alloy Sketch</Title>}</Header>}
                 styles={(theme) => ({
-                    main: { backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[8] : theme.colors.gray[0] },
-                })}
+                    main: {
+                        backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[8] : theme.colors.gray[0]
+                        //height: (viewHeight - headerHeight),
+                        //width: (viewWidth - sidebarWidth)},
+                    }})}
             >
-                {<CanvasWrapper tabs={tabs} setTabs={setTabs} />}
+                {
+                    <BodyWrapper tabs={tabs}
+                                 setTabs={setTabs}
+                                 style={{height: "100%",
+                                     backgroundColor: "#FF0000",
+                                     margin: 0,
+                                     padding: 0}}/>}
             </AppShell>
         </DndProvider>
     );
