@@ -4,10 +4,13 @@ import {AppShell, Container, Header, Navbar, Title} from "@mantine/core";
 import SidebarWrapper from "./components/SidebarWrapper";
 import BodyWrapper from "./components/BodyWrapper";
 import {useViewportSize} from "@mantine/hooks";
-import {useState} from "react";
+import { useState } from "react";
 import {DndProvider} from "react-dnd";
 import {HTML5Backend} from "react-dnd-html5-backend";
 import {DragDrop} from "tabler-icons-react";
+import {loadSavedData, saveDataInStorage} from "./renderer";
+import {HANDLE_FETCH_DATA, HANDLE_SAVE_DATA} from "./utils/constants";
+import Home from "./components/Home";
 
 function App() {
     const { viewHeight, viewWidth } = useViewportSize();

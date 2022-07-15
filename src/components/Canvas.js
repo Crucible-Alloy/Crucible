@@ -1,6 +1,6 @@
 import update from 'immutability-helper'
 import {Atom} from "./Atom";
-import {useCallback, useState} from "react";
+import {useCallback, useEffect, useState} from "react";
 import {useDrop} from "react-dnd";
 import {ItemTypes} from "./ItemTypes";
 import {snapToGrid as doSnapToGrid} from "./SnapToGrid";
@@ -13,25 +13,31 @@ const styles = {
     position: 'relative',
 }
 
-export const Canvas = ({ snapToGrid }) => {
+export const Canvas = ({ snapToGrid, tab }) => {
 
-    const [canvasItems, setCanvas] = useState({
-       // [uuidv4()]: { top: 20, left: 80, title: 'Drag me around', dragType: ItemTypes.ATOM },
-    });
+    const [canvasItems, setCanvas] = useState({});
+
+    // Load canvasState from ipcMain
+    useEffect(() => {
+        window.electronAPI.loadCanvasState(tab.key).then(data => {
+            setCanvas(data)
+        })
+    }, []);
 
     const addNewItem = useCallback(
-        (item, left, top) => {
+        (item, left, top, tabKey) => {
             setCanvas(
                 update(canvasItems, {
                     $merge: {[uuidv4()]: {top: top, left: left, title: item.title, color: item.color }}
                 }),
             )
+            window.electronAPI.saveCanvasState(canvasItems, tabKey)
         },
         [canvasItems],
-    );
+    )
 
     const updateItem = useCallback(
-        (id, left, top) => {
+        (id, left, top, tabKey) => {
             setCanvas(
                 update(canvasItems, {
                     [id]: {
@@ -39,12 +45,11 @@ export const Canvas = ({ snapToGrid }) => {
                     },
                 }),
             )
+            window.electronAPI.saveCanvasState(canvasItems, tabKey)
         },
         [canvasItems],
     );
 
-
-    // TODO: Check if Atom is existing on canvas or if new atom from source.  If from source, add new id to canvasItems. If existing item, update coords in state.
     const [, drop] = useDrop(
         () => ({
         accept: [ItemTypes.ATOM, ItemTypes.ATOM_SOURCE],
@@ -62,12 +67,12 @@ export const Canvas = ({ snapToGrid }) => {
 
             if (monitor.getItemType() === ItemTypes.ATOM) {
                 console.log("Existing atom dragged.")
-                updateItem(item.id, left, top)
+                updateItem(item.id, left, top, tab.key)
             }
 
             if (monitor.getItemType() === ItemTypes.ATOM_SOURCE) {
                 console.log("New atom dragged.")
-                addNewItem(item, left, top)
+                addNewItem(item, left, top, tab.key)
             }
             console.log(canvasItems);
 

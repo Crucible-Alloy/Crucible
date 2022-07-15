@@ -25,9 +25,9 @@ function BodyWrapper({tabs, setTabs}) {
     }
 
     function closeTab(e) {
-        const index = e.target.parentNode.tabKey;
-        console.log(`Removing tab ${index}`);
-        tabs.pop(index);
+        const tabIndex = e.currentTarget.parentElement.parentElement.parentElement.parentElement.getAttribute("index")
+        console.log(`Removing tab ${tabIndex}`);
+        setTabs(tabs => tabs.splice(tabIindex, 1))
     }
 
     function newTab() {
@@ -38,9 +38,10 @@ function BodyWrapper({tabs, setTabs}) {
     return (
         <>
             <Tabs sx={{height: "100%"}} active={activeTab} onTabChange={updateTab} variant={"outline"}>
-                {tabs.map((tab) => (
+                {tabs.map((tab, index) => (
                     <Tabs.Tab
-                        label={<Group>{tab.title} <CloseButton /> </Group>}
+                        index={index}
+                        label={<Group>{tab.title} <CloseButton onClick={closeTab}/> </Group>}
                         icon={<ChartDots3 size={16} />}
                     >
                         <TabContent tab={tab}/>

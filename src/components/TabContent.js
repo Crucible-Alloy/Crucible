@@ -19,7 +19,7 @@ function TabContent ({tab}) {
             </Group>
 
             <div className={"canvasContainer"}>
-                <Canvas />
+                <Canvas tab={tab}/>
             </div>
             <CustomDragLayer />
         </div>
