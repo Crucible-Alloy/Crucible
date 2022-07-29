@@ -4,11 +4,12 @@ const {app, BrowserWindow, ipcMain, dialog, net} = require('electron');
 const axios = require('axios');
 
 // Global window variable
-let mainWindow;
+let mainWindow, projectSelectWindow;
 
 // State persistence constants.
 const { FETCH_DATA_FROM_STORAGE, HANDLE_FETCH_DATA,
-        SAVE_CANVAS_STATE, LOAD_CANVAS_STATE, SET_PROJECT_FILE, GET_PROJECT_FILE
+        SAVE_CANVAS_STATE, LOAD_CANVAS_STATE, SET_PROJECT_FILE, GET_PROJECT_FILE, GET_ATOMS, GET_PROJECTS, OPEN_PROJECT,
+    GET_TESTS
 } = require("../src/utils/constants")
 
 let itemsToTrack;
@@ -24,7 +25,30 @@ let springAPI;
 //     app.quit();
 // }
 
-function createWindow() {
+function createProjectSelectWindow() {
+
+    projectSelectWindow = new BrowserWindow({
+        width: 960,
+        height: 640,
+        webPreferences: {
+            nodeIntegration: true,
+            preload: path.join(__dirname, 'preload.js')
+        }
+    });
+
+    projectSelectWindow.loadURL(
+        isDev ?
+            "http://localhost:3000/projects" :
+            `${path.join(__dirname, '../build/index.html/projects')}`
+    );
+
+    if (isDev) {
+        projectSelectWindow.webContents.openDevTools({mode: "detach"});
+    }
+}
+
+
+function createMainWindow(projectKey) {
 
     mainWindow = new BrowserWindow({
         // Set browser window parameters
@@ -39,8 +63,8 @@ function createWindow() {
     //Load index.html
     mainWindow.loadURL(
         isDev ?
-            "http://localhost:3000" :
-            `${path.join(__dirname, '../build/index.html')}`
+            `http://localhost:3000/main/${projectKey}` :
+            `${path.join(__dirname, `../build/index.html/main/${projectKey}`)}`
     );
 
     if (isDev) {
@@ -54,7 +78,8 @@ function createWindow() {
     // Some APIs only available after this call.
 app.whenReady().then(() => {
 
-    createWindow();
+    //createMainWindow("test-project");
+    createProjectSelectWindow();
 
     const jarPath = `${path.join(__dirname, '../src/JARs/aSketch-API.jar')}`;
     springAPI = require('child_process').spawn('java', ['-jar', jarPath, '']);
@@ -62,7 +87,8 @@ app.whenReady().then(() => {
     app.on('activate', function () {
         // On macOS it's common to re-create a window in the app when the
         // dock icon is clicked and there are no other windows open.
-        if (BrowserWindow.getAllWindows().length === 0) createWindow()
+        //if (BrowserWindow.getAllWindows().length === 0) createMainWindow()
+        if (BrowserWindow.getAllWindows().length === 0) createProjectSelectWindow()
     });
 });
 
@@ -117,6 +143,13 @@ ipcMain.on(LOAD_CANVAS_STATE, (event, tabKey) => {
     event.sender.send('loaded-canvas-state', canvasState ? canvasState : {})
 })
 
+ipcMain.on(GET_PROJECT_FILE, (event, projectKey) => {
+    console.log("MAIN: GET_PROJECT_FILE");
+
+    let projectFile = store.get(`projects.${projectKey}.path`);
+    event.sender.send('got-project-file', projectFile ? projectFile : null)
+});
+
 ipcMain.on(SET_PROJECT_FILE, (event, projectKey) => {
     console.log("Main Received: SET_MAIN_PROJECT_FILE")
 
@@ -160,14 +193,26 @@ ipcMain.on(SET_PROJECT_FILE, (event, projectKey) => {
     })
 })
 
-ipcMain.on(GET_PROJECT_FILE, (event, projectKey) => {
-    console.log("MAIN: GET_PROJECT_FILE");
-
-    let projectFile = store.get(`projects.${projectKey}.path`);
-    event.sender.send('got-project-file', projectFile ? projectFile : null)
-});
-
 ipcMain.on(GET_ATOMS, (event, projectKey) => {
+    console.log("MAIN RECEIVED GET_ATOMS FROM RENDERER")
+    console.log(projectKey);
     let atoms = store.get(`projects.${projectKey}.atoms`);
+    console.log(atoms);
     event.sender.send('got-atoms', atoms ? atoms : null)
+})
+
+ipcMain.on(GET_PROJECTS, (event) => {
+    console.log("RECEIVED 'GET-PROJECTS' FROM RENDERER");
+    let projects = store.get('projects');
+    event.sender.send('get-projects-success', projects ? projects : null)
+})
+
+ipcMain.on(OPEN_PROJECT, (event, projectKey) => {
+    projectSelectWindow.close();
+    createMainWindow(projectKey);
+})
+
+ipcMain.on(GET_TESTS, (event, projectKey) => {
+    let tests = store.get(`projects.${projectKey}.tests`);
+    event.sender.send('got-tests', tests ? tests : null)
 })

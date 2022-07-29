@@ -17,15 +17,15 @@ function getStyles(left, top, isDragging) {
 }
 
 export const AtomSource = memo(function AtomSource(props) {
-    const { id, title, left, top, color } = props
+    const { id, label, left, top, color } = props
     const [{ isDragging }, drag, preview] = useDrag(() => ({
             type: ItemTypes.ATOM_SOURCE,
-            item: { id, left, top, title, color},
+            item: { id, left, top, label, color},
             collect: (monitor) => ({
                 isDragging: monitor.isDragging(),
             })
         }),
-    [id, left, top, title, color],
+    [id, left, top, label, color],
     )
     useEffect(() => {
         preview(getEmptyImage(), { captureDraggingState: true })
@@ -41,11 +41,11 @@ export const AtomSource = memo(function AtomSource(props) {
             role="DraggableBox"
             sx={(theme) => ({
                 backgroundColor: theme.colors.dark[5],
-                border: `solid 6px ${color}`,
+                border: `solid 6px blue`,
                 width: 200,
             })}
         >
-            <Text color={color} size={"xl"} weight={"800"}>{title} <CodePlus /></Text>
+            <Text color={"blue"} size={"xl"} weight={"800"}>{label} <CodePlus /></Text>
         </Paper>
     );
 });

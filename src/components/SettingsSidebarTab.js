@@ -3,12 +3,12 @@ import {FileSearch} from "tabler-icons-react";
 import {useEffect, useState} from "react";
 
 
-function SettingsSidebarTab({project}) {
+function SettingsSidebarTab({projectKey}) {
 
     const [projectFile, setProjectFile] = useState();
 
     useEffect(() => {
-        window.electronAPI.getProjectFile(project.key).then(filePath => {
+        window.electronAPI.getProjectFile(projectKey).then(filePath => {
             setProjectFile(trimFullPath(filePath))
         })
     }, );
@@ -20,7 +20,7 @@ function SettingsSidebarTab({project}) {
     }
 
     function handleSelectFile() {
-        window.electronAPI.setProjectFile(project.key).then( filePath => {
+        window.electronAPI.setProjectFile(projectKey).then( filePath => {
             console.log(filePath)
             setProjectFile(trimFullPath(filePath));
         })

@@ -9,11 +9,12 @@ import {DndProvider} from "react-dnd";
 import {HTML5Backend} from "react-dnd-html5-backend";
 import {DragDrop} from "tabler-icons-react";
 import {HANDLE_FETCH_DATA, HANDLE_SAVE_DATA} from "./utils/constants";
-import Home from "./components/Home";
+import {useParams} from "react-router-dom";
+import {useEffect} from "react";
 
 function App() {
     const { viewHeight, viewWidth } = useViewportSize();
-
+    const { projectKey } = useParams();
     // State for canvas tabs
     const [tabs, setTabs] = useState([
         {
@@ -28,6 +29,14 @@ function App() {
         }
     ]);
 
+    // TODO: Refactor how tabs are loaded from project tests
+    // useEffect(() => {
+    //     window.electronAPI.getTests(projectKey).then(tests => {
+    //         setTabs(tests)
+    //     })
+    // }, );
+
+
     const headerHeight = 60;
     const sidebarWidth = 500;
 
@@ -39,7 +48,7 @@ function App() {
                      width: `${viewWidth}`,
                 }}
                 padding="xs"
-                navbar={<Navbar width={{ base: sidebarWidth }} height={viewHeight} p="xs">{<SidebarWrapper />}</Navbar>}
+                navbar={<Navbar width={{ base: sidebarWidth }} height={viewHeight} p="xs">{<SidebarWrapper projectKey={projectKey}/>}</Navbar>}
                 header={<Header height={headerHeight} p="xs">{<Title>Alloy Sketch</Title>}</Header>}
                 styles={(theme) => ({
                     main: {
@@ -51,6 +60,7 @@ function App() {
                 {
                     <BodyWrapper tabs={tabs}
                                  setTabs={setTabs}
+                                 projectKey={projectKey}
                                  style={{height: "100%",
                                      backgroundColor: "#FF0000",
                                      margin: 0,

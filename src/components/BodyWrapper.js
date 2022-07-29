@@ -9,7 +9,7 @@ import {CustomDragLayer} from "./CustomDragLayer";
 
 
 
-function BodyWrapper({tabs, setTabs}) {
+function BodyWrapper({tabs, setTabs, project}) {
 
     const [activeTab, setActiveTab] = useState(0);
 

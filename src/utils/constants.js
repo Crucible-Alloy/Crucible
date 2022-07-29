@@ -7,5 +7,8 @@ module.exports = {
     LOAD_CANVAS_STATE: 'load-canvas-state',
     SET_PROJECT_FILE: 'set-project-file',
     GET_PROJECT_FILE: 'get-project-file',
-    GET_ATOMS: 'get-atoms'
+    GET_ATOMS: 'get-atoms',
+    GET_PROJECTS: 'get-projects',
+    OPEN_PROJECT: 'open-project',
+    GET_TESTS: 'get-tests'
 }
