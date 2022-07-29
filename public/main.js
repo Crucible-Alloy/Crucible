@@ -1,20 +1,24 @@
+
 const path = require('path');
-const {app, BrowserWindow, ipcMain} = require('electron');
+const {app, BrowserWindow, ipcMain, dialog, net} = require('electron');
+const axios = require('axios');
 
 // Global window variable
 let mainWindow;
 
 // State persistence constants.
 const { FETCH_DATA_FROM_STORAGE, HANDLE_FETCH_DATA,
-        SAVE_DATA_TO_STORAGE, HANDLE_SAVE_DATA, SAVE_CANVAS_STATE, LOAD_CANVAS_STATE
+        SAVE_CANVAS_STATE, LOAD_CANVAS_STATE, SET_PROJECT_FILE, GET_PROJECT_FILE
 } = require("../src/utils/constants")
 
 let itemsToTrack;
 
 const Store = require('electron-store');
+
 let store = new Store();
 
 const isDev = true;
+let springAPI;
 
 // if (require("electron-is-dev")) {
 //     app.quit();
@@ -49,7 +53,11 @@ function createWindow() {
     // After initialization, create new browser window.
     // Some APIs only available after this call.
 app.whenReady().then(() => {
-    createWindow()
+
+    createWindow();
+
+    const jarPath = `${path.join(__dirname, '../src/JARs/aSketch-API.jar')}`;
+    springAPI = require('child_process').spawn('java', ['-jar', jarPath, '']);
 
     app.on('activate', function () {
         // On macOS it's common to re-create a window in the app when the
@@ -62,6 +70,10 @@ app.whenReady().then(() => {
 app.on("window-all-closed", () => {
     if (process.platform !== "darwin") {
         app.quit();
+
+        // Shutdown spring-boot api
+        const kill = require('tree-kill');
+        kill(springAPI.pid);
     }
 });
 
@@ -90,18 +102,6 @@ ipcMain.on(FETCH_DATA_FROM_STORAGE, (event, message) => {
     })
 });
 
-ipcMain.on(SAVE_DATA_TO_STORAGE, (event, message) => {
-
-    console.log("Main Received: SAVE_DATA_TO_STORAGE with: ", message);
-    const list = store.get('list');
-    if (list) {
-        store.set('list', list.concat(message));
-    }
-    else {
-        store.set('list', [message]);
-    }
-})
-
 ipcMain.on(SAVE_CANVAS_STATE, (event, canvasItems, tabKey) => {
 
     console.log("Main Received: SAVE_CANVAS_STATE with: ", canvasItems);
@@ -115,4 +115,59 @@ ipcMain.on(LOAD_CANVAS_STATE, (event, tabKey) => {
     // Send canvas state back to ipcRenderer via api.
     let canvasState = store.get(`${tabKey}.canvas`)
     event.sender.send('loaded-canvas-state', canvasState ? canvasState : {})
+})
+
+ipcMain.on(SET_PROJECT_FILE, (event, projectKey) => {
+    console.log("Main Received: SET_MAIN_PROJECT_FILE")
+
+    dialog.showOpenDialog({
+        title: "Select Project File",
+        filters: [
+            {name: "Alloy Files", extensions: ["als"]},
+            {name: "Any File", extensions: ["*"]}
+        ],
+        properties: ['openFile']
+    }).then(function (response) {
+        if (!response.canceled) {
+            console.log(response.filePaths[0])
+
+            store.set(`projects.${projectKey}.path`, response.filePaths[0])
+
+            let atomLabels = [];
+            try {
+                const apiRequest = axios.post("http://localhost:8080/files",null, {params: {"filePath": response.filePaths[0]}})
+                apiRequest.then(data => {
+                    if (data.data) {
+                        for (const atom in data.data["atoms"]) {
+                            let atomLabel = data.data["atoms"][atom]["label"];
+                            atomLabel = atomLabel.toString().split('/')[1];
+                            console.log(atomLabel)
+                            atomLabels.push(atomLabel);
+                        };
+                    }
+                }).then( () => {
+                    store.set(`projects.${projectKey}.atoms`, atomLabels);
+                });
+            } catch (err) {
+                console.log(err);
+            }
+
+            event.sender.send('project-file-set', response.filePaths[0])
+
+        } else {
+            event.sender.send('project-file-set', null)
+        }
+    })
+})
+
+ipcMain.on(GET_PROJECT_FILE, (event, projectKey) => {
+    console.log("MAIN: GET_PROJECT_FILE");
+
+    let projectFile = store.get(`projects.${projectKey}.path`);
+    event.sender.send('got-project-file', projectFile ? projectFile : null)
+});
+
+ipcMain.on(GET_ATOMS, (event, projectKey) => {
+    let atoms = store.get(`projects.${projectKey}.atoms`);
+    event.sender.send('got-atoms', atoms ? atoms : null)
 })

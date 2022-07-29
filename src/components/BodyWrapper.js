@@ -27,7 +27,7 @@ function BodyWrapper({tabs, setTabs}) {
     function closeTab(e) {
         const tabIndex = e.currentTarget.parentElement.parentElement.parentElement.parentElement.getAttribute("index")
         console.log(`Removing tab ${tabIndex}`);
-        setTabs(tabs => tabs.splice(tabIindex, 1))
+        setTabs(tabs => tabs.splice(tabIndex, 1))
     }
 
     function newTab() {

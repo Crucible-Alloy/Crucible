@@ -20,7 +20,7 @@ export const Canvas = ({ snapToGrid, tab }) => {
     // Load canvasState from ipcMain
     useEffect(() => {
         window.electronAPI.loadCanvasState(tab.key).then(data => {
-            setCanvas(data)
+             setCanvas(data)
         })
     }, []);
 

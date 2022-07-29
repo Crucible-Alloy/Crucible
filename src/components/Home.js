@@ -1,5 +1,4 @@
 import React, {useEffect, useState} from 'react';
-import {loadSavedData, saveDataInStorage} from "../renderer";
 
 const { HANDLE_SAVE_DATA, HANDLE_FETCH_DATA } = require("../utils/constants")
 
