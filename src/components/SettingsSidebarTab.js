@@ -20,7 +20,7 @@ function SettingsSidebarTab({projectKey}) {
     }
 
     function handleSelectFile() {
-        window.electronAPI.setProjectFile(projectKey).then( filePath => {
+        window.electronAPI.updateProjectFile(projectKey).then( filePath => {
             console.log(filePath)
             setProjectFile(trimFullPath(filePath));
         })

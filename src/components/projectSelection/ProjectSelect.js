@@ -14,18 +14,18 @@ import {
     useMantineTheme,
     ActionIcon, Stack, UnstyledButton, Group, Avatar, Button, TextInput, Input, InputWrapper,
 } from "@mantine/core";
-import SidebarWrapper from "./SidebarWrapper";
-import BodyWrapper from "./BodyWrapper";
-import {FileCode, FileSearch, FolderPlus, Settings} from "tabler-icons-react";
+import SidebarWrapper from "../SidebarWrapper";
+import BodyWrapper from "../BodyWrapper";
+import {FileCode, FileSearch, FolderPlus, Folders, Settings, Tag, Tournament} from "tabler-icons-react";
+import FileSelector from "../FileSelector";
+import NewProjectModal from "./NewProjectModal";
 
 export const ProjectSelect = () => {
 
     const theme = useMantineTheme();
     const [opened, setOpened] = useState(false);
-    const [modalOpened, setModalOpened] = useState(false);
     const [projects, setProjects] = useState([]);
-    const [newProjectLocation, setNewProjectLocaction] = useState();
-
+    const [modalOpened, setModalOpened] = useState(false);
 
     // Load projects from store
     useEffect(() => {
@@ -34,16 +34,6 @@ export const ProjectSelect = () => {
         })
     }, []);
 
-
-    function createNewProject() {
-
-    }
-
-    function handleNewProjectLocation() {
-        window.electronAPI.setNewProjectLocation().then( filePath => {
-            setNewProjectLocaction(filePath);
-        })
-    }
 
     function openProject(projectKey) {
         window.electronAPI.openProject(projectKey);
@@ -95,30 +85,6 @@ export const ProjectSelect = () => {
                 </Header>
             }
         >
-
-            <Modal
-                opened={modalOpened}
-                onClose={() => setModalOpened(false)}
-                title="Create a New Project"
-            >
-                    <TextInput
-                        placeholder="New Project"
-                        label="Project name"
-                        required
-                    />
-                    <br/>
-                    <InputWrapper
-                        labelElement="div"
-                        label={"Project Location"}
-                    >
-                        <Input icon={<FileSearch />} onClick={handleNewProjectLocation} value={"User/aSketchProjects/New Project"} />
-                    </InputWrapper>
-
-                <Button m={"sm"} onClick={createNewProject} >Create Project</Button>
-
-
-            </Modal>
-
             {Object.entries(projects).map(([key, value]) => (
                 <>
                 <UnstyledButton onClick={() => {openProject(key)}}>
@@ -140,6 +106,9 @@ export const ProjectSelect = () => {
                 </UnstyledButton>
                 </>
             ))}
+
+            <NewProjectModal setModalOpened={setModalOpened} opened={modalOpened}/>
+
         </AppShell>
     )
 }

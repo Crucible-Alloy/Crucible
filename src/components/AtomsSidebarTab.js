@@ -9,16 +9,21 @@ function AtomsSidebarTab({ projectKey }) {
     const [atoms, setAtoms] = useState([]);
 
     useEffect(() => {
+        getAtoms();
+    }, []);
+
+    const getAtoms = () => {
         window.electronAPI.getAtoms(projectKey).then(atoms => {
             setAtoms(atoms)
         })
-    }, );
+    }
+
 
     return (
         <Group p={"lg"}>
 
-            {atoms.map((label) => (
-                <AtomSource id={uuidv4()} label={label} />
+            {Object.entries(atoms).map(([key, value]) => (
+                <AtomSource id={uuidv4()} label={value["label"]} />
             ))}
         </Group>
     );

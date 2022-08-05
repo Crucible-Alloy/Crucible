@@ -4,7 +4,7 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import {BrowserRouter, Routes, Route} from "react-router-dom";
-import ProjectSelect from "./components/ProjectSelect";
+import ProjectSelect from "./components/projectSelection/ProjectSelect";
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 

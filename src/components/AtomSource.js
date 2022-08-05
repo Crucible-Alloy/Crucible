@@ -1,9 +1,22 @@
-import {memo, useEffect} from 'react';
-import {Paper, Text} from "@mantine/core";
-import {CodePlus} from "tabler-icons-react";
+import {memo, useEffect, useState} from 'react';
+import {
+    ActionIcon,
+    Badge,
+    Button,
+    Center, ColorPicker,
+    Group,
+    Input,
+    InputWrapper, Modal,
+    Paper,
+    SimpleGrid,
+    Text,
+    TextInput
+} from "@mantine/core";
+import {CaretDown, CodePlus, Dots, Edit, FileSearch} from "tabler-icons-react";
 import {useDrag} from "react-dnd";
 import {ItemTypes} from "./ItemTypes";
 import {getEmptyImage} from "react-dnd-html5-backend";
+import React from "react";
 
 function getStyles(left, top, isDragging) {
     //const transform = `translate3d(${left}px, ${top}px, 0)`
@@ -18,6 +31,8 @@ function getStyles(left, top, isDragging) {
 
 export const AtomSource = memo(function AtomSource(props) {
     const { id, label, left, top, color } = props
+    const [modalOpened, setModalOpened] = useState(false);
+
     const [{ isDragging }, drag, preview] = useDrag(() => ({
             type: ItemTypes.ATOM_SOURCE,
             item: { id, left, top, label, color},
@@ -31,21 +46,41 @@ export const AtomSource = memo(function AtomSource(props) {
         preview(getEmptyImage(), { captureDraggingState: true })
     }, [])
 
+    function editAtom() {
+        setModalOpened(true)
+    }
+
     return (
+        <>
+        <Modal
+            opened={modalOpened}
+            onClose={() => setModalOpened(false)}
+            title="Edit Atom"
+        >
+            <ColorPicker/>
+        </Modal>
+
         <Paper
             ref={drag}
             //style={getStyles(left, top, isDragging)}
             shadow="md"
+            size={"xl"}
             p="md"
-            radius={"md"}
+            radius={"lg"}
             role="DraggableBox"
             sx={(theme) => ({
-                backgroundColor: theme.colors.dark[5],
-                border: `solid 6px blue`,
-                width: 200,
+                backgroundColor: theme.colors.dark[4],
+                border: `solid 6px ${theme.colors.blue[4]}`,
+                width: 300,
             })}
         >
-            <Text color={"blue"} size={"xl"} weight={"800"}>{label} <CodePlus /></Text>
+                <Text color={"blue"} size={"xl"} weight={"800"}>{label.split('/')[1]}</Text>
+                <ActionIcon onClick={editAtom}>
+                    <Edit/>
+                </ActionIcon>
+
+
         </Paper>
+        </>
     );
 });

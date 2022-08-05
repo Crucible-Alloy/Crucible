@@ -5,10 +5,13 @@ module.exports = {
     HANDLE_SAVE_DATA: 'handle-save-data',
     SAVE_CANVAS_STATE: 'save-canvas-state',
     LOAD_CANVAS_STATE: 'load-canvas-state',
-    SET_PROJECT_FILE: 'set-project-file',
+    UPDATE_PROJECT_FILE: 'set-project-file',
     GET_PROJECT_FILE: 'get-project-file',
     GET_ATOMS: 'get-atoms',
     GET_PROJECTS: 'get-projects',
     OPEN_PROJECT: 'open-project',
-    GET_TESTS: 'get-tests'
+    GET_TESTS: 'get-tests',
+    SELECT_FILE: 'select-file',
+    CREATE_NEW_PROJECT: 'create-new-project',
+    GET_HOME_DIRECTORY: 'get-home-directory',
 }
