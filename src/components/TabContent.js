@@ -8,7 +8,7 @@ import TestSaveBtn from "./TestSaveBtn";
 import {CustomDragLayer} from "./CustomDragLayer";
 import Canvas from "./Canvas";
 
-function TabContent ({tab}) {
+function TabContent ({tab, projectKey, testKey}) {
 
     return (
         <div style={{height: "100%"}}>
@@ -19,7 +19,7 @@ function TabContent ({tab}) {
             </Group>
 
             <div className={"canvasContainer"}>
-                <Canvas tab={tab}/>
+                <Canvas projectKey={projectKey} testKey={testKey} tab={tab}/>
             </div>
             <CustomDragLayer />
         </div>

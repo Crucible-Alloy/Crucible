@@ -1,18 +1,12 @@
 import {memo, useEffect, useState} from 'react';
 import {
     ActionIcon,
-    Badge,
-    Button,
-    Center, ColorPicker,
-    Group,
-    Input,
-    InputWrapper, Modal,
+    ColorPicker,
+    Modal,
     Paper,
-    SimpleGrid,
     Text,
-    TextInput
 } from "@mantine/core";
-import {CaretDown, CodePlus, Dots, Edit, FileSearch} from "tabler-icons-react";
+import {Edit} from "tabler-icons-react";
 import {useDrag} from "react-dnd";
 import {ItemTypes} from "./ItemTypes";
 import {getEmptyImage} from "react-dnd-html5-backend";
@@ -70,11 +64,11 @@ export const AtomSource = memo(function AtomSource(props) {
             role="DraggableBox"
             sx={(theme) => ({
                 backgroundColor: theme.colors.dark[4],
-                border: `solid 6px ${theme.colors.blue[4]}`,
+                border: `solid 6px ${props.color}`,
                 width: 300,
             })}
         >
-                <Text color={"blue"} size={"xl"} weight={"800"}>{label.split('/')[1]}</Text>
+                <Text color={props.color} size={"xl"} weight={"800"}>{label.split('/')[1]}</Text>
                 <ActionIcon onClick={editAtom}>
                     <Edit/>
                 </ActionIcon>

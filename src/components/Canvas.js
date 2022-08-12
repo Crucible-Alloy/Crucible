@@ -13,31 +13,31 @@ const styles = {
     position: 'relative',
 }
 
-export const Canvas = ({ snapToGrid, tab }) => {
+export const Canvas = ({ snapToGrid, tab, projectKey, testKey }) => {
 
     const [canvasItems, setCanvas] = useState({});
 
     // Load canvasState from ipcMain
     useEffect(() => {
-        window.electronAPI.loadCanvasState(tab.key).then(data => {
+        window.electronAPI.loadCanvasState(projectKey, testKey).then(data => {
              setCanvas(data)
         })
-    }, []);
+    }, [projectKey, testKey]);
 
     const addNewItem = useCallback(
-        (item, left, top, tabKey) => {
+        (item, left, top, projectKey, testKey) => {
             setCanvas(
                 update(canvasItems, {
-                    $merge: {[uuidv4()]: {top: top, left: left, title: item.title, color: item.color }}
+                    $merge: {[uuidv4()]: {top: top, left: left, title: item.label, color: item.color }}
                 }),
             )
-            window.electronAPI.saveCanvasState(canvasItems, tabKey)
+            window.electronAPI.saveCanvasState(canvasItems, projectKey, testKey)
         },
         [canvasItems],
     )
 
     const updateItem = useCallback(
-        (id, left, top, tabKey) => {
+        (id, left, top, projectKey, testKey) => {
             setCanvas(
                 update(canvasItems, {
                     [id]: {
@@ -45,7 +45,7 @@ export const Canvas = ({ snapToGrid, tab }) => {
                     },
                 }),
             )
-            window.electronAPI.saveCanvasState(canvasItems, tabKey)
+            window.electronAPI.saveCanvasState(canvasItems, projectKey, testKey)
         },
         [canvasItems],
     );
@@ -67,12 +67,12 @@ export const Canvas = ({ snapToGrid, tab }) => {
 
             if (monitor.getItemType() === ItemTypes.ATOM) {
                 console.log("Existing atom dragged.")
-                updateItem(item.id, left, top, tab.key)
+                updateItem(item.id, left, top, projectKey, testKey)
             }
 
             if (monitor.getItemType() === ItemTypes.ATOM_SOURCE) {
                 console.log("New atom dragged.")
-                addNewItem(item, left, top, tab.key)
+                addNewItem(item, left, top, projectKey, testKey)
             }
             console.log(canvasItems);
 

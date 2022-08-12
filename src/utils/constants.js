@@ -1,4 +1,5 @@
 module.exports = {
+    // API CHANNELS
     FETCH_DATA_FROM_STORAGE: 'fetch-data-from-storage',
     HANDLE_FETCH_DATA: 'handle-fetch-data',
     SAVE_DATA_TO_STORAGE: 'save-data-to-storage',
@@ -14,4 +15,9 @@ module.exports = {
     SELECT_FILE: 'select-file',
     CREATE_NEW_PROJECT: 'create-new-project',
     GET_HOME_DIRECTORY: 'get-home-directory',
+    CREATE_NEW_TEST: 'create-new-test',
+
+
+    // UI VARIABLES
+    SIDEBAR_WIDTH: 500
 }

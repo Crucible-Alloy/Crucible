@@ -1,14 +1,14 @@
 import logo from './logo.svg';
 import './App.css';
 import {AppShell, Container, Header, Navbar, Title} from "@mantine/core";
-import SidebarWrapper from "./components/SidebarWrapper";
+import SidebarWrapper from "./components/sideBar/SidebarWrapper";
 import BodyWrapper from "./components/BodyWrapper";
 import {useViewportSize} from "@mantine/hooks";
 import { useState } from "react";
 import {DndProvider} from "react-dnd";
 import {HTML5Backend} from "react-dnd-html5-backend";
 import {DragDrop} from "tabler-icons-react";
-import {HANDLE_FETCH_DATA, HANDLE_SAVE_DATA} from "./utils/constants";
+import {HANDLE_FETCH_DATA, HANDLE_SAVE_DATA, SIDEBAR_WIDTH} from "./utils/constants";
 import {useParams} from "react-router-dom";
 import {useEffect} from "react";
 
@@ -17,16 +17,12 @@ function App() {
     const { projectKey } = useParams();
     // State for canvas tabs
     const [tabs, setTabs] = useState([
-        {
-            key: 1,
-            title: "Test 1",
-            active: true
-        },
-        {
-            key: 2,
-            title: "Test 2",
-            active: false
-        }
+
+        // {
+        //     key: 2,
+        //     title: "Test 2",
+        //     active: false
+        // }
     ]);
 
     // TODO: Refactor how tabs are loaded from project tests
@@ -38,7 +34,6 @@ function App() {
 
 
     const headerHeight = 60;
-    const sidebarWidth = 500;
 
     return (
         <DndProvider backend={HTML5Backend}>
@@ -48,7 +43,7 @@ function App() {
                      width: `${viewWidth}`,
                 }}
                 padding="xs"
-                navbar={<Navbar width={{ base: sidebarWidth }} height={viewHeight} p="xs">{<SidebarWrapper projectKey={projectKey}/>}</Navbar>}
+                navbar={<Navbar width={{ base: SIDEBAR_WIDTH }} height={viewHeight} p="xs">{<SidebarWrapper tabs={tabs} setTabs={setTabs} projectKey={projectKey}/>}</Navbar>}
                 header={<Header height={headerHeight} p="xs">{<Title>Alloy Sketch</Title>}</Header>}
                 styles={(theme) => ({
                     main: {

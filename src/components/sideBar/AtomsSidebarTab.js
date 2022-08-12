@@ -1,6 +1,6 @@
 import {Group} from "@mantine/core";
 import {useState} from "react";
-import {AtomSource} from "./AtomSource";
+import {AtomSource} from "../AtomSource";
 import {v4 as uuidv4} from "uuid";
 import {useEffect} from "react";
 
@@ -23,7 +23,7 @@ function AtomsSidebarTab({ projectKey }) {
         <Group p={"lg"}>
 
             {Object.entries(atoms).map(([key, value]) => (
-                <AtomSource id={uuidv4()} label={value["label"]} />
+                <AtomSource id={uuidv4()} label={value["label"]} color={value["color"]} top={0} left={0} />
             ))}
         </Group>
     );

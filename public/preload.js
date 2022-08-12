@@ -3,14 +3,15 @@ const {SAVE_CANVAS_STATE, LOAD_CANVAS_STATE, UPDATE_PROJECT_FILE, GET_PROJECT_FI
     GET_TESTS,
     SELECT_FILE,
     CREATE_NEW_PROJECT,
-    GET_HOME_DIRECTORY
+    GET_HOME_DIRECTORY,
+    CREATE_NEW_TEST
 } = require("../src/utils/constants");
 
 contextBridge.exposeInMainWorld('electronAPI', {
-    saveCanvasState: (canvasItems, tabKey) => ipcRenderer.send(SAVE_CANVAS_STATE, canvasItems, tabKey),
-    loadCanvasState: (tabKey) => {
-        console.log("API received LOAD_CANVAS_STATE from tab ", tabKey)
-        ipcRenderer.send(LOAD_CANVAS_STATE, tabKey)
+    saveCanvasState: (canvasItems, projectKey, testKey) => ipcRenderer.send(SAVE_CANVAS_STATE, canvasItems, projectKey, testKey),
+    loadCanvasState: (projectKey, testKey) => {
+        console.log("API received LOAD_CANVAS_STATE from tab ", testKey)
+        ipcRenderer.send(LOAD_CANVAS_STATE, projectKey, testKey)
 
         return new Promise((resolve) => {
             ipcRenderer.once('loaded-canvas-state', (event, canvasState) => resolve(canvasState))
@@ -65,5 +66,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
         return new Promise((resolve) => {
             ipcRenderer.once('got-home-directory', (event, homedir) => resolve(homedir))
         });
+    },
+    createNewTest: (projectKey, testName) => {
+        ipcRenderer.send(CREATE_NEW_TEST, projectKey, testName)
+        return new Promise((resolve) => {
+            ipcRenderer.once('created-new-test', (event, test) => resolve(test))
+        })
     }
 })

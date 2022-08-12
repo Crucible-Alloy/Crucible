@@ -15,7 +15,8 @@ const { FETCH_DATA_FROM_STORAGE, HANDLE_FETCH_DATA,
     GET_TESTS,
     SELECT_FILE,
     CREATE_NEW_PROJECT,
-    GET_HOME_DIRECTORY
+    GET_HOME_DIRECTORY,
+    CREATE_NEW_TEST
 } = require("../src/utils/constants")
 
 let itemsToTrack;
@@ -94,15 +95,20 @@ function createNewFolder(folder) {
 }
 
 function storeAtomData(filePath, projectKey) {
-    console.log("Getting atom data from springboot api")
+    console.log("Getting atom data from springBoot api")
+    // Mantine colors at value '4'
+    let colors = ["#FFA94D", "#FFD43B", "#A9E34B", "#69DB7C", "#38D9A9", "#3BC9DB", "#4DABF7", "#748FFC", "#9775FA", "#DA77F2", "#F783AC", "#FF8787"]
     let atomData = [];
     try {
         const apiRequest = axios.post("http://localhost:8080/files",null, {params: {"filePath": filePath}})
         apiRequest.then(data => {
             if (data.data) {
                 for (const atom in data.data["atoms"]) {
+                    let selectedColor = colors.splice(Math.floor(Math.random() * colors.length), 1);
+                    console.log(selectedColor)
+                    data.data["atoms"][atom]["color"] = selectedColor
                     atomData.push(data.data["atoms"][atom]);
-                };
+                }
             }
         }).then( () => {
             store.set(`projects.${projectKey}.atoms`, atomData);
@@ -168,18 +174,18 @@ ipcMain.on(FETCH_DATA_FROM_STORAGE, (event, message) => {
     })
 });
 
-ipcMain.on(SAVE_CANVAS_STATE, (event, canvasItems, tabKey) => {
+ipcMain.on(SAVE_CANVAS_STATE, (event, canvasItems, projectKey, testKey) => {
 
-    console.log("Main Received: SAVE_CANVAS_STATE with: ", canvasItems);
-    store.set(`${tabKey}.canvas`, canvasItems);
+    console.log("Main Received: SAVE_CANVAS_STATE with: ", canvasItems, projectKey, testKey);
+    store.set(`${projectKey}.tests.${testKey}.canvas`, canvasItems);
 
 })
 
-ipcMain.on(LOAD_CANVAS_STATE, (event, tabKey) => {
-    console.log("Main Received: LOAD_CANVAS_STATE with: ", tabKey)
+ipcMain.on(LOAD_CANVAS_STATE, (event, projectKey, testKey) => {
+    console.log("Main Received: LOAD_CANVAS_STATE with: ", projectKey, testKey)
 
     // Send canvas state back to ipcRenderer via api.
-    let canvasState = store.get(`${tabKey}.canvas`)
+    let canvasState = store.get(`${projectKey}.tests.${testKey}.canvas`)
     event.sender.send('loaded-canvas-state', canvasState ? canvasState : {})
 })
 
@@ -220,13 +226,13 @@ ipcMain.on(GET_ATOMS, (event, projectKey) => {
     console.log(projectKey);
     let atoms = store.get(`projects.${projectKey}.atoms`);
     //console.log(atoms);
-    event.sender.send('got-atoms', atoms ? atoms : null)
+    event.sender.send('got-atoms', atoms ? atoms : {})
 })
 
 ipcMain.on(GET_PROJECTS, (event) => {
     console.log("RECEIVED 'GET-PROJECTS' FROM RENDERER");
     let projects = store.get('projects');
-    event.sender.send('get-projects-success', projects ? projects : null)
+    event.sender.send('get-projects-success', projects ? projects : {})
 })
 
 ipcMain.on(OPEN_PROJECT, (event, projectKey) => {
@@ -234,8 +240,10 @@ ipcMain.on(OPEN_PROJECT, (event, projectKey) => {
 })
 
 ipcMain.on(GET_TESTS, (event, projectKey) => {
+    console.log("RECEIVED 'GET-TESTS' FROM RENDERER")
     let tests = store.get(`projects.${projectKey}.tests`);
-    event.sender.send('got-tests', tests ? tests : null)
+    console.log(tests)
+    event.sender.send('got-tests', tests ? tests : {})
 })
 
 ipcMain.on(SELECT_FILE, (event) => {
@@ -283,8 +291,9 @@ ipcMain.on(CREATE_NEW_PROJECT, (event, alloyFile, projectName, projectDirectory)
 
     // Save filepath and project name to store
     let projectKey = uuidv4();
-    store.set(`projects.${projectKey}.path`, newAlloyFilePath)
+    store.set(`projects.${projectKey}.path`, projectFolder)
     store.set(`projects.${projectKey}.name`, projectName)
+    store.set(`projects.${projectKey}.tests`, {})
 
     // Get atom data from springBoot API and write to store
     storeAtomData(newAlloyFilePath, projectKey)
@@ -299,3 +308,22 @@ ipcMain.on(GET_HOME_DIRECTORY, (event) => {
     console.log(homedir)
     event.sender.send('got-home-directory', homedir)
 });
+
+ipcMain.on(CREATE_NEW_TEST, (event, projectKey, testName) => {
+    // Create placeholder test file in /tests, write test to store with blank canvas, return test object to ipcRender
+    let parentProject = store.get(`projects.${projectKey}`);
+    let testFilePath = path.join(parentProject["path"], `tests/${testName}.txt`)
+
+    fs.writeFile(testFilePath, "Placeholder file...", function(err) {
+        if (err) throw err;
+    });
+
+    let newTest = {"name": testName,
+                   "testFile": testFilePath,
+                   "canvas": {}}
+
+    let testID = uuidv4()
+    store.set(`projects.${projectKey}.tests.${testID}`, newTest);
+
+    event.sender.send('created-new-test', newTest)
+})
