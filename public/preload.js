@@ -1,10 +1,17 @@
 const { ipcRenderer, contextBridge } = require('electron');
+require('events').EventEmitter.defaultMaxListeners = 0
+const { v4: uuidv4 } =require('uuid')
+
 const {SAVE_CANVAS_STATE, LOAD_CANVAS_STATE, UPDATE_PROJECT_FILE, GET_PROJECT_FILE, GET_ATOMS, GET_PROJECTS, OPEN_PROJECT,
     GET_TESTS,
     SELECT_FILE,
     CREATE_NEW_PROJECT,
     GET_HOME_DIRECTORY,
-    CREATE_NEW_TEST
+    CREATE_NEW_TEST,
+    SET_ATOM_COLOR,
+    GET_ATOM_COLOR,
+    GET_ATOM_LABEL,
+    SET_ATOM_LABEL
 } = require("../src/utils/constants");
 
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -72,5 +79,28 @@ contextBridge.exposeInMainWorld('electronAPI', {
         return new Promise((resolve) => {
             ipcRenderer.once('created-new-test', (event, test) => resolve(test))
         })
-    }
+    },
+    getAtomColor: (projectKey, atomSourceKey) => {
+        let returnChannel = uuidv4();
+        ipcRenderer.send(GET_ATOM_COLOR, projectKey, atomSourceKey, returnChannel)
+        return new Promise((resolve) => {
+            ipcRenderer.once(returnChannel, (event, atomColor) => resolve(atomColor))
+        })
+    },
+
+    setAtomColor: (projectKey, atomKey, atomColor) => {
+        ipcRenderer.send(SET_ATOM_COLOR, projectKey, atomKey, atomColor)
+    },
+
+    getAtomLabel: (projectKey, atomKey) => {
+        let returnChannel = uuidv4();
+        ipcRenderer.send(GET_ATOM_LABEL, projectKey, atomKey, returnChannel)
+        return new Promise((resolve) => {
+            ipcRenderer.once(returnChannel, (event, atomLabel) => resolve(atomLabel))
+        })
+    },
+
+    setAtomLabel: (projectKey, atomKey, atomLabel) => {
+        ipcRenderer.send(SET_ATOM_LABEL, projectKey, atomKey, atomLabel)
+    },
 })

@@ -13,45 +13,30 @@ const styles = {
     position: 'relative',
 }
 
-export const Canvas = ({ snapToGrid, tab, projectKey, testKey }) => {
+export const DemoCanvas = ({ snapToGrid }) => {
 
     const [canvasItems, setCanvas] = useState({});
 
-    // Load canvasState from ipcMain
-    useEffect(() => {
-        window.electronAPI.loadCanvasState(projectKey, testKey).then(data => {
-            setCanvas(data)
-        })
-    }, []);
 
-    useEffect(() => {
-        saveCanvasState(canvasItems, projectKey, testKey)
-    }, [canvasItems])
-
-    const addNewItem = (left, top, projectKey, testKey, sourceAtomKey) => {
-        setCanvas(
-            update(canvasItems, {
-                $merge: {[uuidv4()]: {top: top, left: left, sourceAtomKey: sourceAtomKey, connections: {} }}
-            })
-        )
-    }
-
-    const saveCanvasState = useCallback(
-        () => {
-            window.electronAPI.saveCanvasState(canvasItems, projectKey, testKey)
+    const addNewItem = useCallback(
+        (item, left, top) => {
+            setCanvas(
+                update(canvasItems, {
+                    $merge: {[uuidv4()]: {top: top, left: left, title: item.label, color: item.atomColor, connections: {} }}
+                }),
+            )
         },
         [canvasItems],
-    );
-
+    )
 
     const updateItem = useCallback(
-        (id, left, top) => {
+        (id, left, top ) => {
             setCanvas(
                 update(canvasItems, {
                     [id]: {
                         $merge: {left, top}
                     },
-                })
+                }),
             )
         },
         [canvasItems],
@@ -74,12 +59,12 @@ export const Canvas = ({ snapToGrid, tab, projectKey, testKey }) => {
 
             if (monitor.getItemType() === ATOM) {
                 console.log("Existing atom dragged.")
-                updateItem(item.id, left, top, projectKey, testKey)
+                updateItem(item.id, left, top)
             }
 
             if (monitor.getItemType() === ATOM_SOURCE) {
                 console.log("New atom dragged.")
-                addNewItem(left, top, projectKey, testKey, item.sourceAtomKey)
+                addNewItem(item, left, top)
             }
             console.log(canvasItems);
 
@@ -88,22 +73,13 @@ export const Canvas = ({ snapToGrid, tab, projectKey, testKey }) => {
         [updateItem, addNewItem],
     )
 
-    const checkState = () => {
-        console.log("STATE: ")
-        Object.entries(canvasItems).map(([key, value]) => (
-          console.log(key, value["sourceAtomKey"])
-        ))
-    }
-
-    checkState()
-
     return (
         <div ref={drop} className={"canvas"}>
-            {Object.entries(canvasItems).map(([key, value]) => (
-                <Atom key={key} id={key} projectKey={projectKey} sourceAtomKey={value["sourceAtomKey"]} {...canvasItems[key]} />
+            {Object.keys(canvasItems).map((key) => (
+                <Atom key={key} id={key} {...canvasItems[key]} />
             ))}
         </div>
     )
 }
 
-export default Canvas;
+export default DemoCanvas;

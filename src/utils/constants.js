@@ -16,8 +16,16 @@ module.exports = {
     CREATE_NEW_PROJECT: 'create-new-project',
     GET_HOME_DIRECTORY: 'get-home-directory',
     CREATE_NEW_TEST: 'create-new-test',
+    SET_ATOM_COLOR: 'set-atom-color',
+    GET_ATOM_COLOR: 'get-atom-color',
+    SET_ATOM_LABEL: 'set-atom-label',
+    GET_ATOM_LABEL: 'get-atom-label',
 
 
     // UI VARIABLES
-    SIDEBAR_WIDTH: 500
+    SIDEBAR_WIDTH: 500,
+
+    // ITEM TYPES
+    ATOM: 'Atom',
+    ATOM_SOURCE: 'AtomSource'
 }

@@ -12,7 +12,7 @@ import {
     UnstyledButton
 } from "@mantine/core";
 import {useState} from "react";
-import {AtomSource} from "../AtomSource";
+import {AtomSource} from "../atoms/AtomSource";
 import {v4 as uuidv4} from "uuid";
 import {useEffect} from "react";
 import React from "react";

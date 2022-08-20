@@ -16,7 +16,10 @@ const { FETCH_DATA_FROM_STORAGE, HANDLE_FETCH_DATA,
     SELECT_FILE,
     CREATE_NEW_PROJECT,
     GET_HOME_DIRECTORY,
-    CREATE_NEW_TEST
+    CREATE_NEW_TEST,
+    GET_ATOM_COLOR,
+    GET_ATOM_LABEL,
+    SET_ATOM_COLOR
 } = require("../src/utils/constants")
 
 let itemsToTrack;
@@ -94,20 +97,26 @@ function createNewFolder(folder) {
     }
 }
 
+function setColorArray() {
+    let colorArray = ["#FFA94D", "#FFD43B", "#A9E34B", "#69DB7C", "#38D9A9", "#3BC9DB", "#4DABF7", "#748FFC", "#9775FA", "#DA77F2", "#F783AC", "#FF8787"]
+}
+
 function storeAtomData(filePath, projectKey) {
     console.log("Getting atom data from springBoot api")
     // Mantine colors at value '4'
-    let colors = ["#FFA94D", "#FFD43B", "#A9E34B", "#69DB7C", "#38D9A9", "#3BC9DB", "#4DABF7", "#748FFC", "#9775FA", "#DA77F2", "#F783AC", "#FF8787"]
-    let atomData = [];
+
+    // TODO: If colors list is empty, (ie, more than 12 atom types), reshuffle colors array using setColorArray()
+    const colors = ["#FFA94D", "#FFD43B", "#A9E34B", "#69DB7C", "#38D9A9", "#3BC9DB", "#4DABF7", "#748FFC", "#9775FA", "#DA77F2", "#F783AC", "#FF8787"]
+    let atomData = {};
     try {
         const apiRequest = axios.post("http://localhost:8080/files",null, {params: {"filePath": filePath}})
         apiRequest.then(data => {
             if (data.data) {
                 for (const atom in data.data["atoms"]) {
-                    let selectedColor = colors.splice(Math.floor(Math.random() * colors.length), 1);
+                    let selectedColor = colors.splice(Math.floor(Math.random() * colors.length), 1)[0];
                     console.log(selectedColor)
                     data.data["atoms"][atom]["color"] = selectedColor
-                    atomData.push(data.data["atoms"][atom]);
+                    atomData[uuidv4()] = data.data["atoms"][atom]
                 }
             }
         }).then( () => {
@@ -175,9 +184,8 @@ ipcMain.on(FETCH_DATA_FROM_STORAGE, (event, message) => {
 });
 
 ipcMain.on(SAVE_CANVAS_STATE, (event, canvasItems, projectKey, testKey) => {
-
     console.log("Main Received: SAVE_CANVAS_STATE with: ", canvasItems, projectKey, testKey);
-    store.set(`${projectKey}.tests.${testKey}.canvas`, canvasItems);
+    store.set(`projects.${projectKey}.tests.${testKey}.canvas`, canvasItems);
 
 })
 
@@ -185,7 +193,8 @@ ipcMain.on(LOAD_CANVAS_STATE, (event, projectKey, testKey) => {
     console.log("Main Received: LOAD_CANVAS_STATE with: ", projectKey, testKey)
 
     // Send canvas state back to ipcRenderer via api.
-    let canvasState = store.get(`${projectKey}.tests.${testKey}.canvas`)
+    let canvasState = store.get(`projects.${projectKey}.tests.${testKey}.canvas`)
+    console.log(canvasState)
     event.sender.send('loaded-canvas-state', canvasState ? canvasState : {})
 })
 
@@ -326,4 +335,20 @@ ipcMain.on(CREATE_NEW_TEST, (event, projectKey, testName) => {
     store.set(`projects.${projectKey}.tests.${testID}`, newTest);
 
     event.sender.send('created-new-test', newTest)
+})
+ipcMain.on(GET_ATOM_COLOR, (event, projectKey, atomSourceKey, returnChannel) => {
+    console.log("MAIN RECEIVED: GET_ATOM_COLOR WITH:", atomSourceKey)
+    let loadedColor = store.get(`projects.${projectKey}.atoms.${atomSourceKey}.color`);
+    console.log(loadedColor)
+    event.sender.send(returnChannel, loadedColor)
+})
+
+ipcMain.on(SET_ATOM_COLOR, (event, projectKey, atomKey, atomColor) => {
+    console.log("MAIN RECEIVED: SET_ATOM_COLOR WITH:", atomColor)
+    store.set(`projects.${projectKey}.atoms.${atomKey}.color`, atomColor)
+})
+
+ipcMain.on(GET_ATOM_LABEL, (event, projectKey, atomKey, returnChannel) => {
+    let atomLabel = store.get(`projects.${projectKey}.atoms.${atomKey}.label`)
+    event.sender.send(returnChannel, atomLabel ? atomLabel : "No Label")
 })

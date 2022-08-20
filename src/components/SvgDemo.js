@@ -1,29 +1,27 @@
-import {Box, Container, Group, Text} from "@mantine/core";
+import React from 'react';
+import {Group} from "@mantine/core";
 import TestPlayBtn from "./TestPlayBtn";
 import TestSettingsBtn from "./TestSettingsBtn";
-import {useState} from "react";
-import {useDrop} from "react-dnd";
-import Atom from "./atoms/AtomSource";
 import TestSaveBtn from "./TestSaveBtn";
-import {CustomDragLayer} from "./CustomDragLayer";
 import Canvas from "./Canvas";
+import {CustomDragLayer} from "./CustomDragLayer";
+import DemoCanvas from "./DemoCanvas";
 
-function TabContent ({tab, projectKey, testKey}) {
+function SvgDemo(props) {
 
     return (
         <div style={{height: "100%"}}>
             <Group pb={"xs"}>
                 <TestPlayBtn />
-                <TestSettingsBtn tab={tab} />
                 <TestSaveBtn />
             </Group>
 
             <div className={"canvasContainer"}>
-                <Canvas projectKey={projectKey} testKey={testKey} tab={tab}/>
+                <DemoCanvas />
             </div>
             <CustomDragLayer />
         </div>
     );
 }
 
-export default TabContent;
+export default SvgDemo;

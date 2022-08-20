@@ -1,7 +1,7 @@
 import {useDragLayer} from 'react-dnd'
-import { ItemTypes } from './ItemTypes.js'
+import { ATOM, ATOM_SOURCE } from '../utils/constants'
 import { snapToGrid } from './SnapToGrid.js'
-import {Atom} from "./Atom";
+import {Atom} from "./atoms/Atom";
 
 const layerStyles = {
     position: 'fixed',
@@ -43,11 +43,11 @@ export const CustomDragLayer = (props) => {
 
     const renderItem = () => {
         switch (itemType) {
-            case ItemTypes.ATOM:
+            case ATOM:
                 return (
                     <Atom id={item.id} title={item.title} color={item.color} />
                 );
-            case ItemTypes.ATOM_SOURCE:
+            case ATOM_SOURCE:
                 return (
                     <Atom id={item.id} title={item.title} color={item.color} />
                 );

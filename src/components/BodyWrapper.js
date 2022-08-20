@@ -6,8 +6,7 @@ import TabContent from "./TabContent";
 import {useState} from "react";
 import {useId} from "@mantine/hooks";
 import {CustomDragLayer} from "./CustomDragLayer";
-
-
+import SvgDemo from "./SvgDemo";
 
 function BodyWrapper({tabs, setTabs, projectKey}) {
 
@@ -15,13 +14,11 @@ function BodyWrapper({tabs, setTabs, projectKey}) {
 
     function updateTab(index) {
 
-        if (index === tabs.length) {
-            //newTab();
-        }
-        else {
+        // if (index === tabs.length) {
+        //     //newTab();
+        // }
             setActiveTab(index)
             tabs[index].active = true;
-        }
     }
 
     function closeTab(e) {
@@ -63,6 +60,12 @@ function BodyWrapper({tabs, setTabs, projectKey}) {
                     {/*<ActionIcon mx={"sm"} variant={"transparent"} onClick={newTab}>*/}
                     {/*    <Plus size={16}/>*/}
                     {/*</ActionIcon>*/}
+                    <Tabs.Tab
+                        index={10}
+                        label={<Group> SVG Demo <CloseButton onClick={closeTab}/> </Group>}
+                        icon={<ChartDots3 size={16} />} >
+                        <SvgDemo />
+                    </Tabs.Tab>
                 </Tabs>
             </>
         );

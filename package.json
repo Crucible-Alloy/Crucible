@@ -7,6 +7,7 @@
   "dependencies": {
     "@mantine/core": "^4.2.11",
     "@mantine/hooks": "^4.2.11",
+    "@tabler/icons": "^1.82.0",
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^13.3.0",
     "@testing-library/user-event": "^13.5.0",
@@ -22,9 +23,12 @@
     "react-dnd": "^16.0.1",
     "react-dnd-html5-backend": "^16.0.1",
     "react-dom": "^18.2.0",
+    "react-draggable": "^4.4.5",
     "react-router-dom": "^6.3.0",
     "react-scripts": "5.0.1",
-    "tabler-icons-react": "^1.51.0",
+    "react-svg-connector": "^1.0.9",
+    "react-xarrows": "^2.0.2",
+    "tabler-icons-react": "^1.54.0",
     "tree-kill": "^1.2.2",
     "uuid": "^8.3.2",
     "web-vitals": "^2.1.4"
