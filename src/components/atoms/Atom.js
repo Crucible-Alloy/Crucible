@@ -4,6 +4,8 @@ import { getEmptyImage } from 'react-dnd-html5-backend'
 import { ATOM } from '../../utils/constants'
 import {Group, Paper, Text} from "@mantine/core";
 import {CodePlus} from "tabler-icons-react";
+import {AtomOutPort} from "./AtomOutPort";
+import {AtomInPort} from "./AtomInPort";
 const { v4: uuidv4 } = require('uuid');
 
 function getStyles(left, top, isDragging) {
@@ -18,7 +20,7 @@ function getStyles(left, top, isDragging) {
         height: isDragging ? 0 : '',
     }
 }
-export function Atom({ id, left, top, sourceAtomKey, projectKey,}) {
+export function Atom({ id, left, top, sourceAtomKey, projectKey, testKey}) {
     const outPort = useRef();
     const inPort = useRef();
 
@@ -66,6 +68,7 @@ export function Atom({ id, left, top, sourceAtomKey, projectKey,}) {
             ref={drag}
             style={getStyles(left, top, isDragging)}
             role="DraggableBox"
+            id={id}
         >
             <Paper
                 ref={drag}
@@ -80,38 +83,10 @@ export function Atom({ id, left, top, sourceAtomKey, projectKey,}) {
                     width: 200,
                 })}
             >
-                <Group cen>
-                    <Paper
-                        ref={inPort}
-                        sx={(theme) => ({
-                            position: "absolute",
-                            top: "36%",
-                            left: "-4%",
-                            height: "24px",
-                            width: "24px",
-                            borderRadius: "100%",
-                            border: `solid 6px ${atomColor}`,
-                            backgroundColor: theme.colors.dark[5],
-                        })}/>
-                    <Text float={"left"} color={atomColor} size={"xl"} weight={"800"}> {atomLabel} <CodePlus/> </Text>
-                    <Paper
-                        ref={outPort}
-                        className={"connectPoint"}
-                        sx={(theme) => ({
-                            position: "absolute",
-                            top: "36%",
-                            left: "92%",
-                            height: "24px",
-                            width: "24px",
-                            borderRadius: "100%",
-                            border: `solid 6px ${atomColor}`,
-                            backgroundColor: theme.colors.dark[5],
-
-                            '&:hover': {
-                                backgroundColor: `${atomColor}`
-                            }
-
-                        })}> </Paper>
+                <Group>
+                    <AtomInPort projectKey={projectKey} testKey={testKey} atomColor={atomColor} atomId={id} />
+                    <Text align={"center"} color={atomColor} size={"xl"} weight={"800"}> {atomLabel} </Text>
+                    <AtomOutPort atomId={id} atomColor={atomColor} />
                 </Group>
 
             </Paper>

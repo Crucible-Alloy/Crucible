@@ -19,7 +19,8 @@ const { FETCH_DATA_FROM_STORAGE, HANDLE_FETCH_DATA,
     CREATE_NEW_TEST,
     GET_ATOM_COLOR,
     GET_ATOM_LABEL,
-    SET_ATOM_COLOR
+    SET_ATOM_COLOR,
+    MAKE_CONNECTION
 } = require("../src/utils/constants")
 
 let itemsToTrack;
@@ -329,7 +330,10 @@ ipcMain.on(CREATE_NEW_TEST, (event, projectKey, testName) => {
 
     let newTest = {"name": testName,
                    "testFile": testFilePath,
-                   "canvas": {}}
+                   "canvas": {
+                        "atoms": {},
+                        "connections": {}
+                   }}
 
     let testID = uuidv4()
     store.set(`projects.${projectKey}.tests.${testID}`, newTest);
@@ -351,4 +355,11 @@ ipcMain.on(SET_ATOM_COLOR, (event, projectKey, atomKey, atomColor) => {
 ipcMain.on(GET_ATOM_LABEL, (event, projectKey, atomKey, returnChannel) => {
     let atomLabel = store.get(`projects.${projectKey}.atoms.${atomKey}.label`)
     event.sender.send(returnChannel, atomLabel ? atomLabel : "No Label")
+})
+
+ipcMain.on(MAKE_CONNECTION, (event, projectKey, testKey, fromAtom, toAtom) => {
+    let connectionId = uuidv4()
+    let connection = {from: fromAtom, to: toAtom}
+
+    store.set(`projects.${projectKey}.tests.${testKey}.canvas.connections.${connectionId}`, connection)
 })

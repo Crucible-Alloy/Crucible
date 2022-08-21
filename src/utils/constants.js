@@ -20,6 +20,7 @@ module.exports = {
     GET_ATOM_COLOR: 'get-atom-color',
     SET_ATOM_LABEL: 'set-atom-label',
     GET_ATOM_LABEL: 'get-atom-label',
+    MAKE_CONNECTION: 'make-connection',
 
 
     // UI VARIABLES
@@ -27,5 +28,6 @@ module.exports = {
 
     // ITEM TYPES
     ATOM: 'Atom',
-    ATOM_SOURCE: 'AtomSource'
+    ATOM_SOURCE: 'AtomSource',
+    CONNECTION: 'Connection'
 }

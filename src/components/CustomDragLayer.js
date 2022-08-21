@@ -1,7 +1,10 @@
 import {useDragLayer} from 'react-dnd'
-import { ATOM, ATOM_SOURCE } from '../utils/constants'
+import {ATOM, ATOM_SOURCE, CONNECTION} from '../utils/constants'
 import { snapToGrid } from './SnapToGrid.js'
 import {Atom} from "./atoms/Atom";
+import {Text} from "@mantine/core";
+import Xarrow from "react-xarrows";
+import {useRef, useState} from "react";
 
 const layerStyles = {
     position: 'fixed',
@@ -42,6 +45,7 @@ export const CustomDragLayer = (props) => {
         }))
 
     const renderItem = () => {
+
         switch (itemType) {
             case ATOM:
                 return (
@@ -51,6 +55,12 @@ export const CustomDragLayer = (props) => {
                 return (
                     <Atom id={item.id} title={item.title} color={item.color} />
                 );
+            case CONNECTION:
+                return (
+                    <Xarrow start={item.atomId} end={item.outPort}/>
+                )
+
+
             default:
                 return null;
         }
@@ -60,11 +70,19 @@ export const CustomDragLayer = (props) => {
         return null;
     }
 
+    // if (isDragging && (itemType === CONNECTION)) {
+    //     return (
+    //         <div style={layerStyles}>
+    //             <div style={getItemStyles(initialOffset, currentOffset, false)} >
+    //                 <Xarrow start={item.atomId} end={item.outPort}/>
+    //             </div>
+    //         </div>
+    //     )
+    // }
+
     return (
         <div style={layerStyles}>
-            <div
-                style={getItemStyles(initialOffset, currentOffset, false)}
-            >
+            <div style={getItemStyles(initialOffset, currentOffset, false)}>
                 {renderItem()}
             </div>
         </div>

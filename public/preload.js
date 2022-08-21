@@ -11,11 +11,13 @@ const {SAVE_CANVAS_STATE, LOAD_CANVAS_STATE, UPDATE_PROJECT_FILE, GET_PROJECT_FI
     SET_ATOM_COLOR,
     GET_ATOM_COLOR,
     GET_ATOM_LABEL,
-    SET_ATOM_LABEL
+    SET_ATOM_LABEL,
+    MAKE_CONNECTION
 } = require("../src/utils/constants");
 
 contextBridge.exposeInMainWorld('electronAPI', {
     saveCanvasState: (canvasItems, projectKey, testKey) => ipcRenderer.send(SAVE_CANVAS_STATE, canvasItems, projectKey, testKey),
+
     loadCanvasState: (projectKey, testKey) => {
         console.log("API received LOAD_CANVAS_STATE from tab ", testKey)
         ipcRenderer.send(LOAD_CANVAS_STATE, projectKey, testKey)
@@ -24,6 +26,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
             ipcRenderer.once('loaded-canvas-state', (event, canvasState) => resolve(canvasState))
         })
     },
+
     getProjects: () => {
       ipcRenderer.send(GET_PROJECTS)
 
@@ -31,6 +34,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
           ipcRenderer.once('get-projects-success', (event, projects) => resolve(projects))
       })
     },
+
     getProjectFile: (projectKey) => {
         ipcRenderer.send(GET_PROJECT_FILE, projectKey)
 
@@ -38,12 +42,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
             ipcRenderer.once('got-project-file', (event, filePath) => resolve(filePath))
         })
     },
+
     updateProjectFile: (projectKey) => {
         ipcRenderer.send(UPDATE_PROJECT_FILE, projectKey)
         return new Promise( (resolve) => {
             ipcRenderer.once('project-file-set', (event, filePath) => resolve(filePath))
         })
     },
+
     getAtoms: (projectKey) => {
         ipcRenderer.send(GET_ATOMS, projectKey)
 
@@ -52,6 +58,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
             ipcRenderer.once('got-atoms', (event, atoms) => resolve(atoms))
         })
     },
+
     getTests: (projectKey) => {
         ipcRenderer.send(GET_TESTS, projectKey)
 
@@ -59,6 +66,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
             ipcRenderer.once('got-tests', (event, tests) => resolve(tests))
         })
     },
+
     selectFile: () => {
         ipcRenderer.send(SELECT_FILE)
 
@@ -66,20 +74,25 @@ contextBridge.exposeInMainWorld('electronAPI', {
             ipcRenderer.once('file-selected', (event, filePath) => resolve(filePath))
         })
     },
+
     createNewProject: (alloyFile, projectName, projectDirectory) => { ipcRenderer.send(CREATE_NEW_PROJECT, alloyFile, projectName, projectDirectory) },
+
     openProject: (projectKey) => { ipcRenderer.send(OPEN_PROJECT, projectKey) },
+
     getHomeDirectory: () => {
         ipcRenderer.send(GET_HOME_DIRECTORY)
         return new Promise((resolve) => {
             ipcRenderer.once('got-home-directory', (event, homedir) => resolve(homedir))
         });
     },
+
     createNewTest: (projectKey, testName) => {
         ipcRenderer.send(CREATE_NEW_TEST, projectKey, testName)
         return new Promise((resolve) => {
             ipcRenderer.once('created-new-test', (event, test) => resolve(test))
         })
     },
+
     getAtomColor: (projectKey, atomSourceKey) => {
         let returnChannel = uuidv4();
         ipcRenderer.send(GET_ATOM_COLOR, projectKey, atomSourceKey, returnChannel)
@@ -103,4 +116,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     setAtomLabel: (projectKey, atomKey, atomLabel) => {
         ipcRenderer.send(SET_ATOM_LABEL, projectKey, atomKey, atomLabel)
     },
+
+    makeConnection: (projectKey, testKey, fromAtom, toAtom) => {
+        ipcRenderer.send(MAKE_CONNECTION, projectKey, testKey, fromAtom, toAtom)
+    }
 })

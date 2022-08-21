@@ -5,6 +5,7 @@ import {useDrop} from "react-dnd";
 import {ATOM, ATOM_SOURCE} from "../utils/constants";
 import {snapToGrid as doSnapToGrid} from "./SnapToGrid";
 import {v4 as uuidv4} from "uuid";
+import Xarrow from "react-xarrows";
 
 const styles = {
     width: 300,
@@ -15,7 +16,7 @@ const styles = {
 
 export const Canvas = ({ snapToGrid, tab, projectKey, testKey }) => {
 
-    const [canvasItems, setCanvas] = useState({});
+    const [canvasItems, setCanvas] = useState({"atoms": {}, "connections": {}});
 
     // Load canvasState from ipcMain
     useEffect(() => {
@@ -28,10 +29,11 @@ export const Canvas = ({ snapToGrid, tab, projectKey, testKey }) => {
         saveCanvasState(canvasItems, projectKey, testKey)
     }, [canvasItems])
 
-    const addNewItem = (left, top, projectKey, testKey, sourceAtomKey) => {
+    const addNewAtom = (left, top, projectKey, testKey, sourceAtomKey) => {
         setCanvas(
-            update(canvasItems, {
-                $merge: {[uuidv4()]: {top: top, left: left, sourceAtomKey: sourceAtomKey, connections: {} }}
+            update(canvasItems, { "atoms": {
+                    $merge: {[uuidv4()]: {top: top, left: left, sourceAtomKey: sourceAtomKey}}
+                }
             })
         )
     }
@@ -44,13 +46,14 @@ export const Canvas = ({ snapToGrid, tab, projectKey, testKey }) => {
     );
 
 
-    const updateItem = useCallback(
+    const updateAtom = useCallback(
         (id, left, top) => {
             setCanvas(
-                update(canvasItems, {
-                    [id]: {
-                        $merge: {left, top}
-                    },
+                update(canvasItems, { "atoms": {
+                        [id]: {
+                            $merge: {left, top}
+                        },
+                    }
                 })
             )
         },
@@ -64,8 +67,6 @@ export const Canvas = ({ snapToGrid, tab, projectKey, testKey }) => {
             const delta = monitor.getDifferenceFromInitialOffset()
             let left = Math.round(item.left + delta.x)
             let top = Math.round(item.top + delta.y)
-            console.log(monitor.getItemType())
-            console.log(item)
             console.log(top);
 
             if (snapToGrid) {
@@ -74,18 +75,18 @@ export const Canvas = ({ snapToGrid, tab, projectKey, testKey }) => {
 
             if (monitor.getItemType() === ATOM) {
                 console.log("Existing atom dragged.")
-                updateItem(item.id, left, top, projectKey, testKey)
+                updateAtom(item.id, left, top)
             }
 
             if (monitor.getItemType() === ATOM_SOURCE) {
                 console.log("New atom dragged.")
-                addNewItem(left, top, projectKey, testKey, item.sourceAtomKey)
+                addNewAtom(left, top, projectKey, testKey, item.sourceAtomKey)
             }
             console.log(canvasItems);
 
             return undefined
         },}),
-        [updateItem, addNewItem],
+        [updateAtom, addNewAtom],
     )
 
     const checkState = () => {
@@ -95,12 +96,15 @@ export const Canvas = ({ snapToGrid, tab, projectKey, testKey }) => {
         ))
     }
 
-    checkState()
+    //checkState()
 
     return (
         <div ref={drop} className={"canvas"}>
-            {Object.entries(canvasItems).map(([key, value]) => (
-                <Atom key={key} id={key} projectKey={projectKey} sourceAtomKey={value["sourceAtomKey"]} {...canvasItems[key]} />
+            {Object.entries(canvasItems["atoms"]).map(([key, value]) => (
+                <Atom key={key} id={key} projectKey={projectKey} testKey={testKey} sourceAtomKey={value["sourceAtomKey"]} {...canvasItems["atoms"][key]} />
+            ))}
+            {Object.entries(canvasItems["connections"]).map(([key, value]) => (
+                <Xarrow start={value["from"]} end={value["to"]} />
             ))}
         </div>
     )
