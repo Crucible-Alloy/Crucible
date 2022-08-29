@@ -1,6 +1,6 @@
 
 const path = require('path');
-const {app, BrowserWindow, ipcMain, dialog, net} = require('electron');
+const {app, BrowserWindow, ipcMain, dialog, net, Menu} = require('electron');
 const {v4: uuidv4} = require("uuid");
 const axios = require('axios');
 const homedir = require('os').homedir();
@@ -31,10 +31,122 @@ let store = new Store();
 
 const isDev = true;
 let springAPI;
+let isMac = true;
 
 // if (require("electron-is-dev")) {
 //     app.quit();
 // }
+
+function createASketchMenu() {
+    const template = [
+        // { role: 'appMenu' }
+        ...(isMac ? [{
+            label: app.name,
+            submenu: [
+                { role: 'about' },
+                { type: 'separator' },
+                { role: 'services' },
+                { type: 'separator' },
+                { role: 'hide' },
+                { role: 'hideOthers' },
+                { role: 'unhide' },
+                { type: 'separator' },
+                { role: 'quit' }
+            ]
+        }] : []),
+        // { role: 'fileMenu' }
+        {
+            label: 'File',
+            submenu: [
+                {
+                    label: 'Open Project',
+                    click: async () => {
+                        if (mainWindow) {
+                           //
+                        }
+                        createProjectSelectWindow();
+                    },
+                },
+                isMac ? { role: 'close' } : { role: 'quit' }
+            ]
+        },
+        // { role: 'editMenu' }
+        {
+            label: 'Edit',
+            submenu: [
+                { role: 'undo' },
+                { role: 'redo' },
+                { type: 'separator' },
+                { role: 'cut' },
+                { role: 'copy' },
+                { role: 'paste' },
+                ...(isMac ? [
+                    { role: 'pasteAndMatchStyle' },
+                    { role: 'delete' },
+                    { role: 'selectAll' },
+                    { type: 'separator' },
+                    {
+                        label: 'Speech',
+                        submenu: [
+                            { role: 'startSpeaking' },
+                            { role: 'stopSpeaking' }
+                        ]
+                    }
+                ] : [
+                    { role: 'delete' },
+                    { type: 'separator' },
+                    { role: 'selectAll' }
+                ])
+            ]
+        },
+        // { role: 'viewMenu' }
+        {
+            label: 'View',
+            submenu: [
+                { role: 'reload' },
+                { role: 'forceReload' },
+                { role: 'toggleDevTools' },
+                { type: 'separator' },
+                { role: 'resetZoom' },
+                { role: 'zoomIn' },
+                { role: 'zoomOut' },
+                { type: 'separator' },
+                { role: 'togglefullscreen' }
+            ]
+        },
+        // { role: 'windowMenu' }
+        {
+            label: 'Window',
+            submenu: [
+                { role: 'minimize' },
+                { role: 'zoom' },
+                ...(isMac ? [
+                    { type: 'separator' },
+                    { role: 'front' },
+                    { type: 'separator' },
+                    { role: 'window' }
+                ] : [
+                    { role: 'close' }
+                ])
+            ]
+        },
+        {
+            role: 'help',
+            submenu: [
+                {
+                    label: 'Learn More',
+                    click: async () => {
+                        const { shell } = require('electron')
+                        await shell.openExternal('https://electronjs.org')
+                    }
+                }
+            ]
+        }
+    ]
+
+    const menu = Menu.buildFromTemplate(template)
+    Menu.setApplicationMenu(menu)
+}
 
 function createProjectSelectWindow() {
 
@@ -135,6 +247,7 @@ function storeAtomData(filePath, projectKey) {
 app.whenReady().then(() => {
 
     //createMainWindow("test-project");
+    createASketchMenu();
     createProjectSelectWindow();
 
     const jarPath = `${path.join(__dirname, '../src/JARs/aSketch-API.jar')}`;

@@ -3,7 +3,7 @@ import {Atom} from "./atoms/Atom";
 import {useCallback, useEffect, useState} from "react";
 import {useDrop} from "react-dnd";
 import {ATOM, ATOM_SOURCE} from "../utils/constants";
-import {snapToGrid as doSnapToGrid} from "./SnapToGrid";
+import {snapToGrid as doSnapToGrid} from "./examples/SnapToGrid";
 import {v4 as uuidv4} from "uuid";
 
 const styles = {

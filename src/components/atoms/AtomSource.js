@@ -53,7 +53,7 @@ export function AtomSource({ id, label, left, top, atom, sourceAtomKey, projectK
 
     const [{isDragging}, drag, preview] = useDrag(() => ({
             type: ATOM_SOURCE,
-            item: {id, left, top, label, sourceAtomKey, },
+            item: {id, left, top, label, sourceAtomKey, projectKey},
             collect: (monitor) => ({
                 isDragging: monitor.isDragging(),
             })

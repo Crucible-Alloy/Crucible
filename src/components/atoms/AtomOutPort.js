@@ -19,20 +19,22 @@ function getStyles(left, top, isDragging) {
     }
 }
 export function AtomOutPort({ atomId, atomColor,}) {
-    const outPort = useRef();
+    const portId = uuidv4();
 
     const [position, setPosition] = useState({});
 
     const [{isDragging}, drag, preview] = useDrag(
         () => ({
             type: CONNECTION,
-            item: {atomId, outPort},
+            item: {portId, atomId},
             collect: (monitor) => ({
                 isDragging: monitor.isDragging(),
+                offset: monitor.getClientOffset(),
             }),
         }),
         [atomId],
     )
+
     useEffect(() => {
         preview(getEmptyImage(), {captureDraggingState: true})
     }, [])
@@ -40,11 +42,11 @@ export function AtomOutPort({ atomId, atomColor,}) {
     return (
         <div
             ref={drag}
+            id={portId}
             style={getStyles(isDragging)}
             role="ConnectionArrow"
         >
                     <Paper
-                        ref={outPort}
                         className={"connectPoint"}
                         sx={(theme) => ({
                             position: "absolute",

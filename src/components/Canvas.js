@@ -3,16 +3,9 @@ import {Atom} from "./atoms/Atom";
 import {useCallback, useEffect, useState} from "react";
 import {useDrop} from "react-dnd";
 import {ATOM, ATOM_SOURCE} from "../utils/constants";
-import {snapToGrid as doSnapToGrid} from "./SnapToGrid";
+import {snapToGrid as doSnapToGrid} from "./examples/SnapToGrid";
 import {v4 as uuidv4} from "uuid";
 import Xarrow from "react-xarrows";
-
-const styles = {
-    width: 300,
-    height: 300,
-    border: '1px solid black',
-    position: 'relative',
-}
 
 export const Canvas = ({ snapToGrid, tab, projectKey, testKey }) => {
 
@@ -44,7 +37,6 @@ export const Canvas = ({ snapToGrid, tab, projectKey, testKey }) => {
         },
         [canvasItems],
     );
-
 
     const updateAtom = useCallback(
         (id, left, top) => {

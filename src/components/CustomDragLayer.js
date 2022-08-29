@@ -1,10 +1,11 @@
 import {useDragLayer} from 'react-dnd'
 import {ATOM, ATOM_SOURCE, CONNECTION} from '../utils/constants'
-import { snapToGrid } from './SnapToGrid.js'
+import { snapToGrid } from './examples/SnapToGrid.js'
 import {Atom} from "./atoms/Atom";
 import {Text} from "@mantine/core";
 import Xarrow from "react-xarrows";
-import {useRef, useState} from "react";
+import {useEffect, useRef, useState} from "react";
+import * as PropTypes from "prop-types";
 
 const layerStyles = {
     position: 'fixed',
@@ -16,16 +17,25 @@ const layerStyles = {
     height: '100%',
 }
 
-function getItemStyles(initialOffset, currentOffset, isSnapToGrid) {
+function getItemStyles(item, initialOffset, currentOffset, delta,) {
 
     let { x, y } = currentOffset
-    if (isSnapToGrid) {
-        x -= initialOffset.x
-        y -= initialOffset.y
-        ;[x, y] = snapToGrid(x, y)
-        x += initialOffset.x
-        y += initialOffset.y
-    }
+
+    let left = Math.round(item.left + delta.x)
+    let top = Math.round(item.top + delta.y)
+
+    // Translate mainWindow coordinates (dragLayer) to canvas coordinates
+    let translated_x = x * (1600 / 1000)
+    let translated_y = y * (900 / 600)
+
+    // if (isSnapToGrid) {
+    //     x -= initialOffset.x
+    //     y -= initialOffset.y
+    //     ;[x, y] = snapToGrid(x, y)
+    //     x += initialOffset.x
+    //     y += initialOffset.y
+    // }
+
     const transform = `translate(${x}px, ${y}px)`
     return {
         transform,
@@ -35,11 +45,12 @@ function getItemStyles(initialOffset, currentOffset, isSnapToGrid) {
 
 export const CustomDragLayer = (props) => {
 
-    const { itemType, isDragging, item, initialOffset, currentOffset } =
+    const { itemType, isDragging, item, initialOffset, currentOffset, delta } =
         useDragLayer((monitor) => ({
             item: monitor.getItem(),
             itemType: monitor.getItemType(),
             initialOffset: monitor.getInitialSourceClientOffset(),
+            delta: monitor.getDifferenceFromInitialOffset(),
             currentOffset: monitor.getSourceClientOffset(),
             isDragging: monitor.isDragging(),
         }))
@@ -49,15 +60,17 @@ export const CustomDragLayer = (props) => {
         switch (itemType) {
             case ATOM:
                 return (
-                    <Atom id={item.id} title={item.title} color={item.color} />
+                    <Atom id={item.id} left={item.left} top={item.top} sourceAtomKey={item.sourceAtomKey} projectKey={item.projectKey} testKey={item.testKey} />
                 );
             case ATOM_SOURCE:
                 return (
-                    <Atom id={item.id} title={item.title} color={item.color} />
+                    <Atom id={item.id} left={item.left} top={item.top} sourceAtomKey={item.sourceAtomKey} projectKey={item.projectKey} testKey={item.testKey} />
                 );
             case CONNECTION:
                 return (
-                    <Xarrow start={item.atomId} end={item.outPort}/>
+                    <>
+                        <Xarrow start={item.atomId} end={item.__id}/>
+                    </>
                 )
 
 
@@ -82,7 +95,7 @@ export const CustomDragLayer = (props) => {
 
     return (
         <div style={layerStyles}>
-            <div style={getItemStyles(initialOffset, currentOffset, false)}>
+            <div style={getItemStyles(item, initialOffset, currentOffset, delta)}>
                 {renderItem()}
             </div>
         </div>

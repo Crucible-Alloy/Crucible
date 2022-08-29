@@ -1,9 +1,6 @@
-import {Box, Container, Group, Text} from "@mantine/core";
+import {Group} from "@mantine/core";
 import TestPlayBtn from "./TestPlayBtn";
 import TestSettingsBtn from "./TestSettingsBtn";
-import {useState} from "react";
-import {useDrop} from "react-dnd";
-import Atom from "./atoms/AtomSource";
 import TestSaveBtn from "./TestSaveBtn";
 import {CustomDragLayer} from "./CustomDragLayer";
 import Canvas from "./Canvas";
@@ -20,8 +17,9 @@ function TabContent ({tab, projectKey, testKey}) {
 
             <div className={"canvasContainer"}>
                 <Canvas projectKey={projectKey} testKey={testKey} tab={tab}/>
+                <CustomDragLayer />
             </div>
-            <CustomDragLayer />
+
         </div>
     );
 }

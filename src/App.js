@@ -7,30 +7,14 @@ import {useViewportSize} from "@mantine/hooks";
 import { useState } from "react";
 import {DndProvider} from "react-dnd";
 import {HTML5Backend} from "react-dnd-html5-backend";
-import {DragDrop} from "tabler-icons-react";
-import {HANDLE_FETCH_DATA, HANDLE_SAVE_DATA, SIDEBAR_WIDTH} from "./utils/constants";
+import {SIDEBAR_WIDTH} from "./utils/constants";
 import {useParams} from "react-router-dom";
-import {useEffect} from "react";
 
 function App() {
     const { viewHeight, viewWidth } = useViewportSize();
     const { projectKey } = useParams();
     // State for canvas tabs
-    const [tabs, setTabs] = useState([
-
-        // {
-        //     key: 2,
-        //     title: "Test 2",
-        //     active: false
-        // }
-    ]);
-
-    // TODO: Refactor how tabs are loaded from project tests
-    // useEffect(() => {
-    //     window.electronAPI.getTests(projectKey).then(tests => {
-    //         setTabs(tests)
-    //     })
-    // }, );
+    const [tabs, setTabs] = useState([]);
 
 
     const headerHeight = 60;
