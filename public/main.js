@@ -20,12 +20,14 @@ const { FETCH_DATA_FROM_STORAGE, HANDLE_FETCH_DATA,
     GET_ATOM_COLOR,
     GET_ATOM_LABEL,
     SET_ATOM_COLOR,
-    MAKE_CONNECTION
+    MAKE_CONNECTION,
+    DELETE_ATOM
 } = require("../src/utils/constants")
 
 let itemsToTrack;
 
 const Store = require('electron-store');
+const Connector = require("../src/components/atoms/Connector");
 
 let store = new Store();
 
@@ -468,6 +470,21 @@ ipcMain.on(SET_ATOM_COLOR, (event, projectKey, atomKey, atomColor) => {
 ipcMain.on(GET_ATOM_LABEL, (event, projectKey, atomKey, returnChannel) => {
     let atomLabel = store.get(`projects.${projectKey}.atoms.${atomKey}.label`)
     event.sender.send(returnChannel, atomLabel ? atomLabel : "No Label")
+})
+
+ipcMain.on(DELETE_ATOM, (event, projectKey, testKey, atomID) => {
+    store.delete(`projects.${projectKey}.tests.${testKey}.canvas.atoms.${atomID}`)
+    let connections = store.get(`projects.${projectKey}.tests.${testKey}.canvas.connections`)
+    Object.entries(connections).map(([key, value]) => {
+            if (value["from"] === atomID) {
+                store.delete(`projects.${projectKey}.tests.${testKey}.canvas.connections.${key}`)
+            } else if (value["to"] === atomID) {
+                store.delete(`projects.${projectKey}.tests.${testKey}.canvas.connections.${key}`)
+            }
+        }
+    )
+    let canvasState = store.get(`projects.${projectKey}.tests.${testKey}.canvas`)
+    event.sender.send('deleted-atom', canvasState)
 })
 
 ipcMain.on(MAKE_CONNECTION, (event, projectKey, testKey, fromAtom, toAtom) => {

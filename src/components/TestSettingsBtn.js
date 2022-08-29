@@ -1,4 +1,4 @@
-import {Settings, Tag} from "tabler-icons-react";
+import {IconSettings, IconTag} from "@tabler/icons";
 import {Button, Modal, TextInput} from "@mantine/core";
 import {useState} from "react";
 
@@ -16,7 +16,7 @@ function TestSettingsBtn ({tab}) {
             <TextInput
                 defaultValue={tab.title}
                 label="Test Name"
-                icon={<Tag />} />
+                icon={<IconTag />} />
         </Modal>
 
         <Button
@@ -25,7 +25,7 @@ function TestSettingsBtn ({tab}) {
             size={"md"}
             onClick={() => setOpened(true)}
         >
-            <Settings size={24}/>
+            <IconSettings size={24}/>
         </Button>
         </>
     );

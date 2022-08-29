@@ -3,7 +3,6 @@ import { useDrag } from 'react-dnd'
 import { getEmptyImage } from 'react-dnd-html5-backend'
 import {ATOM, CONNECTION} from '../../utils/constants'
 import {Group, Paper, Text} from "@mantine/core";
-import {CodePlus} from "tabler-icons-react";
 const { v4: uuidv4 } = require('uuid');
 
 function getStyles(left, top, isDragging) {

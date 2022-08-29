@@ -1,5 +1,5 @@
 import {Button, Group, Input, InputWrapper} from "@mantine/core";
-import {FileSearch} from "tabler-icons-react";
+import {IconFileSearch} from "@tabler/icons";
 import {useEffect, useState} from "react";
 
 
@@ -33,7 +33,7 @@ function SettingsSidebarTab({projectKey}) {
                 label={"Project File"}
                 description={"Select the Alloy file you wish to test"}
             >
-               <Input icon={<FileSearch />} onClick={handleSelectFile} value={projectFile} />
+               <Input icon={<IconFileSearch />} onClick={handleSelectFile} value={projectFile} />
             </InputWrapper>
         </Group>
     )

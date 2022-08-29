@@ -1,6 +1,6 @@
 import React from 'react';
 import {Button, Input, InputWrapper, Modal, TextInput} from "@mantine/core";
-import {Folders, Tag} from "tabler-icons-react";
+import {IconFolders, IconTag} from "@tabler/icons";
 import FileSelector from "../FileSelector";
 import {useState} from "react";
 import {useEffect} from "react";
@@ -35,7 +35,7 @@ function NewTestModal({opened, setModalOpened, setTests, tests, projectKey}) {
                 onChange={(event) => updateName(event.target.value)}
                 label="Test Name"
                 description={"Enter a name for the new test"}
-                icon={<Tag />}
+                icon={<IconTag />}
             />
             <br/>
 

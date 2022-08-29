@@ -1,6 +1,6 @@
 import React from 'react';
 import {Input, InputWrapper} from "@mantine/core";
-import {FileSearch} from "tabler-icons-react";
+import {IconFileSearch} from "@tabler/icons";
 import {useState} from "react";
 
 function FileSelector(props) {
@@ -29,7 +29,7 @@ function FileSelector(props) {
                 label={"Primary Alloy File"}
                 description={"Select the Alloy file you wish to test."}
             >
-                <Input icon={<FileSearch />} onClick={handleSelectFile} value={trimmedPath}/>
+                <Input icon={<IconFileSearch />} onClick={handleSelectFile} value={trimmedPath}/>
             </InputWrapper>
             <br />
         </>

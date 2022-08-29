@@ -1,5 +1,5 @@
 import {ActionIcon, Button, CloseButton, Group, Tabs} from '@mantine/core';
-import {ChartDots3, Plus} from "tabler-icons-react";
+import {IconChartDots3, IconPlus} from "@tabler/icons";
 import TestPlayBtn from "./TestPlayBtn";
 import TestSettingsBtn from "./TestSettingsBtn";
 import TabContent from "./TabContent";
@@ -50,7 +50,7 @@ function BodyWrapper({tabs, setTabs, projectKey}) {
                         <Tabs.Tab
                             index={index}
                             label={<Group>{tab.name} <CloseButton onClick={closeTab}/> </Group>}
-                            icon={<ChartDots3 size={16} />}
+                            icon={<IconChartDots3 size={16} />}
                         >
                             <TabContent projectKey={projectKey} testKey={tab.testKey} tab={tab}/>
                         </Tabs.Tab>

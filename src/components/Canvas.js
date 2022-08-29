@@ -38,6 +38,14 @@ export const Canvas = ({ snapToGrid, tab, projectKey, testKey }) => {
         [canvasItems],
     );
 
+    const refreshCanvas = useCallback(
+        () => {
+            window.electronAPI.loadCanvasState(projectKey, testKey).then(data => {
+                setCanvas(data)
+            });
+        }, [canvasItems],
+    )
+
     const updateAtom = useCallback(
         (id, left, top) => {
             setCanvas(
@@ -93,7 +101,7 @@ export const Canvas = ({ snapToGrid, tab, projectKey, testKey }) => {
     return (
         <div ref={drop} className={"canvas"}>
             {Object.entries(canvasItems["atoms"]).map(([key, value]) => (
-                <Atom key={key} id={key} projectKey={projectKey} testKey={testKey} sourceAtomKey={value["sourceAtomKey"]} {...canvasItems["atoms"][key]} />
+                <Atom key={key} id={key} refreshCanvas={refreshCanvas} projectKey={projectKey} testKey={testKey} sourceAtomKey={value["sourceAtomKey"]} {...canvasItems["atoms"][key]} />
             ))}
             {Object.entries(canvasItems["connections"]).map(([key, value]) => (
                 <Xarrow start={value["from"]} end={value["to"]} />

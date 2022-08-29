@@ -1,4 +1,4 @@
-import {DeviceFloppy, PlayerPlay} from "tabler-icons-react";
+import {IconDeviceFloppy} from "@tabler/icons";
 import {Button} from "@mantine/core";
 
 function TestSaveBtn ({disabled}) {
@@ -11,7 +11,7 @@ function TestSaveBtn ({disabled}) {
             size={"md"}
             //onClick={saveFile}
         >
-            <DeviceFloppy size={24}/>
+            <IconDeviceFloppy size={24}/>
         </Button>
     );
 }

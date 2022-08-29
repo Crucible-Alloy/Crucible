@@ -3,7 +3,6 @@ import {useDrag, useDrop} from 'react-dnd'
 import { getEmptyImage } from 'react-dnd-html5-backend'
 import {ATOM, ATOM_SOURCE, CONNECTION} from '../../utils/constants'
 import {Group, Paper, Text} from "@mantine/core";
-import {CodePlus} from "tabler-icons-react";
 import {snapToGrid as doSnapToGrid} from "../examples/SnapToGrid";
 const { v4: uuidv4 } = require('uuid');
 

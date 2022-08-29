@@ -2,10 +2,10 @@ import {useEffect, useRef, useState} from 'react'
 import { useDrag } from 'react-dnd'
 import { getEmptyImage } from 'react-dnd-html5-backend'
 import { ATOM } from '../../utils/constants'
-import {Group, Paper, Text} from "@mantine/core";
-import {CodePlus} from "tabler-icons-react";
+import {ActionIcon, Group, Paper, Text} from "@mantine/core";
 import {AtomOutPort} from "./AtomOutPort";
 import {AtomInPort} from "./AtomInPort";
+import {IconTrash} from "@tabler/icons";
 const { v4: uuidv4 } = require('uuid');
 
 function getStyles(left, top, isDragging) {
@@ -20,7 +20,7 @@ function getStyles(left, top, isDragging) {
         height: isDragging ? 0 : '',
     }
 }
-export function Atom({ id, left, top, sourceAtomKey, projectKey, testKey}) {
+export function Atom({ id, left, top, sourceAtomKey, projectKey, testKey, refreshCanvas}) {
     const outPort = useRef();
     const inPort = useRef();
 
@@ -31,6 +31,12 @@ export function Atom({ id, left, top, sourceAtomKey, projectKey, testKey}) {
 
     function checkState() {
         console.log("STATE OF ATOM: ", atomColor, atomLabel, sourceAtomKey)
+    }
+
+    function deleteAtom(id) {
+        window.electronAPI.deleteAtom(projectKey, testKey, id).then(data => {
+            refreshCanvas();
+        });
     }
 
     useEffect(() => {
@@ -85,8 +91,11 @@ export function Atom({ id, left, top, sourceAtomKey, projectKey, testKey}) {
             >
                 <Group>
                     <AtomInPort projectKey={projectKey} testKey={testKey} atomColor={atomColor} atomId={id} />
-                    <Text align={"center"} color={atomColor} size={"xl"} weight={"800"}> {atomLabel} </Text>
+                    <Text align={"center"} color={atomColor} size={"xl"} weight={"800"}> {atomLabel.split("/")[1]} </Text>
                     <AtomOutPort atomId={id} atomColor={atomColor} />
+                </Group>
+                <Group position={"right"}>
+                    <ActionIcon size={16} onClick={() => deleteAtom(id)}><IconTrash/></ActionIcon>
                 </Group>
 
             </Paper>

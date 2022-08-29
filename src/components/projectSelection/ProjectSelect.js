@@ -1,23 +1,9 @@
 import React, {useEffect, useState} from 'react';
 import {
-    AppShell,
-    Burger,
-    Header,
-    MediaQuery,
-    Navbar,
-    Modal,
-    ScrollArea,
-    Text,
-    Title,
-    Aside,
-    Footer,
-    useMantineTheme,
-    ActionIcon, Stack, UnstyledButton, Group, Avatar, Button, TextInput, Input, InputWrapper, Progress, Loader, Center,
+    AppShell, Burger, Header, MediaQuery, Navbar, Text, Title, Footer, useMantineTheme,
+    ActionIcon, Stack, UnstyledButton, Group, Avatar, Button, Loader, Center, Grid, ScrollArea,
 } from "@mantine/core";
-import SidebarWrapper from "../sideBar/SidebarWrapper";
-import BodyWrapper from "../BodyWrapper";
-import {FileCode, FileSearch, FolderPlus, Folders, Settings, Tag, Tournament} from "tabler-icons-react";
-import FileSelector from "../FileSelector";
+import {IconSettings} from "@tabler/icons";
 import NewProjectModal from "./NewProjectModal";
 
 export const ProjectSelect = () => {
@@ -68,7 +54,7 @@ export const ProjectSelect = () => {
                     <Footer height={60} p="md">
                         <Group position={"apart"}>
                             <ActionIcon>
-                                <Settings />
+                                <IconSettings />
                             </ActionIcon>
                             <Button onClick={() => setModalOpened(true)}>New Project</Button>
                         </Group>
@@ -93,28 +79,31 @@ export const ProjectSelect = () => {
                     </Header>
                 }
             >
-                {Object.entries(projects).map(([key, value]) => (
-                    <>
-                        <UnstyledButton onClick={() => {openProject(key)}}>
-                            <Group p={"xs"}  styles={(theme) => ({
-                                root: {
+                <ScrollArea>
+                    <Group spacing={"lg"}>
+                        {Object.entries(projects).map(([key, value]) => (
+                                <>
+                                        <UnstyledButton onClick={() => {openProject(key)}}>
+                                            <Group p={"xs"}  position={"left"} styles={(theme) => ({
+                                                root: {
 
-                                    borderRadius: 8,
-
-                                    '&:hover': {
-                                        backgroundColor: theme.colors.gray[2],
-                                    },
-                                }})}>
-                                <Avatar size={40} color="blue">{projects[key]["name"].charAt(0)}</Avatar>
-                                <div>
-                                    <Text>{projects[key]["name"]}</Text>
-                                    <Text size="xs" color="dimmed">{projects[key]["path"]}</Text>
-                                </div>
-                            </Group>
-                        </UnstyledButton>
-                    </>
-                ))}
-
+                                                    borderRadius: 8,
+                                                    maxHeight: 60,
+                                                    width: 320,
+                                                    whitespace: "nowrap",
+                                                    textOverflow: "ellipsis",
+                                                    '&:hover': {
+                                                        backgroundColor: theme.colors.gray[2],
+                                                    },
+                                                }})}>
+                                                <Avatar size={40} color="blue">{projects[key]["name"].charAt(0)}</Avatar>
+                                                <Text p={0} m={0}>{projects[key]["name"]}</Text>
+                                            </Group>
+                                        </UnstyledButton>
+                                    </>
+                                ))}
+                    </Group>
+                </ScrollArea>
                 <NewProjectModal setModalOpened={setModalOpened} opened={modalOpened}/>
 
             </AppShell>

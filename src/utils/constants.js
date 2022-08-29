@@ -1,4 +1,5 @@
 module.exports = {
+
     // API CHANNELS
     FETCH_DATA_FROM_STORAGE: 'fetch-data-from-storage',
     HANDLE_FETCH_DATA: 'handle-fetch-data',
@@ -20,8 +21,8 @@ module.exports = {
     GET_ATOM_COLOR: 'get-atom-color',
     SET_ATOM_LABEL: 'set-atom-label',
     GET_ATOM_LABEL: 'get-atom-label',
+    DELETE_ATOM: 'delete-atom',
     MAKE_CONNECTION: 'make-connection',
-
 
     // UI VARIABLES
     SIDEBAR_WIDTH: 500,

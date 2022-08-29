@@ -1,4 +1,4 @@
-import {PlayerPlay} from "tabler-icons-react";
+import {IconPlayerPlay} from "@tabler/icons";
 import {Avatar, Button} from "@mantine/core";
 
 function TestPlayBtn ({disabled}) {
@@ -9,7 +9,7 @@ function TestPlayBtn ({disabled}) {
             variant={"light"}
             size={"md"}
         >
-            <PlayerPlay size={24}/>
+            <IconPlayerPlay size={24}/>
         </Button>
     );
 }
