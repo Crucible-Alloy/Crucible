@@ -1,17 +1,12 @@
-import {Center, Group, Loader, RingProgress} from "@mantine/core";
+import {Center, Group, Loader} from "@mantine/core";
 import {useState} from "react";
 import {AtomSource} from "../atoms/AtomSource";
-import {v4 as uuidv4} from "uuid";
 import {useEffect} from "react";
 
 function AtomsSidebarTab({ projectKey }) {
 
     const [atoms, setAtoms] = useState([]);
     const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        getAtoms();
-    }, []);
 
     const getAtoms = () => {
         setLoading(true)
@@ -20,6 +15,12 @@ function AtomsSidebarTab({ projectKey }) {
             setLoading(false)
         })
     }
+
+    useEffect(() => {
+        getAtoms();
+    }, []);
+
+
 
     if (loading) {
         return (

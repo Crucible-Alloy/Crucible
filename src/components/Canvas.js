@@ -6,6 +6,7 @@ import {ATOM, ATOM_SOURCE} from "../utils/constants";
 import {snapToGrid as doSnapToGrid} from "./examples/SnapToGrid";
 import {v4 as uuidv4} from "uuid";
 import Xarrow from "react-xarrows";
+import Connector from "./atoms/Connector";
 
 export const Canvas = ({ snapToGrid, tab, projectKey, testKey }) => {
 
@@ -105,6 +106,7 @@ export const Canvas = ({ snapToGrid, tab, projectKey, testKey }) => {
             ))}
             {Object.entries(canvasItems["connections"]).map(([key, value]) => (
                 <Xarrow start={value["from"]} end={value["to"]} />
+                //<Connector connectionFrom={value["from"]} connectionTo={value["to"]} />
             ))}
         </div>
     )

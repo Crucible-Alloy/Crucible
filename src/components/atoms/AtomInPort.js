@@ -18,13 +18,15 @@ function getStyles(left, top, isDragging) {
         height: isDragging ? 0 : '',
     }
 }
-export function AtomInPort({ projectKey, testKey, atomId, atomColor,}) {
+export function AtomInPort({ projectKey, testKey, atomId, atomColor, refreshCanvas}) {
     const inPort = useRef();
 
     const [position, setPosition] = useState({});
 
     function createConnection(fromAtom, toAtom) {
-        window.electronAPI.makeConnection(projectKey, testKey, fromAtom, toAtom)
+        window.electronAPI.makeConnection(projectKey, testKey, fromAtom, toAtom).then( data =>
+            refreshCanvas()
+        )
     }
 
     const [, drop] = useDrop(

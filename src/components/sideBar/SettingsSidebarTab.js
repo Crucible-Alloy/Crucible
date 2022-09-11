@@ -28,13 +28,13 @@ function SettingsSidebarTab({projectKey}) {
 
     return (
         <Group p={"sm"}>
-            <InputWrapper
+            <Input.Wrapper
                 labelElement="div"
                 label={"Project File"}
                 description={"Select the Alloy file you wish to test"}
             >
                <Input icon={<IconFileSearch />} onClick={handleSelectFile} value={projectFile} />
-            </InputWrapper>
+            </Input.Wrapper>
         </Group>
     )
 

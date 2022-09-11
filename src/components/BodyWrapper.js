@@ -46,14 +46,20 @@ function BodyWrapper({tabs, setTabs, projectKey}) {
         return (
             <>
                 <Tabs sx={{height: "100%"}} active={activeTab} onTabChange={updateTab} variant={"outline"}>
+                    <Tabs.List>
+                        {tabs.map((tab, index) => (
+                            <Tabs.Tab
+                                value={tab.name}
+                                icon={<IconChartDots3 size={16} />}
+                            >
+                                {<Group>{tab.name} <CloseButton onClick={closeTab}/> </Group>}
+                            </Tabs.Tab>
+                        ))}
+                    </Tabs.List>
                     {tabs.map((tab, index) => (
-                        <Tabs.Tab
-                            index={index}
-                            label={<Group>{tab.name} <CloseButton onClick={closeTab}/> </Group>}
-                            icon={<IconChartDots3 size={16} />}
-                        >
+                        <Tabs.Panel value={tab.name}>
                             <TabContent projectKey={projectKey} testKey={tab.testKey} tab={tab}/>
-                        </Tabs.Tab>
+                        </Tabs.Panel>
                     ))}
                 </Tabs>
             </>

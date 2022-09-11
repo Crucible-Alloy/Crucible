@@ -21,7 +21,8 @@ const { FETCH_DATA_FROM_STORAGE, HANDLE_FETCH_DATA,
     GET_ATOM_LABEL,
     SET_ATOM_COLOR,
     MAKE_CONNECTION,
-    DELETE_ATOM
+    DELETE_ATOM,
+    DELETE_CONNECTION
 } = require("../src/utils/constants")
 
 let itemsToTrack;
@@ -487,9 +488,23 @@ ipcMain.on(DELETE_ATOM, (event, projectKey, testKey, atomID) => {
     event.sender.send('deleted-atom', canvasState)
 })
 
+ipcMain.on(DELETE_CONNECTION, (event, projectKey, testKey, atomID) => {
+    console.log("MAIN RECEIVED DELETE_CONNECTIONS")
+    let connections = store.get(`projects.${projectKey}.tests.${testKey}.canvas.connections`)
+    Object.entries(connections).map(([key, value]) => {
+            if (value["from"] === atomID) {
+                store.delete(`projects.${projectKey}.tests.${testKey}.canvas.connections.${key}`)
+            }
+        }
+    )
+    let canvasState = store.get(`projects.${projectKey}.tests.${testKey}.canvas`)
+    event.sender.send('deleted-connection', canvasState)
+})
+
 ipcMain.on(MAKE_CONNECTION, (event, projectKey, testKey, fromAtom, toAtom) => {
     let connectionId = uuidv4()
     let connection = {from: fromAtom, to: toAtom}
 
     store.set(`projects.${projectKey}.tests.${testKey}.canvas.connections.${connectionId}`, connection)
+    event.sender.send('made-connection', true)
 })

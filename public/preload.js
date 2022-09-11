@@ -13,7 +13,8 @@ const {SAVE_CANVAS_STATE, LOAD_CANVAS_STATE, UPDATE_PROJECT_FILE, GET_PROJECT_FI
     GET_ATOM_LABEL,
     SET_ATOM_LABEL,
     MAKE_CONNECTION,
-    DELETE_ATOM
+    DELETE_ATOM,
+    DELETE_CONNECTION
 } = require("../src/utils/constants");
 
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -125,7 +126,21 @@ contextBridge.exposeInMainWorld('electronAPI', {
         })
     },
 
+    deleteConnections: (projectKey, testKey, atomId) => {
+        ipcRenderer.send(DELETE_CONNECTION, projectKey, testKey, atomId)
+        return new Promise((resolve) => {
+            ipcRenderer.once('deleted-connection',
+                (event, canvasState) => resolve(canvasState)
+            )
+        })
+    },
+
     makeConnection: (projectKey, testKey, fromAtom, toAtom) => {
         ipcRenderer.send(MAKE_CONNECTION, projectKey, testKey, fromAtom, toAtom)
+        return new Promise((resolve) => {
+            ipcRenderer.once('made-connection',
+                (event, canvasState) => resolve(canvasState)
+            )
+        })
     }
 })

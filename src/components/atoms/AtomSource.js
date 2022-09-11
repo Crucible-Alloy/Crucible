@@ -1,10 +1,10 @@
 import {memo, useEffect, useState} from 'react';
-import { ActionIcon, ColorInput, ColorPicker, Group, Modal, Paper, Text } from "@mantine/core";
+import {ActionIcon, ColorInput, ColorPicker, Group, List, ListItem, Modal, Paper, Text} from "@mantine/core";
 import {useDrag} from "react-dnd";
 import { ATOM_SOURCE } from "../../utils/constants";
 import {getEmptyImage} from "react-dnd-html5-backend";
 import React from "react";
-import {IconArrowMoveRight, IconCaretDown, IconCaretUp, IconEdit} from "@tabler/icons";
+import {IconArrowMoveRight, IconCaretDown, IconCaretUp, IconChartCircles, IconEdit} from "@tabler/icons";
 
 function getStyles(left, top, isDragging) {
     //const transform = `translate3d(${left}px, ${top}px, 0)`
@@ -110,8 +110,13 @@ export function AtomSource({ id, label, left, top, atom, sourceAtomKey, projectK
                     </Group>
 
                     <Group>
-                        <IconArrowMoveRight color={"gray"}/>
+                        <IconChartCircles color={"gray"}/>
                         <Text color={atomColor} size={"md"} weight={"600"}> {multiplicity} </Text>
+                    </Group>
+                    <Group>
+                        {/*TODO: Loop through relationships*/}
+                        <IconArrowMoveRight color={"gray"} />
+                        <Text color={"white"} size={"md"} weight={"600"}> Relationships </Text>
                     </Group>
                     <Group position={"right"}>
                         <ActionIcon onClick={editAtom}>

@@ -2,7 +2,7 @@ import {useEffect, useRef, useState} from 'react'
 import { useDrag } from 'react-dnd'
 import { getEmptyImage } from 'react-dnd-html5-backend'
 import { ATOM } from '../../utils/constants'
-import {ActionIcon, Group, Paper, Text} from "@mantine/core";
+import {ActionIcon, Group, HoverCard, Paper, Text, Button} from "@mantine/core";
 import {AtomOutPort} from "./AtomOutPort";
 import {AtomInPort} from "./AtomInPort";
 import {IconTrash} from "@tabler/icons";
@@ -39,6 +39,12 @@ export function Atom({ id, left, top, sourceAtomKey, projectKey, testKey, refres
         });
     }
 
+    function deleteConnections(id) {
+        window.electronAPI.deleteConnections(projectKey, testKey, id).then(data => {
+            refreshCanvas();
+        });
+    }
+
     useEffect(() => {
         console.log("SOURCE ATOM KEY", sourceAtomKey)
         window.electronAPI.getAtomColor(projectKey, sourceAtomKey).then(color => {
@@ -69,37 +75,54 @@ export function Atom({ id, left, top, sourceAtomKey, projectKey, testKey, refres
 
     checkState()
 
+
+
     return (
-        <div
-            ref={drag}
-            style={getStyles(left, top, isDragging)}
-            role="DraggableBox"
-            id={id}
-        >
-            <Paper
-                ref={drag}
-                //style={getStyles(left, top, isDragging)}
-                shadow="md"
-                p="md"
-                radius={"md"}
-                role="DraggableBox"
-                sx={(theme) => ({
-                    backgroundColor: theme.colors.dark[5],
-                    border: `solid 6px ${atomColor}`,
-                    width: 200,
-                })}
-            >
-                <Group>
-                    <AtomInPort projectKey={projectKey} testKey={testKey} atomColor={atomColor} atomId={id} />
-                    <Text align={"center"} color={atomColor} size={"xl"} weight={"800"}> {atomLabel.split("/")[1]} </Text>
-                    <AtomOutPort atomId={id} atomColor={atomColor} />
+        <HoverCard>
+                <div
+                    ref={drag}
+                    style={getStyles(left, top, isDragging)}
+                    role="DraggableBox"
+                    id={id}
+                >
+                    <Paper
+                        ref={drag}
+                        //style={getStyles(left, top, isDragging)}
+                        shadow="md"
+                        p="md"
+                        radius={"md"}
+                        role="DraggableBox"
+                        sx={(theme) => ({
+                            backgroundColor: theme.colors.dark[5],
+                            border: `solid 6px ${atomColor}`,
+                            width: 200,
+                        })}
+                    >
+                        <Group>
+                            <AtomInPort projectKey={projectKey} testKey={testKey} atomColor={atomColor} atomId={id} refreshCanvas={refreshCanvas} />
+                            <Text align={"center"} color={atomColor} size={"xl"} weight={"800"}> {atomLabel.split("/")[1]} </Text>
+                            <AtomOutPort atomId={id} atomColor={atomColor} />
+                        </Group>
+                        <Group position={"right"}>
+                            <HoverCard.Target>
+                                <ActionIcon size={16}><IconTrash/></ActionIcon>
+                            </HoverCard.Target>
+                        </Group>
+
+                    </Paper>
+                </div>
+
+            <HoverCard.Dropdown>
+                <Group m={"xs"}>
+                    <Button color="red" onClick={() => deleteAtom(id)}>Delete Atom</Button>
+
                 </Group>
-                <Group position={"right"}>
-                    <ActionIcon size={16} onClick={() => deleteAtom(id)}><IconTrash/></ActionIcon>
+                <Group m={"xs"}>
+                    <Button color="red" onClick={() => deleteConnections(id)}>Delete Connections</Button>
                 </Group>
 
-            </Paper>
-        </div>
+            </HoverCard.Dropdown>
+        </HoverCard>
     )
 }
 

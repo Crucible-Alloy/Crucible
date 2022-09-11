@@ -23,14 +23,14 @@ function FileSelector(props) {
 
     return (
         <>
-            <InputWrapper
+            <Input.Wrapper
                 required
                 labelElement="div"
                 label={"Primary Alloy File"}
                 description={"Select the Alloy file you wish to test."}
             >
                 <Input icon={<IconFileSearch />} onClick={handleSelectFile} value={trimmedPath}/>
-            </InputWrapper>
+            </Input.Wrapper>
             <br />
         </>
     );

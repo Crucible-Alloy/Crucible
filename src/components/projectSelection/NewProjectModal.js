@@ -60,13 +60,13 @@ function NewProjectModal(props) {
 
             <FileSelector setSelectedFile={setAlloyFile} selectedFile={alloyFile}/>
 
-            <InputWrapper
+            <Input.Wrapper>
                 labelElement="div"
                 label={"Project Location"}
                 description={"Where the project will be saved."}
             >
                 <Input icon={<IconFolders />} onClick={() => handleNewProjectLocation} onChange={(event) => updateProjectFolder(event.target.value)} value={newProjectLocation} />
-            </InputWrapper>
+            </Input.Wrapper>
             <Button  m={"sm"} onClick={() => createNewProject()} >Create Project</Button>
 
         </Modal>

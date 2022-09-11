@@ -23,6 +23,7 @@ module.exports = {
     GET_ATOM_LABEL: 'get-atom-label',
     DELETE_ATOM: 'delete-atom',
     MAKE_CONNECTION: 'make-connection',
+    DELETE_CONNECTION: 'delete-connection',
 
     // UI VARIABLES
     SIDEBAR_WIDTH: 500,
