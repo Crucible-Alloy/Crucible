@@ -1,8 +1,8 @@
-import {useEffect, useRef, useState} from 'react'
+import {useEffect} from 'react'
 import { useDrag } from 'react-dnd'
 import { getEmptyImage } from 'react-dnd-html5-backend'
-import {ATOM, CONNECTION} from '../../utils/constants'
-import {Group, Paper, Text} from "@mantine/core";
+import {CONNECTION} from '../../utils/constants'
+import {Paper} from "@mantine/core";
 const { v4: uuidv4 } = require('uuid');
 
 function getStyles(left, top, isDragging) {
@@ -17,21 +17,25 @@ function getStyles(left, top, isDragging) {
         height: isDragging ? 0 : '',
     }
 }
-export function AtomOutPort({ atomId, atomColor,}) {
+export function AtomOutPort({ atomId, atomColor, atomLabel, sourceAtomKey}) {
     const portId = uuidv4();
 
-    const [position, setPosition] = useState({});
+    // const [position, setPosition] = useState({});
+
+    const renderType = CONNECTION;
+
+    // TODO: Check if any accept types are not at their multiplicity, set canDrag accordingly.
 
     const [{isDragging}, drag, preview] = useDrag(
         () => ({
-            type: CONNECTION,
-            item: {portId, atomId},
+            type: atomLabel,
+            item: {portId, atomId, renderType, atomLabel, sourceAtomKey},
             collect: (monitor) => ({
                 isDragging: monitor.isDragging(),
                 offset: monitor.getClientOffset(),
             }),
         }),
-        [atomId],
+        [atomId, atomLabel, sourceAtomKey],
     )
 
     useEffect(() => {
@@ -53,6 +57,7 @@ export function AtomOutPort({ atomId, atomColor,}) {
                             left: 160,
                             height: "24px",
                             width: "24px",
+                            zIndex: "90",
                             borderRadius: "100%",
                             border: `solid 6px ${atomColor}`,
                             backgroundColor: theme.colors.dark[5],

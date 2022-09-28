@@ -4,6 +4,9 @@ import { getEmptyImage } from 'react-dnd-html5-backend'
 import {ATOM, ATOM_SOURCE, CONNECTION} from '../../utils/constants'
 import {Group, Paper, Text} from "@mantine/core";
 import {snapToGrid as doSnapToGrid} from "../examples/SnapToGrid";
+import update from "immutability-helper";
+import {showNotification} from "@mantine/notifications";
+import {IconAlertTriangle} from "@tabler/icons";
 const { v4: uuidv4 } = require('uuid');
 
 function getStyles(left, top, isDragging) {
@@ -18,33 +21,82 @@ function getStyles(left, top, isDragging) {
         height: isDragging ? 0 : '',
     }
 }
-export function AtomInPort({ projectKey, testKey, atomId, atomColor, refreshCanvas}) {
+export function AtomInPort({ projectKey, testKey, atomId, atomColor, acceptTypes, sourceAtomKey, atomLabel}) {
     const inPort = useRef();
 
     const [position, setPosition] = useState({});
 
-    function createConnection(fromAtom, toAtom) {
-        window.electronAPI.makeConnection(projectKey, testKey, fromAtom, toAtom).then( data =>
-            refreshCanvas()
-        )
+    function createConnection(fromAtom, toAtom, toAtomLabel) {
+        window.electronAPI.makeConnection(projectKey, testKey, fromAtom, toAtom, toAtomLabel);
     }
 
-    const [, drop] = useDrop(
+    function addNewConnection(projectKey, testKey, sourceAtomKey, toAtom, fromAtomSource, fromAtom, fromAtomLabel) {
+        let eligibleToAdd = true;
+        let connectionsArray = [];
+        let foundMultiplicity;
+
+        // Get connections of the originating atom
+        window.electronAPI.getConnections(projectKey, testKey, fromAtom).then(connections => {
+            connectionsArray = connections;
+        })
+
+        // Get relations of the originating atom
+        window.electronAPI.getRelations(projectKey, fromAtomSource).then(relations => {
+            relations.forEach(function(relation) {
+                // Find the correct relation via source key of the receiving atom and check the multiplicity
+                if (relation["related_key"] === sourceAtomKey) {
+                    if (relation["multiplicity"] === "lone" || relation["multiplicity"] === "one") {
+                        console.log("Multiplicity is one")
+                        // Parse connections array and compare if there is already a connection with a label matching 'related_label'
+                        connectionsArray.forEach(function(connection) {
+                            console.log("To Label: " + connection["ToLabel"])
+                            console.log("Related Label: " + relation["related_label"])
+                            if (connection["toLabel"] === relation["related_label"]) {
+                                // Matching connection had been found, alert user of multiplicity violation.
+                                console.log("Found a match!")
+                                eligibleToAdd = false;
+                                foundMultiplicity = relation["multiplicity"];
+                            }
+                        })
+                    }
+                }
+            })
+
+            if (eligibleToAdd) {
+                createConnection(fromAtom, toAtom, atomLabel);
+            } else {
+                showNotification({
+                    title: "Cannot add connection",
+                    message: `Adding that connection would exceed it's ${foundMultiplicity} multiplicity.`,
+                    color: "red",
+                    icon: <IconAlertTriangle/>
+                });
+            }
+        })
+    }
+
+
+    const [{isOver, canDrop}, drop] = useDrop(
         () => ({
-            accept: [CONNECTION],
+            accept: acceptTypes,
+            collect: (monitor) => ({
+               isOver: monitor.isOver(),
+               canDrop: monitor.canDrop(),
+            }),
             drop(item, monitor) {
                 const delta = monitor.getDifferenceFromInitialOffset()
                 let left = Math.round(item.left + delta.x)
                 let top = Math.round(item.top + delta.y)
                 console.log(top);
 
-                if (monitor.getItemType() === CONNECTION) {
+                if (item.renderType === CONNECTION) {
                     console.log("Existing atom dragged.")
-                    createConnection(item.atomId, atomId)
+                    addNewConnection(projectKey, testKey, sourceAtomKey, atomId, item.sourceAtomKey, item.atomId, item.atomLabel)
                 }
 
                 return undefined
-            },}),
+            },
+        }),
         [createConnection],
     )
 
@@ -64,7 +116,7 @@ export function AtomInPort({ projectKey, testKey, atomId, atomColor, refreshCanv
                             height: "24px",
                             width: "24px",
                             borderRadius: "100%",
-                            border: `solid 6px ${atomColor}`,
+                            border: `solid 6px ${canDrop ?  "green" : atomColor}`,
                             backgroundColor: theme.colors.dark[5],
 
                             '&:hover': {

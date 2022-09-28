@@ -1,6 +1,6 @@
 const { ipcRenderer, contextBridge } = require('electron');
 require('events').EventEmitter.defaultMaxListeners = 0
-const { v4: uuidv4 } =require('uuid')
+const { v4: uuidv4 } = require('uuid')
 
 const {SAVE_CANVAS_STATE, LOAD_CANVAS_STATE, UPDATE_PROJECT_FILE, GET_PROJECT_FILE, GET_ATOMS, GET_PROJECTS, OPEN_PROJECT,
     GET_TESTS,
@@ -14,7 +14,12 @@ const {SAVE_CANVAS_STATE, LOAD_CANVAS_STATE, UPDATE_PROJECT_FILE, GET_PROJECT_FI
     SET_ATOM_LABEL,
     MAKE_CONNECTION,
     DELETE_ATOM,
-    DELETE_CONNECTION
+    DELETE_CONNECTION,
+    GET_ATOM_MULTIPLICITY,
+    GET_ACCEPT_TYPES,
+    GET_RELATIONS,
+    GET_CONNECTION,
+    GET_CONNECTIONS
 } = require("../src/utils/constants");
 
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -135,12 +140,51 @@ contextBridge.exposeInMainWorld('electronAPI', {
         })
     },
 
-    makeConnection: (projectKey, testKey, fromAtom, toAtom) => {
-        ipcRenderer.send(MAKE_CONNECTION, projectKey, testKey, fromAtom, toAtom)
+    makeConnection: (projectKey, testKey, fromAtom, toAtom, toAtomLabel) => {
+        ipcRenderer.send(MAKE_CONNECTION, projectKey, testKey, fromAtom, toAtom, toAtomLabel)
+    },
+
+    listenForCanvasChange: (callback) => {
+        ipcRenderer.on("canvas-update", callback)
+    },
+
+    listenForColorChange: (callback) => {
+        ipcRenderer.on("color-update", callback)
+    },
+
+    getAtomMultiplicity: (projectKey, atomKey) => {
+        let returnChannel = uuidv4();
+        ipcRenderer.send(GET_ATOM_MULTIPLICITY, projectKey, atomKey, returnChannel)
         return new Promise((resolve) => {
-            ipcRenderer.once('made-connection',
-                (event, canvasState) => resolve(canvasState)
-            )
+            ipcRenderer.once(returnChannel,
+            (event, multiplicity) => resolve(multiplicity))
+        })
+    },
+
+    getAcceptTypes: (projectKey, sourceAtomKey) => {
+        let returnChannel = uuidv4();
+        ipcRenderer.send(GET_ACCEPT_TYPES, projectKey, sourceAtomKey, returnChannel)
+        return new Promise((resolve) => {
+            ipcRenderer.once(returnChannel,
+                (event, types) => resolve(types))
+        })
+    },
+
+    getRelations: (projectKey, sourceAtomKey) => {
+        let returnChannel = uuidv4();
+        ipcRenderer.send(GET_RELATIONS, projectKey, sourceAtomKey, returnChannel)
+        return new Promise((resolve) => {
+            ipcRenderer.once(returnChannel,
+                (event, relations) => (resolve(relations)))
+        })
+    },
+
+    getConnections: (projectKey, testKey, atomKey) => {
+        let returnChannel = uuidv4();
+        ipcRenderer.send(GET_CONNECTIONS, projectKey, testKey, atomKey, returnChannel)
+        return new Promise((resolve) => {
+            ipcRenderer.once(returnChannel,
+            (event, connections) => (resolve(connections)))
         })
     }
 })

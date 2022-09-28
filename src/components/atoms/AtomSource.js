@@ -51,9 +51,11 @@ export function AtomSource({ id, label, left, top, atom, sourceAtomKey, projectK
         window.electronAPI.setAtomColor(projectKey, sourceAtomKey, color)
     }
 
+    const renderType = ATOM_SOURCE;
+
     const [{isDragging}, drag, preview] = useDrag(() => ({
             type: ATOM_SOURCE,
-            item: {id, left, top, label, sourceAtomKey, projectKey},
+            item: {id, left, top, label, sourceAtomKey, projectKey, renderType},
             collect: (monitor) => ({
                 isDragging: monitor.isDragging(),
             })
@@ -109,15 +111,22 @@ export function AtomSource({ id, label, left, top, atom, sourceAtomKey, projectK
 
                     </Group>
 
-                    <Group>
+                    <Group mt={"xs"}>
                         <IconChartCircles color={"gray"}/>
-                        <Text color={atomColor} size={"md"} weight={"600"}> {multiplicity} </Text>
+                        <Text color={"white"} size={"md"} weight={"800"}> Multiplicity </Text>
                     </Group>
-                    <Group>
-                        {/*TODO: Loop through relationships*/}
+                    <Text ml={"sm"} color={atomColor} size={"md"} weight={600}> {multiplicity} </Text>
+
+                    <Group mt={"xs"}>
                         <IconArrowMoveRight color={"gray"} />
-                        <Text color={"white"} size={"md"} weight={"600"}> Relationships </Text>
+                        <Text color="white" size={"md"} weight={800}> Relations </Text>
                     </Group>
+                        { atom["relations"].map(item =>
+                            ( <Group>
+                                <Text ml={"sm"} color="white" weight={600}> {item["label"]}:</Text>
+                                <Text color="white"> {item["multiplicity"]} </Text>
+                            </Group>)
+                        )}
                     <Group position={"right"}>
                         <ActionIcon onClick={editAtom}>
                             <IconEdit/>

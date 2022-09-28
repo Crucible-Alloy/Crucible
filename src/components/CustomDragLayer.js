@@ -18,25 +18,23 @@ const layerStyles = {
 }
 
 function getItemStyles(item, initialOffset, currentOffset, delta,) {
-
     let { x, y } = currentOffset
+    if (item.renderType === ATOM_SOURCE) {
+        const transform = `translate(${x}px, ${y}px)`
+        return {
+            transform,
+            WebkitTransform: transform,
+        }
+    }
 
-    let left = Math.round(item.left + delta.x)
-    let top = Math.round(item.top + delta.y)
+    console.log("Initial Offset: " + initialOffset.x + "," + initialOffset.y );
+    console.log("Current Offset: " + currentOffset.x + "," + currentOffset.y );
 
-    // Translate mainWindow coordinates (dragLayer) to canvas coordinates
-    let translated_x = x * (1600 / 1000)
-    let translated_y = y * (900 / 600)
-
-    // if (isSnapToGrid) {
-    //     x -= initialOffset.x
-    //     y -= initialOffset.y
-    //     ;[x, y] = snapToGrid(x, y)
-    //     x += initialOffset.x
-    //     y += initialOffset.y
-    // }
-
-    const transform = `translate(${x}px, ${y}px)`
+    let left = Math.round(delta.x)
+    let top = Math.round(delta.y)
+    let translated_x = left + 500;
+    let translated_y = top + 150;
+    const transform = `translate(${translated_x}px, ${translated_y}px)`
     return {
         transform,
         WebkitTransform: transform,
@@ -57,8 +55,9 @@ export const CustomDragLayer = (props) => {
 
     const renderItem = () => {
 
-        switch (itemType) {
+        switch (item.renderType) {
             case ATOM:
+
                 return (
                     <Atom id={item.id} left={item.left} top={item.top} sourceAtomKey={item.sourceAtomKey} projectKey={item.projectKey} testKey={item.testKey} />
                 );
@@ -67,12 +66,12 @@ export const CustomDragLayer = (props) => {
                     <Atom id={item.id} left={item.left} top={item.top} sourceAtomKey={item.sourceAtomKey} projectKey={item.projectKey} testKey={item.testKey} />
                 );
             case CONNECTION:
+
                 return (
                     <>
-                        <Xarrow start={item.atomId} end={item.__id}/>
+                        <Xarrow start={item.atomId} end={item}/>
                     </>
                 )
-
 
             default:
                 return null;

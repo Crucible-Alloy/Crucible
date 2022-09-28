@@ -60,7 +60,7 @@ function NewProjectModal(props) {
 
             <FileSelector setSelectedFile={setAlloyFile} selectedFile={alloyFile}/>
 
-            <Input.Wrapper>
+            <Input.Wrapper
                 labelElement="div"
                 label={"Project Location"}
                 description={"Where the project will be saved."}

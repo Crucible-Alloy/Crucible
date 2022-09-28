@@ -6,7 +6,7 @@ import TestsSidebarTab from "./TestsSidebarTab";
 
 function SidebarWrapper({projectKey, tabs, setTabs }) {
     return (
-        <Tabs color="blue">
+        <Tabs color="blue" defaultValue={"atoms"}>
             <Tabs.List grow>
                 <Tabs.Tab value="atoms" icon={<IconAtom size={16} />}>Atoms</Tabs.Tab>
                 <Tabs.Tab value="tests" icon={<IconTestPipe size={16} />}>Tests</Tabs.Tab>

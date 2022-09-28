@@ -20,7 +20,7 @@ function getStyles(left, top, isDragging) {
         height: isDragging ? 0 : '',
     }
 }
-export function Atom({ id, left, top, sourceAtomKey, projectKey, testKey, refreshCanvas}) {
+export function Atom({ id, left, top, sourceAtomKey, projectKey, testKey}) {
     const outPort = useRef();
     const inPort = useRef();
 
@@ -28,30 +28,36 @@ export function Atom({ id, left, top, sourceAtomKey, projectKey, testKey, refres
     const [position, setPosition] = useState({});
     const [atomColor, setColor] = useState("");
     const [atomLabel, setAtomLabel] = useState('');
+    const [acceptTypes, setAcceptTypes] = useState([]);
 
-    function checkState() {
-        console.log("STATE OF ATOM: ", atomColor, atomLabel, sourceAtomKey)
-    }
+    useEffect(() => {
+        window.electronAPI.getAtomColor(projectKey, sourceAtomKey).then(color => {
+            setColor(color)
+        })
+    }, [atomColor]);
+
+    useEffect( () => {
+        window.electronAPI.listenForColorChange((_event, value) => {
+            console.log("Canvas change")
+            window.electronAPI.getAtomColor(projectKey, sourceAtomKey).then(color => {
+                setColor(color);
+            })
+        })
+    }, []);
+
+    useEffect( () => {
+        window.electronAPI.getAcceptTypes(projectKey, sourceAtomKey).then(types => {
+            setAcceptTypes(types);
+        })
+    }, []);
 
     function deleteAtom(id) {
-        window.electronAPI.deleteAtom(projectKey, testKey, id).then(data => {
-            refreshCanvas();
-        });
+        window.electronAPI.deleteAtom(projectKey, testKey, id)
     }
 
     function deleteConnections(id) {
-        window.electronAPI.deleteConnections(projectKey, testKey, id).then(data => {
-            refreshCanvas();
-        });
+        window.electronAPI.deleteConnections(projectKey, testKey, id)
     }
-
-    useEffect(() => {
-        console.log("SOURCE ATOM KEY", sourceAtomKey)
-        window.electronAPI.getAtomColor(projectKey, sourceAtomKey).then(color => {
-            setColor(color)
-            console.log(color)
-        })
-    }, [atomColor]);
 
     useEffect(() => {
         window.electronAPI.getAtomLabel(projectKey, sourceAtomKey).then(label => {
@@ -59,10 +65,12 @@ export function Atom({ id, left, top, sourceAtomKey, projectKey, testKey, refres
         })
     }, [projectKey, sourceAtomKey, atomLabel]);
 
+    const renderType = ATOM;
+
     const [{isDragging}, drag, preview] = useDrag(
         () => ({
             type: ATOM,
-            item: {id, left, top, sourceAtomKey, projectKey},
+            item: {id, left, top, sourceAtomKey, projectKey, renderType},
             collect: (monitor) => ({
                 isDragging: monitor.isDragging(),
             }),
@@ -72,10 +80,6 @@ export function Atom({ id, left, top, sourceAtomKey, projectKey, testKey, refres
     useEffect(() => {
         preview(getEmptyImage(), {captureDraggingState: true})
     }, [])
-
-    checkState()
-
-
 
     return (
         <HoverCard>
@@ -99,9 +103,17 @@ export function Atom({ id, left, top, sourceAtomKey, projectKey, testKey, refres
                         })}
                     >
                         <Group>
-                            <AtomInPort projectKey={projectKey} testKey={testKey} atomColor={atomColor} atomId={id} refreshCanvas={refreshCanvas} />
+                            <AtomInPort
+                                projectKey={projectKey}
+                                testKey={testKey}
+                                atomColor={atomColor}
+                                atomId={id}
+                                acceptTypes={acceptTypes}
+                                sourceAtomKey={sourceAtomKey}
+                                atomLabel={atomLabel}
+                            />
                             <Text align={"center"} color={atomColor} size={"xl"} weight={"800"}> {atomLabel.split("/")[1]} </Text>
-                            <AtomOutPort atomId={id} atomColor={atomColor} />
+                            <AtomOutPort atomId={id} atomColor={atomColor} atomLabel={atomLabel} sourceAtomKey={sourceAtomKey}/>
                         </Group>
                         <Group position={"right"}>
                             <HoverCard.Target>

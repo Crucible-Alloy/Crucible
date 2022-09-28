@@ -8,6 +8,7 @@
     "@emotion/react": "^11.10.4",
     "@mantine/core": "^5.3.0",
     "@mantine/hooks": "^5.3.0",
+    "@mantine/notifications": "^5.3.0",
     "@radix-ui/react-slot": "^1.0.0",
     "@tabler/icons": "^1.82.0",
     "@testing-library/jest-dom": "^5.16.4",

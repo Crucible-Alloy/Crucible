@@ -1,6 +1,6 @@
 import logo from './logo.svg';
 import './App.css';
-import {AppShell, Container, Header, Navbar, Title} from "@mantine/core";
+import {AppShell, Container, Header, MantineProvider, Navbar, Title} from "@mantine/core";
 import SidebarWrapper from "./components/sideBar/SidebarWrapper";
 import BodyWrapper from "./components/BodyWrapper";
 import {useViewportSize} from "@mantine/hooks";
@@ -9,6 +9,7 @@ import {DndProvider} from "react-dnd";
 import {HTML5Backend} from "react-dnd-html5-backend";
 import {SIDEBAR_WIDTH} from "./utils/constants";
 import {useParams} from "react-router-dom";
+import {NotificationsProvider} from "@mantine/notifications";
 
 function App() {
     const { viewHeight, viewWidth } = useViewportSize();
@@ -21,6 +22,8 @@ function App() {
 
     return (
         <DndProvider backend={HTML5Backend}>
+            <MantineProvider>
+            <NotificationsProvider>
             <AppShell
                 sx={{
                      height: `${viewHeight}`,
@@ -45,6 +48,8 @@ function App() {
                                      margin: 0,
                                      padding: 0}}/>}
             </AppShell>
+            </NotificationsProvider>
+            </MantineProvider>
         </DndProvider>
     );
 }

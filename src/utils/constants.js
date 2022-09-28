@@ -21,7 +21,11 @@ module.exports = {
     GET_ATOM_COLOR: 'get-atom-color',
     SET_ATOM_LABEL: 'set-atom-label',
     GET_ATOM_LABEL: 'get-atom-label',
+    GET_ACCEPT_TYPES: 'get-accept-types',
+    GET_ATOM_MULTIPLICITY: 'get-atom-multiplicity',
+    GET_RELATIONS: 'get-relations',
     DELETE_ATOM: 'delete-atom',
+    GET_CONNECTIONS: 'get-connection',
     MAKE_CONNECTION: 'make-connection',
     DELETE_CONNECTION: 'delete-connection',
 

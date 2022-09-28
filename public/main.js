@@ -1,9 +1,8 @@
 
 const path = require('path');
-const {app, BrowserWindow, ipcMain, dialog, net, Menu} = require('electron');
+const {app, BrowserWindow, ipcMain, dialog, Menu} = require('electron');
 const {v4: uuidv4} = require("uuid");
 const axios = require('axios');
-const homedir = require('os').homedir();
 const fs = require('fs');
 
 // Global window variable
@@ -22,13 +21,18 @@ const { FETCH_DATA_FROM_STORAGE, HANDLE_FETCH_DATA,
     SET_ATOM_COLOR,
     MAKE_CONNECTION,
     DELETE_ATOM,
-    DELETE_CONNECTION
+    DELETE_CONNECTION,
+    GET_ATOM_MULTIPLICITY,
+    GET_ACCEPT_TYPES,
+    GET_RELATION_MULTIPLICITY,
+    GET_RELATIONS,
+    GET_CONNECTION,
+    GET_CONNECTIONS
 } = require("../src/utils/constants")
 
 let itemsToTrack;
 
 const Store = require('electron-store');
-const Connector = require("../src/components/atoms/Connector");
 
 let store = new Store();
 
@@ -213,29 +217,55 @@ function createNewFolder(folder) {
     }
 }
 
-function setColorArray() {
-    let colorArray = ["#FFA94D", "#FFD43B", "#A9E34B", "#69DB7C", "#38D9A9", "#3BC9DB", "#4DABF7", "#748FFC", "#9775FA", "#DA77F2", "#F783AC", "#FF8787"]
+function getColorArray() {
+    // Mantine colors at value '4'
+    return ["#FFA94D", "#FFD43B", "#A9E34B", "#69DB7C", "#38D9A9", "#3BC9DB", "#4DABF7", "#748FFC", "#9775FA", "#DA77F2", "#F783AC", "#FF8787"]
 }
 
-function storeAtomData(filePath, projectKey) {
-    console.log("Getting atom data from springBoot api")
-    // Mantine colors at value '4'
 
-    // TODO: If colors list is empty, (ie, more than 12 atom types), reshuffle colors array using setColorArray()
-    const colors = ["#FFA94D", "#FFD43B", "#A9E34B", "#69DB7C", "#38D9A9", "#3BC9DB", "#4DABF7", "#748FFC", "#9775FA", "#DA77F2", "#F783AC", "#FF8787"]
+function storeAtomData(filePath, projectKey) {
+    let colors = getColorArray();
     let atomData = {};
+
     try {
+        // Send file to alloy API and get back metadata
         const apiRequest = axios.post("http://localhost:8080/files",null, {params: {"filePath": filePath}})
         apiRequest.then(data => {
             if (data.data) {
                 for (const atom in data.data["atoms"]) {
-                    let selectedColor = colors.splice(Math.floor(Math.random() * colors.length), 1)[0];
-                    console.log(selectedColor)
-                    data.data["atoms"][atom]["color"] = selectedColor
+
+                    // If colors array is empty, repopulate it.
+                    if ( !colors.length ) {
+                        colors = getColorArray();
+                    }
+                    // Pop a random color from the colors array and assign to the atom
+                    data.data["atoms"][atom]["color"] = colors.splice(Math.floor(Math.random() * colors.length), 1)[0]
                     atomData[uuidv4()] = data.data["atoms"][atom]
+                }
+
+                // Post-processing on the relations information for multiplicity enforcement
+                for ( const [key, atom] of Object.entries(atomData)) {
+
+                    // Get the multiplicity and related atom label from the response returned to the API
+                    atom["relations"].forEach(function(item) {
+                        let multiplicity = item["multiplicity"].split(" ")[0];
+                        let related_atom_label = item["type"].split("->")[1].split("}")[0];
+
+                        // Overwrite the multiplicity key and set related_label
+                        item["multiplicity"] = multiplicity;
+                        item["related_label"] = related_atom_label;
+
+                        // Find the related atom key
+                        for (const [key, value] of Object.entries(atomData)) {
+                            if (value["label"] === related_atom_label) {
+                                item["related_key"] = key
+                            }
+                        }
+                    });
                 }
             }
         }).then( () => {
+            // Write all atom data to the project
             store.set(`projects.${projectKey}.atoms`, atomData);
         });
     } catch (err) {
@@ -249,7 +279,6 @@ function storeAtomData(filePath, projectKey) {
     // Some APIs only available after this call.
 app.whenReady().then(() => {
 
-    //createMainWindow("test-project");
     createASketchMenu();
     createProjectSelectWindow();
 
@@ -257,7 +286,7 @@ app.whenReady().then(() => {
     springAPI = require('child_process').spawn('java', ['-jar', jarPath, '']);
 
     app.on('activate', function () {
-        // On macOS it's common to re-create a window in the app when the
+        // On macOS, it's common to re-create a window in the app when the
         // dock icon is clicked and there are no other windows open.
         //if (BrowserWindow.getAllWindows().length === 0) createMainWindow()
         if (BrowserWindow.getAllWindows().length === 0) createProjectSelectWindow()
@@ -311,7 +340,6 @@ ipcMain.on(LOAD_CANVAS_STATE, (event, projectKey, testKey) => {
 
     // Send canvas state back to ipcRenderer via api.
     let canvasState = store.get(`projects.${projectKey}.tests.${testKey}.canvas`)
-    console.log(canvasState)
     event.sender.send('loaded-canvas-state', canvasState ? canvasState : {})
 })
 
@@ -339,10 +367,10 @@ ipcMain.on(UPDATE_PROJECT_FILE, (event, projectKey) => {
             store.set(`projects.${projectKey}.path`, response.filePaths[0])
             storeAtomData(response.filePaths[0], projectKey);
 
-            event.sender.send('project-file-set', response.filePaths[0])
+            event.reply('project-file-set', response.filePaths[0])
 
         } else {
-            event.sender.send('project-file-set', null)
+            event.reply('project-file-set', null)
         }
     })
 })
@@ -457,20 +485,33 @@ ipcMain.on(CREATE_NEW_TEST, (event, projectKey, testName) => {
     event.sender.send('created-new-test', newTest)
 })
 ipcMain.on(GET_ATOM_COLOR, (event, projectKey, atomSourceKey, returnChannel) => {
-    console.log("MAIN RECEIVED: GET_ATOM_COLOR WITH:", atomSourceKey)
     let loadedColor = store.get(`projects.${projectKey}.atoms.${atomSourceKey}.color`);
-    console.log(loadedColor)
     event.sender.send(returnChannel, loadedColor)
 })
 
 ipcMain.on(SET_ATOM_COLOR, (event, projectKey, atomKey, atomColor) => {
     console.log("MAIN RECEIVED: SET_ATOM_COLOR WITH:", atomColor)
     store.set(`projects.${projectKey}.atoms.${atomKey}.color`, atomColor)
+    mainWindow.webContents.send("color-update");
 })
 
 ipcMain.on(GET_ATOM_LABEL, (event, projectKey, atomKey, returnChannel) => {
     let atomLabel = store.get(`projects.${projectKey}.atoms.${atomKey}.label`)
     event.sender.send(returnChannel, atomLabel ? atomLabel : "No Label")
+})
+
+ipcMain.on(GET_ATOM_MULTIPLICITY, (event, projectKey, atomKey, returnChannel) => {
+    const keys = ["isLone", "isOne", "isSome"]
+    let returnValue = null;
+    keys.forEach((key, i) => {
+        if (store.get(`projects.${projectKey}.atoms.${atomKey}.${key}`) !== null) {
+            console.log(`MAIN FOUND MULTIPLICITY: ${key}`)
+            returnValue = key;
+        }
+    })
+
+    event.sender.send(returnChannel, returnValue)
+
 })
 
 ipcMain.on(DELETE_ATOM, (event, projectKey, testKey, atomID) => {
@@ -486,10 +527,10 @@ ipcMain.on(DELETE_ATOM, (event, projectKey, testKey, atomID) => {
     )
     let canvasState = store.get(`projects.${projectKey}.tests.${testKey}.canvas`)
     event.sender.send('deleted-atom', canvasState)
+    mainWindow.webContents.send("canvas-update")
 })
 
 ipcMain.on(DELETE_CONNECTION, (event, projectKey, testKey, atomID) => {
-    console.log("MAIN RECEIVED DELETE_CONNECTIONS")
     let connections = store.get(`projects.${projectKey}.tests.${testKey}.canvas.connections`)
     Object.entries(connections).map(([key, value]) => {
             if (value["from"] === atomID) {
@@ -499,12 +540,57 @@ ipcMain.on(DELETE_CONNECTION, (event, projectKey, testKey, atomID) => {
     )
     let canvasState = store.get(`projects.${projectKey}.tests.${testKey}.canvas`)
     event.sender.send('deleted-connection', canvasState)
+    mainWindow.webContents.send("canvas-update")
 })
 
-ipcMain.on(MAKE_CONNECTION, (event, projectKey, testKey, fromAtom, toAtom) => {
+ipcMain.on(MAKE_CONNECTION, (event, projectKey, testKey, fromAtom, toAtom, toAtomLabel) => {
     let connectionId = uuidv4()
-    let connection = {from: fromAtom, to: toAtom}
+    let connection = {from: fromAtom, to: toAtom, toLabel: toAtomLabel}
 
     store.set(`projects.${projectKey}.tests.${testKey}.canvas.connections.${connectionId}`, connection)
-    event.sender.send('made-connection', true)
+
+    mainWindow.webContents.send("canvas-update")
+})
+
+ipcMain.on(GET_ACCEPT_TYPES, (event, projectKey, sourceAtomKey, returnChannel) => {
+    const atoms = store.get(`projects.${projectKey}.atoms`);
+    let types = [];
+    let typesLabels = [];
+    // for atom in atoms
+    // for relation in relations
+    // if atom related to sourceAtomKey
+    // accept type found
+    // atom.label added to the types array
+    Object.entries(atoms).map(([key, atom]) => {
+        if (atom["relations"]) {
+            Object.entries(atom["relations"]).map(([relationKey, relation]) => {
+                if (relation["related_key"] === sourceAtomKey) {
+                    types.push(key);
+                }
+            })
+        }
+    })
+
+    types.forEach( function(x) {
+        typesLabels.push(store.get(`projects.${projectKey}.atoms.${x}.label`))
+    })
+
+    console.log(`MAIN FOUND TYPES FOR ${sourceAtomKey}: ${typesLabels}`)
+    event.sender.send(returnChannel, typesLabels);
+})
+
+ipcMain.on(GET_RELATIONS, (event, projectKey, sourceAtomKey, returnChannel) => {
+    const relations = store.get(`projects.${projectKey}.atoms.${sourceAtomKey}.relations`);
+    event.sender.send(returnChannel, relations)
+})
+
+ipcMain.on(GET_CONNECTIONS, (event, projectKey, testKey, atomKey, returnChannel) => {
+    const connections = store.get(`projects.${projectKey}.tests.${testKey}.canvas.connections`);
+    const foundConnections = [];
+    Object.entries(connections).map(([key, value]) => {
+        if (value["from"] === atomKey) {
+            foundConnections.push(value)
+        }
+    })
+    event.sender.send(returnChannel, foundConnections);
 })
