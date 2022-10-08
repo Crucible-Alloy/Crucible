@@ -1,22 +1,13 @@
-import {ActionIcon, Button, CloseButton, Group, Tabs} from '@mantine/core';
-import {IconChartDots3, IconPlus} from "@tabler/icons";
-import TestPlayBtn from "./TestPlayBtn";
-import TestSettingsBtn from "./TestSettingsBtn";
+import {CloseButton, Group, Tabs} from '@mantine/core';
+import {IconChartDots3} from "@tabler/icons";
 import TabContent from "./TabContent";
 import {useState} from "react";
-import {useId} from "@mantine/hooks";
-import {CustomDragLayer} from "./CustomDragLayer";
-import SvgDemo from "./examples/SvgDemo";
 
 function BodyWrapper({tabs, setTabs, projectKey}) {
 
     const [activeTab, setActiveTab] = useState(0);
 
     function updateTab(index) {
-
-        // if (index === tabs.length) {
-        //     //newTab();
-        // }
             setActiveTab(index)
             tabs[index].active = true;
     }

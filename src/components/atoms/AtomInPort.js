@@ -26,14 +26,16 @@ export function AtomInPort({ projectKey, testKey, atomId, atomColor, acceptTypes
 
     const [position, setPosition] = useState({});
 
-    function createConnection(fromAtom, toAtom, toAtomLabel) {
-        window.electronAPI.makeConnection(projectKey, testKey, fromAtom, toAtom, toAtomLabel);
+    function createConnection(fromAtom, toAtom, fromAtomLabel, toAtomLabel, connectionLabel) {
+        window.electronAPI.makeConnection(projectKey, testKey, fromAtom, toAtom, fromAtomLabel, toAtomLabel, connectionLabel);
     }
 
-    function addNewConnection(projectKey, testKey, sourceAtomKey, toAtom, fromAtomSource, fromAtom, fromAtomLabel) {
+    function addNewConnection(projectKey, testKey, sourceAtomKey, toAtom, toAtomLabel, fromAtomSource, fromAtom, fromAtomLabel) {
         let eligibleToAdd = true;
         let connectionsArray = [];
         let foundMultiplicity;
+        fromAtomLabel = fromAtomLabel.split('/')[1]
+        toAtomLabel = toAtomLabel.split('/')[1]
 
         // Get connections of the originating atom
         window.electronAPI.getConnections(projectKey, testKey, fromAtom).then(connections => {
@@ -42,9 +44,11 @@ export function AtomInPort({ projectKey, testKey, atomId, atomColor, acceptTypes
 
         // Get relations of the originating atom
         window.electronAPI.getRelations(projectKey, fromAtomSource).then(relations => {
+            let connectionName;
             relations.forEach(function(relation) {
                 // Find the correct relation via source key of the receiving atom and check the multiplicity
                 if (relation["related_key"] === sourceAtomKey) {
+                    connectionName = relation["label"];
                     if (relation["multiplicity"] === "lone" || relation["multiplicity"] === "one") {
                         console.log("Multiplicity is one")
                         // Parse connections array and compare if there is already a connection with a label matching 'related_label'
@@ -63,7 +67,7 @@ export function AtomInPort({ projectKey, testKey, atomId, atomColor, acceptTypes
             })
 
             if (eligibleToAdd) {
-                createConnection(fromAtom, toAtom, atomLabel);
+                createConnection(fromAtom, toAtom, toAtomLabel, fromAtomLabel, connectionName);
             } else {
                 showNotification({
                     title: "Cannot add connection",
@@ -91,7 +95,7 @@ export function AtomInPort({ projectKey, testKey, atomId, atomColor, acceptTypes
 
                 if (item.renderType === CONNECTION) {
                     console.log("Existing atom dragged.")
-                    addNewConnection(projectKey, testKey, sourceAtomKey, atomId, item.sourceAtomKey, item.atomId, item.atomLabel)
+                    addNewConnection(projectKey, testKey, sourceAtomKey, atomId, atomLabel, item.sourceAtomKey, item.atomId, item.atomLabel)
                 }
 
                 return undefined

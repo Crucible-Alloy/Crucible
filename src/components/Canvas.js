@@ -43,7 +43,7 @@ export const Canvas = ({ snapToGrid, tab, projectKey, testKey }) => {
         saveCanvasState(canvasItems, projectKey, testKey)
     }, [canvasItems])
 
-    const addNewAtom = (left, top, projectKey, testKey, sourceAtomKey) => {
+    const addNewAtom = (left, top, projectKey, testKey, sourceAtomKey, atomLabel) => {
         let eligibleToAdd = true;
         window.electronAPI.getAtomMultiplicity(projectKey, sourceAtomKey).then(multiplicity => {
             console.log(multiplicity)
@@ -60,12 +60,24 @@ export const Canvas = ({ snapToGrid, tab, projectKey, testKey }) => {
             }
 
             if (eligibleToAdd) {
+
+                let atomCount = Object.entries(canvasItems["atoms"]).filter(([key, value]) =>
+                    value["sourceAtomKey"] === sourceAtomKey).length;
+                console.log(atomCount)
                 setCanvas(
-                    update(canvasItems, { "atoms": {
-                            $merge: {[uuidv4()]: {top: top, left: left, sourceAtomKey: sourceAtomKey}}
+                    update(canvasItems, {
+                        "atoms": {
+                            $merge: {
+                                [uuidv4()]: {
+                                    top: top,
+                                    left: left,
+                                    sourceAtomKey: sourceAtomKey,
+                                    atomLabel: `${atomLabel.split('/')[1]}`
+                                }
+                            }
                         }
-                    })
-                )
+                    }
+                ))
             } else {
                 showNotification({
                     title: "Cannot add Atom",
@@ -126,7 +138,7 @@ export const Canvas = ({ snapToGrid, tab, projectKey, testKey }) => {
 
             if (monitor.getItemType() === ATOM_SOURCE) {
                 console.log("New atom dragged.")
-                addNewAtom(left, top, projectKey, testKey, item.sourceAtomKey)
+                addNewAtom(left, top, projectKey, testKey, item.sourceAtomKey, item.label)
             }
 
             return undefined

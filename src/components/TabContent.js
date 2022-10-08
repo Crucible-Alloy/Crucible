@@ -10,7 +10,7 @@ function TabContent ({tab, projectKey, testKey}) {
     return (
         <div style={{height: "100%"}}>
             <Group pb={"xs"}>
-                <TestPlayBtn />
+                <TestPlayBtn projectKey={projectKey} testKey={testKey}/>
                 <TestSettingsBtn tab={tab} />
                 <TestSaveBtn />
             </Group>

@@ -27,7 +27,8 @@ const { FETCH_DATA_FROM_STORAGE, HANDLE_FETCH_DATA,
     GET_RELATION_MULTIPLICITY,
     GET_RELATIONS,
     GET_CONNECTION,
-    GET_CONNECTIONS
+    GET_CONNECTIONS,
+    CONVERT_TO_COMMAND_STRING
 } = require("../src/utils/constants")
 
 let itemsToTrack;
@@ -154,6 +155,7 @@ function createASketchMenu() {
     const menu = Menu.buildFromTemplate(template)
     Menu.setApplicationMenu(menu)
 }
+
 
 function createProjectSelectWindow() {
 
@@ -306,7 +308,6 @@ app.on("window-all-closed", () => {
 
 
 ipcMain.on(FETCH_DATA_FROM_STORAGE, (event, message) => {
-    console.log("Main Received: FETCH_DATA_FROM_STORAGE with: ", message);
     mainWindow.send(HANDLE_FETCH_DATA, {
         success: true,
         message: message
@@ -330,13 +331,13 @@ ipcMain.on(FETCH_DATA_FROM_STORAGE, (event, message) => {
 });
 
 ipcMain.on(SAVE_CANVAS_STATE, (event, canvasItems, projectKey, testKey) => {
-    console.log("Main Received: SAVE_CANVAS_STATE with: ", canvasItems, projectKey, testKey);
+    //console.log("Main Received: SAVE_CANVAS_STATE with: ", canvasItems, projectKey, testKey);
     store.set(`projects.${projectKey}.tests.${testKey}.canvas`, canvasItems);
 
 })
 
 ipcMain.on(LOAD_CANVAS_STATE, (event, projectKey, testKey) => {
-    console.log("Main Received: LOAD_CANVAS_STATE with: ", projectKey, testKey)
+    //console.log("Main Received: LOAD_CANVAS_STATE with: ", projectKey, testKey)
 
     // Send canvas state back to ipcRenderer via api.
     let canvasState = store.get(`projects.${projectKey}.tests.${testKey}.canvas`)
@@ -344,14 +345,14 @@ ipcMain.on(LOAD_CANVAS_STATE, (event, projectKey, testKey) => {
 })
 
 ipcMain.on(GET_PROJECT_FILE, (event, projectKey) => {
-    console.log("MAIN: GET_PROJECT_FILE");
+    //console.log("MAIN: GET_PROJECT_FILE");
 
     let projectFile = store.get(`projects.${projectKey}.path`);
     event.sender.send('got-project-file', projectFile ? projectFile : null)
 });
 
 ipcMain.on(UPDATE_PROJECT_FILE, (event, projectKey) => {
-    console.log("Main Received: SET_MAIN_PROJECT_FILE")
+    //console.log("Main Received: SET_MAIN_PROJECT_FILE")
 
     dialog.showOpenDialog({
         title: "Select Project File",
@@ -376,15 +377,15 @@ ipcMain.on(UPDATE_PROJECT_FILE, (event, projectKey) => {
 })
 
 ipcMain.on(GET_ATOMS, (event, projectKey) => {
-    console.log("MAIN RECEIVED GET_ATOMS FROM RENDERER")
-    console.log(projectKey);
+    //console.log("MAIN RECEIVED GET_ATOMS FROM RENDERER")
+    //console.log(projectKey);
     let atoms = store.get(`projects.${projectKey}.atoms`);
     //console.log(atoms);
     event.sender.send('got-atoms', atoms ? atoms : {})
 })
 
 ipcMain.on(GET_PROJECTS, (event) => {
-    console.log("RECEIVED 'GET-PROJECTS' FROM RENDERER");
+    //console.log("RECEIVED 'GET-PROJECTS' FROM RENDERER");
     let projects = store.get('projects');
     event.sender.send('get-projects-success', projects ? projects : {})
 })
@@ -394,14 +395,14 @@ ipcMain.on(OPEN_PROJECT, (event, projectKey) => {
 })
 
 ipcMain.on(GET_TESTS, (event, projectKey) => {
-    console.log("RECEIVED 'GET-TESTS' FROM RENDERER")
+    //console.log("RECEIVED 'GET-TESTS' FROM RENDERER")
     let tests = store.get(`projects.${projectKey}.tests`);
-    console.log(tests)
+    //console.log(tests)
     event.sender.send('got-tests', tests ? tests : {})
 })
 
 ipcMain.on(SELECT_FILE, (event) => {
-    console.log("Main Received: SELECT_FILE")
+    //console.log("Main Received: SELECT_FILE")
 
     dialog.showOpenDialog({
         title: "Select Project File",
@@ -412,7 +413,7 @@ ipcMain.on(SELECT_FILE, (event) => {
         properties: ['openFile']
     }).then(function (response) {
         if (!response.canceled) {
-            console.log(response.filePaths[0])
+            //console.log(response.filePaths[0])
             event.sender.send('file-selected', response.filePaths[0])
 
         } else {
@@ -422,7 +423,7 @@ ipcMain.on(SELECT_FILE, (event) => {
 })
 
 ipcMain.on(CREATE_NEW_PROJECT, (event, alloyFile, projectName, projectDirectory) => {
-    console.log("Main Received: CREATE_NEW_PROJECT");
+    //console.log("Main Received: CREATE_NEW_PROJECT");
 
     // Create project directories
     const projectFolder = projectDirectory + projectName;
@@ -459,7 +460,7 @@ ipcMain.on(CREATE_NEW_PROJECT, (event, alloyFile, projectName, projectDirectory)
 
 ipcMain.on(GET_HOME_DIRECTORY, (event) => {
     const homedir = require('os').homedir();
-    console.log(homedir)
+    //console.log(homedir)
     event.sender.send('got-home-directory', homedir)
 });
 
@@ -490,7 +491,7 @@ ipcMain.on(GET_ATOM_COLOR, (event, projectKey, atomSourceKey, returnChannel) => 
 })
 
 ipcMain.on(SET_ATOM_COLOR, (event, projectKey, atomKey, atomColor) => {
-    console.log("MAIN RECEIVED: SET_ATOM_COLOR WITH:", atomColor)
+    //console.log("MAIN RECEIVED: SET_ATOM_COLOR WITH:", atomColor)
     store.set(`projects.${projectKey}.atoms.${atomKey}.color`, atomColor)
     mainWindow.webContents.send("color-update");
 })
@@ -505,7 +506,7 @@ ipcMain.on(GET_ATOM_MULTIPLICITY, (event, projectKey, atomKey, returnChannel) =>
     let returnValue = null;
     keys.forEach((key, i) => {
         if (store.get(`projects.${projectKey}.atoms.${atomKey}.${key}`) !== null) {
-            console.log(`MAIN FOUND MULTIPLICITY: ${key}`)
+            //console.log(`MAIN FOUND MULTIPLICITY: ${key}`)
             returnValue = key;
         }
     })
@@ -543,9 +544,12 @@ ipcMain.on(DELETE_CONNECTION, (event, projectKey, testKey, atomID) => {
     mainWindow.webContents.send("canvas-update")
 })
 
-ipcMain.on(MAKE_CONNECTION, (event, projectKey, testKey, fromAtom, toAtom, toAtomLabel) => {
+ipcMain.on(MAKE_CONNECTION, (event, projectKey, testKey, fromAtom, toAtom, fromAtomLabel, toAtomLabel, connectionLabel) => {
     let connectionId = uuidv4()
-    let connection = {from: fromAtom, to: toAtom, toLabel: toAtomLabel}
+    let connection = {from: fromAtom, to: toAtom, fromLabel: fromAtomLabel, toLabel: toAtomLabel, connectionLabel: connectionLabel}
+
+    // Todo: Get relation label based on sourceAtomKeys?
+    //  Filter relations down based to toLabel compared to relatedLabel
 
     store.set(`projects.${projectKey}.tests.${testKey}.canvas.connections.${connectionId}`, connection)
 
@@ -575,7 +579,7 @@ ipcMain.on(GET_ACCEPT_TYPES, (event, projectKey, sourceAtomKey, returnChannel) =
         typesLabels.push(store.get(`projects.${projectKey}.atoms.${x}.label`))
     })
 
-    console.log(`MAIN FOUND TYPES FOR ${sourceAtomKey}: ${typesLabels}`)
+    //console.log(`MAIN FOUND TYPES FOR ${sourceAtomKey}: ${typesLabels}`)
     event.sender.send(returnChannel, typesLabels);
 })
 
@@ -593,4 +597,77 @@ ipcMain.on(GET_CONNECTIONS, (event, projectKey, testKey, atomKey, returnChannel)
         }
     })
     event.sender.send(returnChannel, foundConnections);
+})
+
+function wrapInBraces(string) {
+    return '{' + string + '}';
+}
+
+ipcMain.on(CONVERT_TO_COMMAND_STRING, (event, projectKey, testKey, returnChannel) => {
+    let canvas = store.get(`projects.${projectKey}.tests.${testKey}.canvas`);
+    let atoms = store.get(`projects.${projectKey}.atoms`);
+    let commandString = '';
+    let atomsWithIndexes = {};
+
+    // Type assignment
+    // For atomType in project.atoms
+    Object.entries(atoms).map(([sourceAtomKey, sourceAtom]) => {
+        // Assign each atom a numeral for use in command string
+        Object.entries(canvas["atoms"]).map(([canvasAtomKey, canvasAtom], index) => {
+          atomsWithIndexes[canvasAtomKey] = index;
+        })
+        // For atom in canvas where type matches atomType
+        commandString += 'some disj'
+        Object.entries(canvas["atoms"]).map(([canvasAtomKey, canvasAtom]) => {
+            if (canvasAtom["sourceAtomKey"] === sourceAtomKey) {
+                commandString += ` ${sourceAtom["label"].split('/')[1]}${atomsWithIndexes[canvasAtomKey]}`;
+            }
+
+        })
+        commandString += `: ${sourceAtom["label"].split('/')[1]} {`
+    })
+    // Set equals these atoms and only these atoms.
+    // For each type of atom in our project.
+    Object.entries(atoms).map(([sourceAtomKey, sourceAtom]) => {
+        commandString += `${sourceAtom["label"].split('/')[1]} = `
+        // Get atoms on the canvas with a matching type.
+        let matchedAtoms = Object.entries(canvas["atoms"]).filter(([key, value]) => (sourceAtomKey === value["sourceAtomKey"]));
+        // console.log(matchedAtoms)
+        // For each matching atom, append their label and corresponding numerical to the command string.
+        for (let i = 0; i < matchedAtoms.length; i++) {
+            commandString += `${matchedAtoms[i][1]['atomLabel']}${atomsWithIndexes[matchedAtoms[i][0]]}`;
+            if (i < matchedAtoms.length - 1) {
+                commandString += '+';
+            }
+        }
+        commandString += ` and `
+    })
+    // Get a list of the unique connection types in the canvas
+    let connectionTypes = [...new Set(Object.entries(canvas['connections']).map((value) => value[1]['connectionLabel']))];
+
+    // Iterate over the found connection types
+    for (let i=0; i < connectionTypes.length; i++) {
+        commandString += `${connectionTypes[i]}=`
+        // Filter our canvas connections down to just the ones that match the current connection type
+        let canvasConnections = Object.entries(canvas['connections']).filter(([key, value]) => value["connectionLabel"] === connectionTypes[i]);
+        // Add each connection to the commandString, and if we aren't on the last one, add a plus.
+        for (let j=0; j < canvasConnections.length; j++) {
+            let value = canvasConnections[j][1];
+            commandString += `${value["fromLabel"]}${atomsWithIndexes[value["from"]]}->${value["toLabel"]}${atomsWithIndexes[value["to"]]}`
+            if (j < canvasConnections.length - 1) {
+                commandString += `+`
+            }
+        }
+        // If we have more connection types, string them with 'and'
+        if (i < connectionTypes.length - 1) {
+            commandString += ' and ';
+        }
+    }
+
+    // Close our brackets all at the end
+    commandString += "}".repeat((commandString.split("{").length - 1));
+
+    // TODO: Send commandString in post request to Alloy Analyzer....
+    console.log(commandString);
+
 })

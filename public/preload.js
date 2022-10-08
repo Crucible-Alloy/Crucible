@@ -19,8 +19,11 @@ const {SAVE_CANVAS_STATE, LOAD_CANVAS_STATE, UPDATE_PROJECT_FILE, GET_PROJECT_FI
     GET_ACCEPT_TYPES,
     GET_RELATIONS,
     GET_CONNECTION,
-    GET_CONNECTIONS
+    GET_CONNECTIONS,
+    CONVERT_TO_COMMAND_STRING
 } = require("../src/utils/constants");
+
+//const projectSelect = require("../src/components/projectSelection/ProjectSelect");
 
 contextBridge.exposeInMainWorld('electronAPI', {
     saveCanvasState: (canvasItems, projectKey, testKey) => ipcRenderer.send(SAVE_CANVAS_STATE, canvasItems, projectKey, testKey),
@@ -140,8 +143,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
         })
     },
 
-    makeConnection: (projectKey, testKey, fromAtom, toAtom, toAtomLabel) => {
-        ipcRenderer.send(MAKE_CONNECTION, projectKey, testKey, fromAtom, toAtom, toAtomLabel)
+    makeConnection: (projectKey, testKey, fromAtom, toAtom, fromAtomLabel, toAtomLabel, connectionLabel) => {
+        ipcRenderer.send(MAKE_CONNECTION, projectKey, testKey, fromAtom, toAtom, fromAtomLabel, toAtomLabel, connectionLabel)
     },
 
     listenForCanvasChange: (callback) => {
@@ -185,6 +188,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
         return new Promise((resolve) => {
             ipcRenderer.once(returnChannel,
             (event, connections) => (resolve(connections)))
+        })
+    },
+
+    runTest: (projectKey, testKey) => {
+        let returnChannel = uuidv4();
+        ipcRenderer.send(CONVERT_TO_COMMAND_STRING, projectKey, testKey, returnChannel)
+        return new Promise((resolve) => {
+            ipcRenderer.once(returnChannel,
+            (event, testResponse) => (resolve(testResponse)))
         })
     }
 })

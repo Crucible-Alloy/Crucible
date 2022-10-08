@@ -28,6 +28,7 @@ module.exports = {
     GET_CONNECTIONS: 'get-connection',
     MAKE_CONNECTION: 'make-connection',
     DELETE_CONNECTION: 'delete-connection',
+    CONVERT_TO_COMMAND_STRING: 'convert-to-command-string',
 
     // UI VARIABLES
     SIDEBAR_WIDTH: 500,
