@@ -16,6 +16,7 @@ function App() {
     const { projectKey } = useParams();
     // State for canvas tabs
     const [tabs, setTabs] = useState([]);
+    const [activeTab, setActiveTab] = useState('');
 
 
     const headerHeight = 60;
@@ -29,24 +30,34 @@ function App() {
                      height: `${viewHeight}`,
                      width: `${viewWidth}`,
                 }}
-                padding="xs"
-                navbar={<Navbar width={{ base: SIDEBAR_WIDTH }} height={viewHeight} p="xs">{<SidebarWrapper tabs={tabs} setTabs={setTabs} projectKey={projectKey}/>}</Navbar>}
-                header={<Header height={headerHeight} p="xs">{<Title>Alloy Sketch</Title>}</Header>}
                 styles={(theme) => ({
                     main: {
                         backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[8] : theme.colors.gray[0]
                         //height: (viewHeight - headerHeight),
                         //width: (viewWidth - sidebarWidth)},
-                    }})}
+                    }
+                })}
+                padding="xs"
+                navbar={
+                    <Navbar
+                        width={{ base: SIDEBAR_WIDTH }}
+                        height={viewHeight}
+                        p="xs"> {
+                            <SidebarWrapper
+                                projectKey={projectKey}
+                            />
+                        }
+                    </Navbar>
+                }
+                header={<Header height={headerHeight} p="xs">{<Title>Alloy Sketch</Title>}</Header>}
             >
-                {
-                    <BodyWrapper tabs={tabs}
-                                 setTabs={setTabs}
-                                 projectKey={projectKey}
-                                 style={{height: "100%",
-                                     backgroundColor: "#FF0000",
-                                     margin: 0,
-                                     padding: 0}}/>}
+                <BodyWrapper
+                    projectKey={projectKey}
+                    style={{height: "100%",
+                            backgroundColor: "#FF0000",
+                            margin: 0,
+                            padding: 0}}
+                />
             </AppShell>
             </NotificationsProvider>
             </MantineProvider>

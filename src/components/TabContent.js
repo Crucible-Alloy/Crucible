@@ -1,7 +1,7 @@
 import {Group} from "@mantine/core";
 import TestPlayBtn from "./TestPlayBtn";
 import TestSettingsBtn from "./TestSettingsBtn";
-import TestSaveBtn from "./TestSaveBtn";
+import TestDeleteBtn from "./TestDeleteBtn";
 import {CustomDragLayer} from "./CustomDragLayer";
 import Canvas from "./Canvas";
 
@@ -12,7 +12,7 @@ function TabContent ({tab, projectKey, testKey}) {
             <Group pb={"xs"}>
                 <TestPlayBtn projectKey={projectKey} testKey={testKey}/>
                 <TestSettingsBtn tab={tab} />
-                <TestSaveBtn />
+                <TestDeleteBtn projectKey={projectKey} testKey={testKey}/>
             </Group>
 
             <div className={"canvasContainer"}>

@@ -1,6 +1,6 @@
 
 const path = require('path');
-const {app, BrowserWindow, ipcMain, dialog, Menu} = require('electron');
+const {app, BrowserWindow, ipcMain, dialog, Menu, session} = require('electron');
 const {v4: uuidv4} = require("uuid");
 const axios = require('axios');
 const fs = require('fs');
@@ -28,12 +28,20 @@ const { FETCH_DATA_FROM_STORAGE, HANDLE_FETCH_DATA,
     GET_RELATIONS,
     GET_CONNECTION,
     GET_CONNECTIONS,
-    CONVERT_TO_COMMAND_STRING
+    RUN_TEST,
+    GET_PROJECT_TABS,
+    SET_PROJECT_TABS,
+    OPEN_AND_SET_ACTIVE,
+    SET_ACTIVE_TAB,
+    CLOSE_TAB,
+    DELETE_TEST,
+    CREATE_ATOM
 } = require("../src/utils/constants")
 
 let itemsToTrack;
 
 const Store = require('electron-store');
+const os = require("os");
 
 let store = new Store();
 
@@ -156,7 +164,6 @@ function createASketchMenu() {
     Menu.setApplicationMenu(menu)
 }
 
-
 function createProjectSelectWindow() {
 
     projectSelectWindow = new BrowserWindow({
@@ -178,7 +185,6 @@ function createProjectSelectWindow() {
         projectSelectWindow.webContents.openDevTools({mode: "detach"});
     }
 }
-
 
 function createMainWindow(projectKey) {
 
@@ -223,7 +229,6 @@ function getColorArray() {
     // Mantine colors at value '4'
     return ["#FFA94D", "#FFD43B", "#A9E34B", "#69DB7C", "#38D9A9", "#3BC9DB", "#4DABF7", "#748FFC", "#9775FA", "#DA77F2", "#F783AC", "#FF8787"]
 }
-
 
 function storeAtomData(filePath, projectKey) {
     let colors = getColorArray();
@@ -275,14 +280,24 @@ function storeAtomData(filePath, projectKey) {
     }
 }
 
-    // Open dev tools on launch in dev mode
+// Open dev tools on launch in dev mode
 
-    // After initialization, create new browser window.
-    // Some APIs only available after this call.
+// After initialization, create new browser window.
+// Some APIs only available after this call.
 app.whenReady().then(() => {
 
     createASketchMenu();
     createProjectSelectWindow();
+
+    // on macOS
+    const reactDevToolsPath = path.join(
+        os.homedir(),
+        '/Library/Application Support/Google/Chrome/Profile 1/Extensions/fmkadmapgofadopljbjfkapdkoienihi/4.25.0_0'
+    )
+
+    app.whenReady().then(async () => {
+        await session.defaultSession.loadExtension(reactDevToolsPath);
+    })
 
     const jarPath = `${path.join(__dirname, '../src/JARs/aSketch-API.jar')}`;
     springAPI = require('child_process').spawn('java', ['-jar', jarPath, '']);
@@ -331,17 +346,17 @@ ipcMain.on(FETCH_DATA_FROM_STORAGE, (event, message) => {
 });
 
 ipcMain.on(SAVE_CANVAS_STATE, (event, canvasItems, projectKey, testKey) => {
-    //console.log("Main Received: SAVE_CANVAS_STATE with: ", canvasItems, projectKey, testKey);
+    console.log("Main Received: SAVE_CANVAS_STATE with: ", canvasItems, projectKey, testKey);
     store.set(`projects.${projectKey}.tests.${testKey}.canvas`, canvasItems);
 
 })
 
-ipcMain.on(LOAD_CANVAS_STATE, (event, projectKey, testKey) => {
+ipcMain.on(LOAD_CANVAS_STATE, (event, projectKey, testKey, returnKey) => {
     //console.log("Main Received: LOAD_CANVAS_STATE with: ", projectKey, testKey)
 
     // Send canvas state back to ipcRenderer via api.
     let canvasState = store.get(`projects.${projectKey}.tests.${testKey}.canvas`)
-    event.sender.send('loaded-canvas-state', canvasState ? canvasState : {})
+    event.sender.send(returnKey, canvasState ? canvasState : {})
 })
 
 ipcMain.on(GET_PROJECT_FILE, (event, projectKey) => {
@@ -447,8 +462,11 @@ ipcMain.on(CREATE_NEW_PROJECT, (event, alloyFile, projectName, projectDirectory)
     // Save filepath and project name to store
     let projectKey = uuidv4();
     store.set(`projects.${projectKey}.path`, projectFolder)
+    store.set(`projects.${projectKey}.alloyFile`, newAlloyFilePath)
     store.set(`projects.${projectKey}.name`, projectName)
     store.set(`projects.${projectKey}.tests`, {})
+    store.set(`projects.${projectKey}.tabs`, [])
+    store.set(`projects.${projectKey}.activeTab`, "")
 
     // Get atom data from springBoot API and write to store
     storeAtomData(newAlloyFilePath, projectKey)
@@ -599,11 +617,7 @@ ipcMain.on(GET_CONNECTIONS, (event, projectKey, testKey, atomKey, returnChannel)
     event.sender.send(returnChannel, foundConnections);
 })
 
-function wrapInBraces(string) {
-    return '{' + string + '}';
-}
-
-ipcMain.on(CONVERT_TO_COMMAND_STRING, (event, projectKey, testKey, returnChannel) => {
+ipcMain.on(RUN_TEST, (event, projectKey, testKey, returnChannel) => {
     let canvas = store.get(`projects.${projectKey}.tests.${testKey}.canvas`);
     let atoms = store.get(`projects.${projectKey}.atoms`);
     let commandString = '';
@@ -618,14 +632,16 @@ ipcMain.on(CONVERT_TO_COMMAND_STRING, (event, projectKey, testKey, returnChannel
         })
         // For atom in canvas where type matches atomType
         commandString += 'some disj'
-        Object.entries(canvas["atoms"]).map(([canvasAtomKey, canvasAtom]) => {
-            if (canvasAtom["sourceAtomKey"] === sourceAtomKey) {
-                commandString += ` ${sourceAtom["label"].split('/')[1]}${atomsWithIndexes[canvasAtomKey]}`;
+        let atomsOfType = Object.entries(canvas["atoms"]).filter(([canvasAtomKey, canvasAtom]) => (sourceAtomKey === canvasAtom["sourceAtomKey"]))
+        for (let i = 0; i < atomsOfType.length; i++) {
+            commandString += ` ${sourceAtom["label"].split('/')[1]}${atomsWithIndexes[atomsOfType[i][0]]}`;
+            if (i < atomsOfType.length - 1) {
+                commandString += ',';
             }
-
-        })
+        }
         commandString += `: ${sourceAtom["label"].split('/')[1]} {`
     })
+
     // Set equals these atoms and only these atoms.
     // For each type of atom in our project.
     Object.entries(atoms).map(([sourceAtomKey, sourceAtom]) => {
@@ -667,7 +683,77 @@ ipcMain.on(CONVERT_TO_COMMAND_STRING, (event, projectKey, testKey, returnChannel
     // Close our brackets all at the end
     commandString += "}".repeat((commandString.split("{").length - 1));
 
-    // TODO: Send commandString in post request to Alloy Analyzer....
-    console.log(commandString);
+    console.log(commandString)
+    // Send command string to Alloy Analyzer
+    let reqBody = JSON.stringify({path: store.get(`projects.${projectKey}.alloyFile`), command: commandString});
+    const apiRequest = axios.post("http://localhost:8080/tests", reqBody, {headers: {'Content-Type': 'application/json'}});
+    apiRequest.then(data => {
+        if (data.data) {
+            data.data.includes("Unsatisfiable") ? event.sender.send(returnChannel, "Fail") : event.sender.send(returnChannel, "Pass");
+        }
+    });
+})
 
+ipcMain.on(GET_PROJECT_TABS, (event, projectKey) => {
+    let projectTabs = store.get(`projects.${projectKey}.tabs`);
+    let activeTab = store.get(`projects.${projectKey}.activeTab`);
+    event.sender.send('got-tabs', projectTabs, activeTab);
+});
+
+ipcMain.on(SET_PROJECT_TABS, (event, projectKey, tabs, activeTab) => {
+    console.log(tabs)
+    store.set(`projects.${projectKey}.tabs`, tabs);
+    store.set(`projects.${projectKey}.activeTab`, activeTab);
+    console.log(store.get(`projects.${projectKey}.tabs`));
+
+    mainWindow.webContents.send('tabs-update');
+})
+
+ipcMain.on(SET_ACTIVE_TAB, (event, projectKey, activeTab) => {
+    if (store.get(`projects.${projectKey}.activeTab`) !== activeTab) {
+        store.set(`projects.${projectKey}.activeTab`, activeTab);
+        mainWindow.webContents.send('tabs-update');
+    }
+})
+
+ipcMain.on(OPEN_AND_SET_ACTIVE, (event, projectKey, newTab) => {
+    console.log("OPEN_AND_SET_ACTIVE")
+    let tabData = {"testKey": newTab.testKey, "name": newTab.name}
+    let activeTab = store.get(`projects.${projectKey}.activeTab`);
+    let projectTabs = store.get(`projects.${projectKey}.tabs`);
+
+    // If there is no tab with a matching name already, push the new tab and store
+    if (projectTabs.filter((tab) => (newTab.name === tab.name)).length === 0) {
+        projectTabs.push(tabData)
+        store.set(`projects.${projectKey}.tabs`, projectTabs);
+        store.set(`projects.${projectKey}.activeTab`, newTab.name);
+        mainWindow.webContents.send('tabs-update');
+    } else if (activeTab.name !== newTab) {
+        store.set(`projects.${projectKey}.activeTab`, newTab.name);
+        mainWindow.webContents.send('tabs-update');
+    }
+})
+
+ipcMain.on(CLOSE_TAB, (event, projectKey, tabName) => {
+
+    let projectTabs = store.get(`projects.${projectKey}.tabs`);
+    store.set(`projects.${projectKey}.tabs`,
+        projectTabs.filter((tab) => (tabName !== tab.name))
+    )
+
+    if (store.get(`projects.${projectKey}.activeTab`) === tabName) {
+        if (store.get(`projects.${projectKey}.tabs`).length > 0) {
+            store.set(`projects.${projectKey}.activeTab`, projectTabs[projectTabs.length -1].name);
+        }
+    }
+    mainWindow.webContents.send('tabs-update');
+})
+
+ipcMain.on(DELETE_TEST, (event, projectKey, testKey) => {
+    store.delete(`projects.${projectKey}.tests.${testKey}`);
+})
+
+ipcMain.on(CREATE_ATOM, (event, projectKey, testKey, atomKey, atom) => {
+    store.set(`projects.${projectKey}.tests.${testKey}.canvas.atoms.${atomKey}`, atom)
+    mainWindow.webContents.send('canvas-update')
 })

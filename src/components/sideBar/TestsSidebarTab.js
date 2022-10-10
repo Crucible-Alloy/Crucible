@@ -1,48 +1,40 @@
-import { Avatar, Button, Container, Group, ScrollArea, Text} from "@mantine/core";
-import {useState} from "react";
+import { Avatar, Button, Container, Group, ScrollArea, Text, ActionIcon} from "@mantine/core";
+import {useCallback, useState} from "react";
 import {useEffect} from "react";
 import React from "react";
-import {IconPlus} from "@tabler/icons";
+import {IconPlayerPlay, IconPlus, IconStatusChange} from "@tabler/icons";
 import {SIDEBAR_WIDTH} from "../../utils/constants";
 import NewTestModal from "./NewTestModal";
+import SidebarTestRow from "./SidebarTestRow";
 
-function TestsSidebarTab({ projectKey, tabs, setTabs }) {
+function TestsSidebarTab({ projectKey }) {
 
     const [tests, setTests] = useState([]);
     const [modalOpened, setModalOpened] = useState(false);
 
+    // Initialize Tests
     useEffect(() => {
-        getTests();
-    }, []);
-
-    const getTests = () => {
+        console.log("get tests")
         window.electronAPI.getTests(projectKey).then(tests => {
             setTests(tests)
-            console.log(tests)
-        })
-    }
-
-    function openTab(testKey, testObj) {
-        const newTab = testObj
-        newTab["active"] = true
-        newTab["index"] = tabs.length + 1
-        newTab["testKey"] = testKey
-
-        //TODO: Set other tabs "Active" state to false
+        });
+    }, []);
 
 
-        setTabs((tabs) => [...tabs, testObj])
+    function handleRowClick(testKey, testObj) {
+        let newTab = testObj;
+        newTab.testKey = testKey;
+        // If there isn't a tab with a matching name, add the tab.
+        window.electronAPI.openTab(projectKey, newTab)
     }
 
     if (Object.keys(tests).length > 0) {
-        console.log("Tests detected")
         return (
             <Container>
                 <ScrollArea style={{}} offsetScrollbars>
-                    <Group>
                         {Object.entries(tests).map(([key, value]) => (
                             <>
-                                <Container onClick={() => openTab(key, value)} p={"xs"} styles={(theme) => ({
+                                <Container p={"xs"} styles={(theme) => ({
                                     root: {
 
                                         borderRadius: 8,
@@ -52,16 +44,14 @@ function TestsSidebarTab({ projectKey, tabs, setTabs }) {
                                             backgroundColor: theme.colors.gray[1],
                                         },
                                     }})}>
-                                    <Group>
-                                        <Avatar size={30} color="blue">{value["name"].charAt(0)}</Avatar>
-                                        <div>
-                                            <Text>{value["name"]}</Text>
-                                        </div>
-                                    </Group>
+                                    <SidebarTestRow
+                                        test={value}
+                                        testKey={key}
+                                        handleRowClick={handleRowClick}
+                                    />
                                 </Container>
                             </>
                         ))}
-                </Group>
                 </ScrollArea>
                 <hr />
                 <NewTestModal projectKey={projectKey} opened={modalOpened} tests={tests} setTests={setTests} setModalOpened={setModalOpened} />

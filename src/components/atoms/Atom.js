@@ -20,7 +20,7 @@ function getStyles(left, top, isDragging) {
         height: isDragging ? 0 : '',
     }
 }
-export function Atom({ id, left, top, sourceAtomKey, projectKey, testKey}) {
+export function Atom({ id, left, top, sourceAtomKey, projectKey, testKey, label}) {
     const outPort = useRef();
     const inPort = useRef();
 
@@ -70,7 +70,7 @@ export function Atom({ id, left, top, sourceAtomKey, projectKey, testKey}) {
     const [{isDragging}, drag, preview] = useDrag(
         () => ({
             type: ATOM,
-            item: {id, left, top, sourceAtomKey, projectKey, renderType},
+            item: {id, left, top, sourceAtomKey, projectKey, label, renderType},
             collect: (monitor) => ({
                 isDragging: monitor.isDragging(),
             }),

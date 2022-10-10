@@ -12,16 +12,7 @@ import {useEventListener} from "@mantine/hooks";
 
 export const Canvas = ({ snapToGrid, tab, projectKey, testKey }) => {
 
-    const [canvasItems, setCanvas] = useState({"atoms": {}, "connections": {}});
-    const [showToast, setShowToast] = useState(false);
-
-    // const handler = window.electronAPI.listenForCanvasChange(
-    //     (_event, value) => {
-    //         console.log("found canvas change")
-    //         setCanvas(value)
-    //     });
-    //
-    // useEventListener('DOMContentLoaded', handler);
+    const [canvasItems, setCanvas] = useState(initializeCanvas);
 
     useEffect( () => {
         window.electronAPI.listenForCanvasChange((_event, value) => {
@@ -32,16 +23,11 @@ export const Canvas = ({ snapToGrid, tab, projectKey, testKey }) => {
         })
     }, []);
 
-    // Load canvasState from ipcMain
-    useEffect(() => {
+    function initializeCanvas() {
         window.electronAPI.loadCanvasState(projectKey, testKey).then(data => {
             setCanvas(data)
         })
-    }, []);
-
-    useEffect(() => {
-        saveCanvasState(canvasItems, projectKey, testKey)
-    }, [canvasItems])
+    }
 
     const addNewAtom = (left, top, projectKey, testKey, sourceAtomKey, atomLabel) => {
         let eligibleToAdd = true;
@@ -58,26 +44,11 @@ export const Canvas = ({ snapToGrid, tab, projectKey, testKey }) => {
                     }
                 })
             }
-
             if (eligibleToAdd) {
-
                 let atomCount = Object.entries(canvasItems["atoms"]).filter(([key, value]) =>
                     value["sourceAtomKey"] === sourceAtomKey).length;
                 console.log(atomCount)
-                setCanvas(
-                    update(canvasItems, {
-                        "atoms": {
-                            $merge: {
-                                [uuidv4()]: {
-                                    top: top,
-                                    left: left,
-                                    sourceAtomKey: sourceAtomKey,
-                                    atomLabel: `${atomLabel.split('/')[1]}`
-                                }
-                            }
-                        }
-                    }
-                ))
+                window.electronAPI.createAtom(projectKey, testKey, uuidv4(), {top: top, left: left, sourceAtomKey: sourceAtomKey, atomLabel: `${atomLabel.split('/')[1]}`})
             } else {
                 showNotification({
                     title: "Cannot add Atom",
@@ -89,34 +60,9 @@ export const Canvas = ({ snapToGrid, tab, projectKey, testKey }) => {
         })
     }
 
-    const saveCanvasState = useCallback(
-        () => {
-            window.electronAPI.saveCanvasState(canvasItems, projectKey, testKey)
-        },
-        [canvasItems],
-    );
-
-    // const refreshCanvas = useCallback(
-    //     () => {
-    //         window.electronAPI.loadCanvasState(projectKey, testKey).then(data => {
-    //             setCanvas(data)
-    //         });
-    //     }, [canvasItems],
-    // )
-
-    const updateAtom = useCallback(
-        (id, left, top) => {
-            setCanvas(
-                update(canvasItems, { "atoms": {
-                        [id]: {
-                            $merge: {left, top}
-                        },
-                    }
-                })
-            )
-        },
-        [canvasItems],
-    );
+    const updateAtom = (id, left, top, sourceAtomKey, atomLabel) => {
+        window.electronAPI.createAtom(projectKey, testKey, id, {top: top, left: left, sourceAtomKey: sourceAtomKey, atomLabel: atomLabel})
+    }
 
     const [, drop] = useDrop(
         () => ({
@@ -133,11 +79,13 @@ export const Canvas = ({ snapToGrid, tab, projectKey, testKey }) => {
 
             if (monitor.getItemType() === ATOM) {
                 console.log("Existing atom dragged.")
-                updateAtom(item.id, left, top)
+                console.log(item.label)
+                updateAtom(item.id, left, top, item.sourceAtomKey, item.label)
             }
 
             if (monitor.getItemType() === ATOM_SOURCE) {
                 console.log("New atom dragged.")
+                console.log(testKey)
                 addNewAtom(left, top, projectKey, testKey, item.sourceAtomKey, item.label)
             }
 
@@ -146,24 +94,29 @@ export const Canvas = ({ snapToGrid, tab, projectKey, testKey }) => {
         [updateAtom, addNewAtom],
     )
 
-    const checkState = () => {
-        console.log("STATE: ")
-        Object.entries(canvasItems).map(([key, value]) => (
-          console.log(key, value["sourceAtomKey"])
-        ))
-    }
 
-    return (
-        <div ref={drop} className={"canvas"}>
-            {Object.entries(canvasItems["atoms"]).map(([key, value]) => (
-                <Atom key={key} id={key} projectKey={projectKey} testKey={testKey} sourceAtomKey={value["sourceAtomKey"]} {...canvasItems["atoms"][key]} />
-            ))}
-            {Object.entries(canvasItems["connections"]).map(([key, value]) => (
-                <Xarrow start={value["from"]} end={value["to"]} />
-                //<Connector connectionFrom={value["from"]} connectionTo={value["to"]} />
-            ))}
-        </div>
-    )
+
+    if (canvasItems) {
+        return (
+            <div ref={drop} className={"canvas"}>
+                {Object.entries(canvasItems["atoms"]).map(([key, value]) => (
+                    <Atom key={key} id={key} projectKey={projectKey} testKey={testKey} sourceAtomKey={value["sourceAtomKey"]} label={value["atomLabel"]} {...canvasItems["atoms"][key]} />
+                ))}
+                {Object.entries(canvasItems["connections"]).map(([key, value]) => (
+                    <Xarrow start={value["from"]} end={value["to"]} />
+                    //<Connector connectionFrom={value["from"]} connectionTo={value["to"]} />
+                ))}
+            </div>
+        )
+
+    } else {
+        // Loading items
+        return (
+            <div ref={drop} className={"canvas"}>
+            </div>
+        )
+
+    }
 }
 
 export default Canvas;

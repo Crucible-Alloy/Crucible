@@ -1,49 +1,53 @@
 import {CloseButton, Group, Tabs} from '@mantine/core';
 import {IconChartDots3} from "@tabler/icons";
 import TabContent from "./TabContent";
-import {useState} from "react";
+import {useCallback, useEffect, useState} from "react";
 
-function BodyWrapper({tabs, setTabs, projectKey}) {
+function BodyWrapper({projectKey}) {
+    const [tabs, setTabs] = useState([]);
+    const [activeTab, setActiveTab] = useState("");
 
-    const [activeTab, setActiveTab] = useState(0);
+    // Initialize tabs
+    useEffect(() => {
+        window.electronAPI.getProjectTabs(projectKey).then(data => {
+            setTabs(data[0])
+            setActiveTab(data[1])
+        })
+    }, []);
 
-    function updateTab(index) {
-            setActiveTab(index)
-            tabs[index].active = true;
+    // useEffect(() => {
+    //     updateTabs()
+    // }, [tabs, activeTab])
+
+    // Listen for updates to tabs
+    useEffect( () => {
+        window.electronAPI.listenForTabsChange((_event, value) => {
+            window.electronAPI.getProjectTabs(projectKey).then(data => {
+                setTabs(data[0])
+                setActiveTab(data[1])
+            })
+        })
+    }, []);
+
+    function updateActiveTab(tabName) {
+        window.electronAPI.setActiveTab(projectKey, tabName)
     }
 
-    function closeTab(e) {
-        const tabIndex = e.currentTarget.parentElement.parentElement.parentElement.parentElement.getAttribute("index")
-        console.log(`Removing tab ${tabIndex}`);
-        let updatedTabs = tabs.splice(tabIndex, 1)
-        setTabs([...tabs.slice(0, tabIndex),
-            ...tabs.slice(tabIndex + 1)]);
+    function closeTab(tabName) {
+        window.electronAPI.closeTab(projectKey, tabName);
     }
 
-    // New Tab function removed in favor of creating new tests via the sidebar...
-
-    // function newTab() {
-    //     // Create new test in store, generate placeholder file in /tests.
-    //     window.electronAPI.createNewTest(projectKey, "New Test").then( (test) => {
-    //         //setTabs(tabs => [...tabs, test]);
-    //         //setActiveTab(tabs.length);
-    //
-    //
-    //
-    //     })
-    // }
-
-    if (tabs.length > 0) {
+    if (tabs) {
         return (
             <>
-                <Tabs sx={{height: "100%"}} active={activeTab} onTabChange={updateTab} variant={"outline"}>
+                <Tabs sx={{height: "100%"}} value={activeTab} onTabChange={updateActiveTab} keepMounted={false} variant={"outline"}>
                     <Tabs.List>
                         {tabs.map((tab, index) => (
                             <Tabs.Tab
                                 value={tab.name}
                                 icon={<IconChartDots3 size={16} />}
                             >
-                                {<Group>{tab.name} <CloseButton onClick={closeTab}/> </Group>}
+                                {<Group>{tab.name} <CloseButton onClick={() => closeTab(tab.name)}/> </Group>}
                             </Tabs.Tab>
                         ))}
                     </Tabs.List>

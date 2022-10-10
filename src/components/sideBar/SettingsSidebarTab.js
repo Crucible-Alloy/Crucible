@@ -33,7 +33,7 @@ function SettingsSidebarTab({projectKey}) {
                 label={"Project File"}
                 description={"Select the Alloy file you wish to test"}
             >
-               <Input icon={<IconFileSearch />} onClick={handleSelectFile} value={projectFile} />
+               <Input icon={<IconFileSearch />} onClick={() => handleSelectFile} value={projectFile} />
             </Input.Wrapper>
         </Group>
     )

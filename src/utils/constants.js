@@ -28,8 +28,14 @@ module.exports = {
     GET_CONNECTIONS: 'get-connection',
     MAKE_CONNECTION: 'make-connection',
     DELETE_CONNECTION: 'delete-connection',
-    CONVERT_TO_COMMAND_STRING: 'convert-to-command-string',
-
+    RUN_TEST: 'convert-to-command-string',
+    GET_PROJECT_TABS: 'get-project-tabs',
+    SET_PROJECT_TABS: 'set-project-tabs',
+    OPEN_AND_SET_ACTIVE: 'open-and-set-active',
+    SET_ACTIVE_TAB: 'set-active-tab',
+    CLOSE_TAB: 'close-tab',
+    DELETE_TEST: 'delete-test',
+    CREATE_ATOM: 'create-atom',
     // UI VARIABLES
     SIDEBAR_WIDTH: 500,
 

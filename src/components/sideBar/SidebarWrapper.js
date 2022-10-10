@@ -4,7 +4,7 @@ import AtomsSidebarTab from "./AtomsSidebarTab";
 import SettingsSidebarTab from "./SettingsSidebarTab";
 import TestsSidebarTab from "./TestsSidebarTab";
 
-function SidebarWrapper({projectKey, tabs, setTabs }) {
+function SidebarWrapper({projectKey}) {
     return (
         <Tabs color="blue" defaultValue={"atoms"}>
             <Tabs.List grow>
@@ -18,7 +18,7 @@ function SidebarWrapper({projectKey, tabs, setTabs }) {
             </Tabs.Panel>
 
             <Tabs.Panel value={"tests"}>
-                <TestsSidebarTab tabs={tabs} setTabs={setTabs} projectKey={projectKey}/>
+                <TestsSidebarTab projectKey={projectKey}/>
             </Tabs.Panel>
 
             <Tabs.Panel value={"settings"}>

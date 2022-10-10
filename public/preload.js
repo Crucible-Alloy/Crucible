@@ -20,7 +20,14 @@ const {SAVE_CANVAS_STATE, LOAD_CANVAS_STATE, UPDATE_PROJECT_FILE, GET_PROJECT_FI
     GET_RELATIONS,
     GET_CONNECTION,
     GET_CONNECTIONS,
-    CONVERT_TO_COMMAND_STRING
+    RUN_TEST,
+    GET_PROJECT_TABS,
+    SET_PROJECT_TABS,
+    OPEN_AND_SET_ACTIVE,
+    SET_ACTIVE_TAB,
+    CLOSE_TAB,
+    DELETE_TEST,
+    CREATE_ATOM
 } = require("../src/utils/constants");
 
 //const projectSelect = require("../src/components/projectSelection/ProjectSelect");
@@ -29,11 +36,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
     saveCanvasState: (canvasItems, projectKey, testKey) => ipcRenderer.send(SAVE_CANVAS_STATE, canvasItems, projectKey, testKey),
 
     loadCanvasState: (projectKey, testKey) => {
+        let returnKey = uuidv4();
         console.log("API received LOAD_CANVAS_STATE from tab ", testKey)
-        ipcRenderer.send(LOAD_CANVAS_STATE, projectKey, testKey)
+        ipcRenderer.send(LOAD_CANVAS_STATE, projectKey, testKey, returnKey)
 
         return new Promise((resolve) => {
-            ipcRenderer.once('loaded-canvas-state', (event, canvasState) => resolve(canvasState))
+            ipcRenderer.once(returnKey, (event, canvasState) => resolve(canvasState))
         })
     },
 
@@ -155,6 +163,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.on("color-update", callback)
     },
 
+    listenForTabsChange: (callback) => {
+        ipcRenderer.on("tabs-update", callback)
+    },
+
     getAtomMultiplicity: (projectKey, atomKey) => {
         let returnChannel = uuidv4();
         ipcRenderer.send(GET_ATOM_MULTIPLICITY, projectKey, atomKey, returnChannel)
@@ -193,10 +205,42 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
     runTest: (projectKey, testKey) => {
         let returnChannel = uuidv4();
-        ipcRenderer.send(CONVERT_TO_COMMAND_STRING, projectKey, testKey, returnChannel)
+        ipcRenderer.send(RUN_TEST, projectKey, testKey, returnChannel)
         return new Promise((resolve) => {
             ipcRenderer.once(returnChannel,
             (event, testResponse) => (resolve(testResponse)))
         })
+    },
+
+    getProjectTabs: (projectKey) => {
+        ipcRenderer.send(GET_PROJECT_TABS, projectKey)
+        return new Promise((resolve) => {
+            ipcRenderer.once('got-tabs',
+                (event, tabs, activeTab) => (resolve([tabs, activeTab])))
+        });
+    },
+
+    setProjectTabs: (projectKey, tabs, activeTab) => {
+        ipcRenderer.send(SET_PROJECT_TABS, projectKey, tabs, activeTab)
+    },
+
+    setActiveTab: (projectKey, activeTab) => {
+      ipcRenderer.send(SET_ACTIVE_TAB, projectKey, activeTab);
+    },
+
+    openTab: (projectKey, tab) => {
+        ipcRenderer.send(OPEN_AND_SET_ACTIVE, projectKey, tab)
+    },
+
+    closeTab: (projectKey, tabName) => {
+        ipcRenderer.send(CLOSE_TAB, projectKey, tabName)
+    },
+
+    deleteTest: (projectKey, testKey) => {
+        ipcRenderer.send(DELETE_TEST, projectKey, testKey)
+    },
+
+    createAtom: (projectKey, testKey, atomKey, atom) => {
+        ipcRenderer.send(CREATE_ATOM, projectKey, testKey, atomKey, atom);
     }
 })

@@ -30,7 +30,7 @@ export function AtomInPort({ projectKey, testKey, atomId, atomColor, acceptTypes
         window.electronAPI.makeConnection(projectKey, testKey, fromAtom, toAtom, fromAtomLabel, toAtomLabel, connectionLabel);
     }
 
-    function addNewConnection(projectKey, testKey, sourceAtomKey, toAtom, toAtomLabel, fromAtomSource, fromAtom, fromAtomLabel) {
+    function addNewConnection(sourceAtomKey, toAtom, toAtomLabel, fromAtomSource, fromAtom, fromAtomLabel) {
         let eligibleToAdd = true;
         let connectionsArray = [];
         let foundMultiplicity;
@@ -67,7 +67,8 @@ export function AtomInPort({ projectKey, testKey, atomId, atomColor, acceptTypes
             })
 
             if (eligibleToAdd) {
-                createConnection(fromAtom, toAtom, toAtomLabel, fromAtomLabel, connectionName);
+                console.log(testKey);
+                createConnection(fromAtom, toAtom, fromAtomLabel, toAtomLabel, connectionName);
             } else {
                 showNotification({
                     title: "Cannot add connection",
@@ -95,7 +96,7 @@ export function AtomInPort({ projectKey, testKey, atomId, atomColor, acceptTypes
 
                 if (item.renderType === CONNECTION) {
                     console.log("Existing atom dragged.")
-                    addNewConnection(projectKey, testKey, sourceAtomKey, atomId, atomLabel, item.sourceAtomKey, item.atomId, item.atomLabel)
+                    addNewConnection(sourceAtomKey, atomId, atomLabel, item.sourceAtomKey, item.atomId, item.atomLabel)
                 }
 
                 return undefined
