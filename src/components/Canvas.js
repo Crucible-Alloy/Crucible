@@ -1,18 +1,40 @@
 import update from 'immutability-helper';
 import {Atom} from "./atoms/Atom";
-import {useCallback, useEffect, useState} from "react";
+import React, {useCallback, useEffect, useState} from "react";
 import {useDrop} from "react-dnd";
 import {ATOM, ATOM_SOURCE} from "../utils/constants";
 import {snapToGrid as doSnapToGrid} from "./examples/SnapToGrid";
 import {v4 as uuidv4} from "uuid";
 import Xarrow from "react-xarrows";
 import {showNotification} from "@mantine/notifications";
-import {IconAlertTriangle, IconX} from "@tabler/icons";
-import {useEventListener} from "@mantine/hooks";
+import {IconAlertTriangle, IconAlphabetLatin, IconNumbers, IconRectangle, IconX} from "@tabler/icons";
+import {useClickOutside, useDidUpdate, useEventListener} from "@mantine/hooks";
+import { Affix, Popover, Select, Title } from "@mantine/core";
+import {AtomV2} from "./atoms/AtomV2";
 
 export const Canvas = ({ snapToGrid, tab, projectKey, testKey }) => {
 
     const [canvasItems, setCanvas] = useState(initializeCanvas);
+    const [atomMenu, setAtomMenu] = useState(false);
+    const [coords, setCoords] = useState({clickX: null, clickY: null});
+    const [atoms, setAtoms] = useState() ;
+    const [quickInsertData, setQuickInsertData] = useState([]);
+    // useDidUpdate(() => {
+    //     window.electronAPI.listenForCanvasChange((_event, value) => {
+    //         console.log("got canvas update")
+    //         window.electronAPI.loadCanvasState(projectKey, testKey).then(data => {
+    //             setCanvas(data)
+    //         })
+    //     })
+    // })
+
+    useEffect(() => {
+        return () => {
+            window.electronAPI.getAtoms(projectKey).then(atoms => {
+                setAtoms(atoms);
+            }, []);
+        }
+    }, []);
 
     useEffect( () => {
         window.electronAPI.listenForCanvasChange((_event, value) => {
@@ -22,6 +44,21 @@ export const Canvas = ({ snapToGrid, tab, projectKey, testKey }) => {
             })
         })
     }, []);
+
+    useDidUpdate(() => {
+        setQuickInsertData(Object.entries(atoms).map(([key, value]) => (
+            {label: value['label'], value: key}
+        )));
+        console.log(quickInsertData)
+        // setQuickInsertData([...quickInsertData, {label: 'Integer', value: 'int'}, {label: 'String', value: 'string'}])
+    }, [atoms]);
+
+
+    const ref = useClickOutside(() =>
+        setCoords({ clickX: null, clickY: null })
+    );
+
+    const validCoords = coords.clickX !== null && coords.clickY !== null;
 
     function initializeCanvas() {
         window.electronAPI.loadCanvasState(projectKey, testKey).then(data => {
@@ -48,7 +85,12 @@ export const Canvas = ({ snapToGrid, tab, projectKey, testKey }) => {
                 let atomCount = Object.entries(canvasItems["atoms"]).filter(([key, value]) =>
                     value["sourceAtomKey"] === sourceAtomKey).length;
                 console.log(atomCount)
-                window.electronAPI.createAtom(projectKey, testKey, uuidv4(), {top: top, left: left, sourceAtomKey: sourceAtomKey, atomLabel: `${atomLabel.split('/')[1]}`})
+                window.electronAPI.createAtom(projectKey, testKey, uuidv4(), {
+                    top: top,
+                    left: left,
+                    sourceAtomKey: sourceAtomKey,
+                    atomLabel: `${atomLabel.split('/')[1]}`
+                })
             } else {
                 showNotification({
                     title: "Cannot add Atom",
@@ -60,8 +102,17 @@ export const Canvas = ({ snapToGrid, tab, projectKey, testKey }) => {
         })
     }
 
-    const updateAtom = (id, left, top, sourceAtomKey, atomLabel) => {
-        window.electronAPI.createAtom(projectKey, testKey, id, {top: top, left: left, sourceAtomKey: sourceAtomKey, atomLabel: atomLabel})
+    const updateAtom = (id, left, top, sourceAtomKey, atomLabel, nickname) => {
+        window.electronAPI.createAtom(projectKey, testKey, id, {top: top, left: left, sourceAtomKey: sourceAtomKey, atomLabel: atomLabel, nickname: nickname})
+    }
+
+    function quickInsert(selectedAtom, coords) {
+        window.electronAPI.getAtomInstance(projectKey, selectedAtom).then( atom => {
+            console.log(coords)
+            //let canvasRect = this.getBoundingClientRect();
+            // TODO: Translate to coordinates in canvas.
+            addNewAtom(coords.clickX, coords.clickY, projectKey, testKey, selectedAtom, atom.label)
+        })
     }
 
     const [, drop] = useDrop(
@@ -80,7 +131,7 @@ export const Canvas = ({ snapToGrid, tab, projectKey, testKey }) => {
             if (monitor.getItemType() === ATOM) {
                 console.log("Existing atom dragged.")
                 console.log(item.label)
-                updateAtom(item.id, left, top, item.sourceAtomKey, item.label)
+                updateAtom(item.atomId, left, top, item.sourceAtomKey, item.label, item.nickname)
             }
 
             if (monitor.getItemType() === ATOM_SOURCE) {
@@ -98,9 +149,54 @@ export const Canvas = ({ snapToGrid, tab, projectKey, testKey }) => {
 
     if (canvasItems) {
         return (
-            <div ref={drop} className={"canvas"}>
+            <div ref={drop}
+                 className={"canvas"}
+                 onContextMenu={(e) => {
+                     e.preventDefault();
+                     const clickCoords = {clickX: e.pageX, clickY: e.pageY};
+                     console.log(clickCoords)
+                     console.log(quickInsertData)
+                     setCoords(clickCoords);
+                 }}>
+                <Affix
+                    sx={{ display: validCoords ? "initial" : "none" }}
+                    position={
+                        coords.clickX !== null && coords.clickY !== null
+                            ? { left: coords.clickX, top: coords.clickY }
+                        : undefined
+                    }>
+                    <Popover opened={validCoords} trapFocus width={400} shadow={"md"}>
+                        <div ref={ref}>
+                            <Popover.Target>
+                                <div />
+                            </Popover.Target>
+                            <Popover.Dropdown>
+                                <Title size={"xs"} color={"dimmed"}>Quick Insert</Title>
+                                <Select
+                                    data={quickInsertData}
+                                    label="Atoms"
+                                    placeholder="Pick one"
+                                    searchable
+                                    data-auto-focus
+                                    nothingFound="No options"
+                                    onChange={(selected) => quickInsert(selected, coords)}
+                                />
+                                {/*<Text size={"sm"} weight={500} mt={"sm"} mb={"xs"}>Data Types</Text>*/}
+                                {/*<Group>*/}
+                                {/*    <Tooltip label={"Integer"} position={"bottom"}>*/}
+                                {/*        <ActionIcon variant={"light"} > <IconNumbers/> </ActionIcon>*/}
+                                {/*    </Tooltip>*/}
+                                {/*    <Tooltip label={"String"} position={"bottom"}>*/}
+                                {/*        <ActionIcon variant={"light"} disabled> <IconAlphabetLatin/> </ActionIcon>*/}
+                                {/*    </Tooltip>*/}
+                                {/*</Group>*/}
+
+                            </Popover.Dropdown>
+                        </div>
+                    </Popover>
+                </Affix>
                 {Object.entries(canvasItems["atoms"]).map(([key, value]) => (
-                    <Atom key={key} id={key} projectKey={projectKey} testKey={testKey} sourceAtomKey={value["sourceAtomKey"]} label={value["atomLabel"]} {...canvasItems["atoms"][key]} />
+                    <AtomV2 id={key} projectKey={projectKey} testKey={testKey} sourceAtomKey={value["sourceAtomKey"]} label={value["atomLabel"]} atomColor={value["color"]} {...canvasItems["atoms"][key]} />
                 ))}
                 {Object.entries(canvasItems["connections"]).map(([key, value]) => (
                     <Xarrow start={value["from"]} end={value["to"]} />
@@ -108,7 +204,6 @@ export const Canvas = ({ snapToGrid, tab, projectKey, testKey }) => {
                 ))}
             </div>
         )
-
     } else {
         // Loading items
         return (

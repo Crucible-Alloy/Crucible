@@ -21,7 +21,7 @@ function getStyles(left, top, isDragging) {
         height: isDragging ? 0 : '',
     }
 }
-export function AtomInPort({ projectKey, testKey, atomId, atomColor, acceptTypes, sourceAtomKey, atomLabel}) {
+export function AtomInPort({ projectKey, testKey, atomId, atomColor, acceptTypes, sourceAtomKey, atomLabel, nickname}) {
     const inPort = useRef();
 
     const [position, setPosition] = useState({});
@@ -30,10 +30,11 @@ export function AtomInPort({ projectKey, testKey, atomId, atomColor, acceptTypes
         window.electronAPI.makeConnection(projectKey, testKey, fromAtom, toAtom, fromAtomLabel, toAtomLabel, connectionLabel);
     }
 
-    function addNewConnection(sourceAtomKey, toAtom, toAtomLabel, fromAtomSource, fromAtom, fromAtomLabel) {
+    function addNewConnection(sourceAtomKey, toAtom, toAtomLabel, toNickname, fromAtomSource, fromAtom, fromAtomLabel, fromNickname) {
         let eligibleToAdd = true;
         let connectionsArray = [];
         let foundMultiplicity;
+        let targetLabels = [];
         fromAtomLabel = fromAtomLabel.split('/')[1]
         toAtomLabel = toAtomLabel.split('/')[1]
 
@@ -42,33 +43,41 @@ export function AtomInPort({ projectKey, testKey, atomId, atomColor, acceptTypes
             connectionsArray = connections;
         })
 
+        window.electronAPI.getAtom(projectKey, sourceAtomKey).then(atom => {
+            targetLabels = [atom.label, ...atom.parents]
+            console.log(targetLabels)
+        })
+
         // Get relations of the originating atom
         window.electronAPI.getRelations(projectKey, fromAtomSource).then(relations => {
             let connectionName;
+
             relations.forEach(function(relation) {
                 // Find the correct relation via source key of the receiving atom and check the multiplicity
-                if (relation["related_key"] === sourceAtomKey) {
-                    connectionName = relation["label"];
-                    if (relation["multiplicity"] === "lone" || relation["multiplicity"] === "one") {
-                        console.log("Multiplicity is one")
-                        // Parse connections array and compare if there is already a connection with a label matching 'related_label'
-                        connectionsArray.forEach(function(connection) {
-                            console.log("To Label: " + connection["ToLabel"])
-                            console.log("Related Label: " + relation["related_label"])
-                            if (connection["toLabel"] === relation["related_label"]) {
-                                // Matching connection had been found, alert user of multiplicity violation.
-                                console.log("Found a match!")
-                                eligibleToAdd = false;
-                                foundMultiplicity = relation["multiplicity"];
-                            }
-                        })
+                targetLabels.forEach(label => {
+                    if (relation.related_label === label) {
+                        connectionName = relation["label"];
+                        if (relation["multiplicity"] === "lone" || relation["multiplicity"] === "one") {
+                            console.log("Multiplicity is one")
+                            // Parse connections array and compare if there is already a connection with a label matching 'related_label'
+                            connectionsArray.forEach(function(connection) {
+                                console.log("To Label: " + connection["toLabel"])
+                                console.log("Related Label: " + relation["related_label"])
+                                if (connection["connectionLabel"] === relation["label"]) {
+                                    // Matching connection had been found, alert user of multiplicity violation.
+                                    console.log("Found a match!")
+                                    eligibleToAdd = false;
+                                    foundMultiplicity = relation["multiplicity"];
+                                }
+                            })
+                        }
                     }
-                }
+                })
             })
 
             if (eligibleToAdd) {
                 console.log(testKey);
-                createConnection(fromAtom, toAtom, fromAtomLabel, toAtomLabel, connectionName);
+                createConnection(fromAtom, toAtom, fromAtomLabel, toAtomLabel, fromNickname, toNickname, connectionName);
             } else {
                 showNotification({
                     title: "Cannot add connection",
@@ -96,7 +105,7 @@ export function AtomInPort({ projectKey, testKey, atomId, atomColor, acceptTypes
 
                 if (item.renderType === CONNECTION) {
                     console.log("Existing atom dragged.")
-                    addNewConnection(sourceAtomKey, atomId, atomLabel, item.sourceAtomKey, item.atomId, item.atomLabel)
+                    addNewConnection(sourceAtomKey, atomId, atomLabel, nickname, item.sourceAtomKey, item.atomId, item.atomLabel, item.nickname)
                 }
 
                 return undefined

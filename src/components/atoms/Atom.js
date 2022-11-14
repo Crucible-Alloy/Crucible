@@ -2,7 +2,7 @@ import {useEffect, useRef, useState} from 'react'
 import { useDrag } from 'react-dnd'
 import { getEmptyImage } from 'react-dnd-html5-backend'
 import { ATOM } from '../../utils/constants'
-import {ActionIcon, Group, HoverCard, Paper, Text, Button} from "@mantine/core";
+import {ActionIcon, Group, HoverCard, Paper, Text, Button, TextInput} from "@mantine/core";
 import {AtomOutPort} from "./AtomOutPort";
 import {AtomInPort} from "./AtomInPort";
 import {IconTrash} from "@tabler/icons";
@@ -20,27 +20,45 @@ function getStyles(left, top, isDragging) {
         height: isDragging ? 0 : '',
     }
 }
+
 export function Atom({ id, left, top, sourceAtomKey, projectKey, testKey, label}) {
     const outPort = useRef();
     const inPort = useRef();
 
     const [connectorActive, setConnectorActive] = useState(false);
     const [position, setPosition] = useState({});
-    const [atomColor, setColor] = useState("");
+    const [atomColor, setColor] = useState(initializeColor);
+    const [nickname, setNickname] = useState(initializeNickname);
+    const [atomShape, setAtomShape] = useState(initializeShape);
     const [atomLabel, setAtomLabel] = useState('');
     const [acceptTypes, setAcceptTypes] = useState([]);
 
-    useEffect(() => {
-        window.electronAPI.getAtomColor(projectKey, sourceAtomKey).then(color => {
-            setColor(color)
-        })
-    }, [atomColor]);
+    const [atomData, setAtomData] = useState({});
+    const renderType = ATOM;
+
+    const [{isDragging}, drag, preview] = useDrag(
+        () => ({
+            type: ATOM,
+            item: {id, left, top, sourceAtomKey, projectKey, label, nickname, renderType},
+            collect: (monitor) => ({
+                isDragging: monitor.isDragging(),
+            }),
+        }),
+        [id, left, top, atomLabel, atomColor, nickname],
+    )
 
     useEffect( () => {
         window.electronAPI.listenForColorChange((_event, value) => {
-            console.log("Canvas change")
             window.electronAPI.getAtomColor(projectKey, sourceAtomKey).then(color => {
                 setColor(color);
+            })
+        })
+    }, []);
+
+    useEffect( () => {
+        window.electronAPI.listenForShapeChange((_event, value) => {
+            window.electronAPI.getAtomShape(projectKey, sourceAtomKey).then(shape => {
+                setAtomShape(shape);
             })
         })
     }, []);
@@ -51,6 +69,28 @@ export function Atom({ id, left, top, sourceAtomKey, projectKey, testKey, label}
         })
     }, []);
 
+    useEffect(() => {
+        preview(getEmptyImage(), {captureDraggingState: true})
+    }, []);
+
+    function initializeNickname() {
+        window.electronAPI.getAtomInstance(projectKey, testKey, id).then(atom => {
+            setNickname(atom.nickname)
+        })
+    }
+
+    function initializeColor() {
+        window.electronAPI.getAtomColor(projectKey, sourceAtomKey).then(color => {
+            setColor(color)
+        })
+    }
+
+    function initializeShape() {
+        window.electronAPI.getAtomShape(projectKey, sourceAtomKey).then(shape => {
+            setAtomShape(shape)
+        })
+    }
+
     function deleteAtom(id) {
         window.electronAPI.deleteAtom(projectKey, testKey, id)
     }
@@ -59,27 +99,9 @@ export function Atom({ id, left, top, sourceAtomKey, projectKey, testKey, label}
         window.electronAPI.deleteConnections(projectKey, testKey, id)
     }
 
-    useEffect(() => {
-        window.electronAPI.getAtomLabel(projectKey, sourceAtomKey).then(label => {
-            setAtomLabel(label);
-        })
-    }, [projectKey, sourceAtomKey, atomLabel]);
-
-    const renderType = ATOM;
-
-    const [{isDragging}, drag, preview] = useDrag(
-        () => ({
-            type: ATOM,
-            item: {id, left, top, sourceAtomKey, projectKey, label, renderType},
-            collect: (monitor) => ({
-                isDragging: monitor.isDragging(),
-            }),
-        }),
-        [id, left, top, atomLabel, atomColor],
-    )
-    useEffect(() => {
-        preview(getEmptyImage(), {captureDraggingState: true})
-    }, [])
+    function setAtomNickname(value) {
+        setNickname(value);
+    }
 
     return (
         <HoverCard>
@@ -96,24 +118,45 @@ export function Atom({ id, left, top, sourceAtomKey, projectKey, testKey, label}
                         p="md"
                         radius={"md"}
                         role="DraggableBox"
-                        sx={(theme) => ({
-                            backgroundColor: theme.colors.dark[5],
-                            border: `solid 6px ${atomColor}`,
-                            width: 200,
-                        })}
+                        sx={(theme) => {
+                            if (atomShape ==="rectangle") {
+                                return {
+                                    backgroundColor: theme.colors.dark[5],
+                                    border: `solid 6px ${atomColor}`,
+                                    width: 200 }
+                            } else if (atomShape === "triangle") {
+                                return {
+                                    backgroundColor: theme.colors.dark[5],
+                                    width: 0,
+                                    height: 0,
+                                    borderLeft: "100px solid transparent",
+                                    borderRight: "100px solid transparent",
+                                    borderBottom: `200px solid`,
+                                }
+                            } else if (atomShape === "circle") {
+                                return {
+                                    backgroundColor: theme.colors.dark[5],
+                                    border: `solid 6px ${atomColor}`,
+                                    width: 100,
+                                    height: 100,
+                                    borderRadius: 100,
+                                    }
+                            }
+                        }}
                     >
                         <Group>
                             <AtomInPort
+                                atomId={id}
                                 projectKey={projectKey}
                                 testKey={testKey}
                                 atomColor={atomColor}
-                                atomId={id}
                                 acceptTypes={acceptTypes}
                                 sourceAtomKey={sourceAtomKey}
                                 atomLabel={atomLabel}
+                                nickname={nickname}
                             />
-                            <Text align={"center"} color={atomColor} size={"xl"} weight={"800"}> {atomLabel.split("/")[1]} </Text>
-                            <AtomOutPort atomId={id} atomColor={atomColor} atomLabel={atomLabel} sourceAtomKey={sourceAtomKey}/>
+                            <Text size={"xl"} color={atomColor} weight={800}> {nickname} </Text>
+                            <AtomOutPort atomId={id} atomColor={atomColor} atomLabel={atomLabel} sourceAtomKey={sourceAtomKey} nickname={nickname}/>
                         </Group>
                         <Group position={"right"}>
                             <HoverCard.Target>

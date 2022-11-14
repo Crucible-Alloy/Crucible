@@ -1,5 +1,5 @@
-import {IconAlertTriangle, IconCheck, IconPlayerPlay, IconX} from "@tabler/icons";
-import {Avatar, Button} from "@mantine/core";
+import {IconCheck, IconPlayerPlay, IconX} from "@tabler/icons";
+import {Button, Tooltip, ActionIcon} from "@mantine/core";
 import {useState} from "react";
 import {showNotification} from "@mantine/notifications";
 
@@ -33,16 +33,15 @@ function TestPlayBtn ({disabled, projectKey, testKey}) {
     }
 
     return (
-        <Button
-            disabled={disabled}
-            color="green"
-            variant={"light"}
-            size={"md"}
-            onClick={() => {runTest()}}
-            loading={running}
-        >
-            <IconPlayerPlay size={24}/>
-        </Button>
+        <Tooltip label={"Run"} position={"bottom"}>
+            <ActionIcon
+                disabled={disabled}
+                color="teal"
+                variant={"light"}
+                onClick={() => {runTest()}}
+                loading={running}
+            ><IconPlayerPlay size={20}/></ActionIcon>
+        </Tooltip>
     );
 }
 

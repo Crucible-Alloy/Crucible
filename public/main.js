@@ -19,7 +19,7 @@ const { FETCH_DATA_FROM_STORAGE, HANDLE_FETCH_DATA,
     GET_ATOM_COLOR,
     GET_ATOM_LABEL,
     SET_ATOM_COLOR,
-    MAKE_CONNECTION,
+    CREATE_CONNECTION,
     DELETE_ATOM,
     DELETE_CONNECTION,
     GET_ATOM_MULTIPLICITY,
@@ -35,7 +35,14 @@ const { FETCH_DATA_FROM_STORAGE, HANDLE_FETCH_DATA,
     SET_ACTIVE_TAB,
     CLOSE_TAB,
     DELETE_TEST,
-    CREATE_ATOM
+    CREATE_ATOM,
+    GET_ATOM,
+    GET_PREDICATES,
+    SET_PREDICATE_TEST,
+    GET_ATOM_SHAPE,
+    SET_ATOM_SHAPE,
+    GET_ATOM_INSTANCE,
+    SET_ATOM_INSTANCE_NICKNAME
 } = require("../src/utils/constants")
 
 let itemsToTrack;
@@ -196,6 +203,7 @@ function createMainWindow(projectKey) {
             nodeIntegration: true,
             preload: path.join(__dirname, 'preload.js'),
         },
+        titleBarStyle: 'hiddenInset',
     });
 
     //Load index.html
@@ -230,9 +238,10 @@ function getColorArray() {
     return ["#FFA94D", "#FFD43B", "#A9E34B", "#69DB7C", "#38D9A9", "#3BC9DB", "#4DABF7", "#748FFC", "#9775FA", "#DA77F2", "#F783AC", "#FF8787"]
 }
 
-function storeAtomData(filePath, projectKey) {
+function initProjectData(filePath, projectKey) {
     let colors = getColorArray();
     let atomData = {};
+    let predicateData = {};
 
     try {
         // Send file to alloy API and get back metadata
@@ -242,19 +251,23 @@ function storeAtomData(filePath, projectKey) {
                 for (const atom in data.data["atoms"]) {
 
                     // If colors array is empty, repopulate it.
-                    if ( !colors.length ) {
+                    if (!colors.length) {
                         colors = getColorArray();
                     }
                     // Pop a random color from the colors array and assign to the atom
                     data.data["atoms"][atom]["color"] = colors.splice(Math.floor(Math.random() * colors.length), 1)[0]
+
+                    // Set the shape of the atom.
+                    data.data["atoms"][atom]["shape"] = "rectangle"
+
                     atomData[uuidv4()] = data.data["atoms"][atom]
                 }
 
                 // Post-processing on the relations information for multiplicity enforcement
-                for ( const [key, atom] of Object.entries(atomData)) {
+                for (const [key, atom] of Object.entries(atomData)) {
 
                     // Get the multiplicity and related atom label from the response returned to the API
-                    atom["relations"].forEach(function(item) {
+                    atom["relations"].forEach(function (item) {
                         let multiplicity = item["multiplicity"].split(" ")[0];
                         let related_atom_label = item["type"].split("->")[1].split("}")[0];
 
@@ -270,10 +283,27 @@ function storeAtomData(filePath, projectKey) {
                         }
                     });
                 }
+
+                let preds = data.data.functions
+
+                // Status can be 'null', 'equals', or 'negate'
+                preds.forEach(predicate => {
+                    predicateData[predicate['label'].split('/').at(-1)] = {
+                        status: "null",
+                        params: predicate['parameters']};
+                })
+
+                Object.values(predicateData).forEach(predicate => {
+                    predicate.params.forEach(param => {
+                        param.atom = "null"
+                    })
+                })
+
             }
         }).then( () => {
             // Write all atom data to the project
             store.set(`projects.${projectKey}.atoms`, atomData);
+            store.set(`projects.${projectKey}.predicates`, predicateData)
         });
     } catch (err) {
         console.log(err)
@@ -381,7 +411,7 @@ ipcMain.on(UPDATE_PROJECT_FILE, (event, projectKey) => {
             console.log(response.filePaths[0])
 
             store.set(`projects.${projectKey}.path`, response.filePaths[0])
-            storeAtomData(response.filePaths[0], projectKey);
+            initProjectData(response.filePaths[0], projectKey);
 
             event.reply('project-file-set', response.filePaths[0])
 
@@ -397,6 +427,16 @@ ipcMain.on(GET_ATOMS, (event, projectKey) => {
     let atoms = store.get(`projects.${projectKey}.atoms`);
     //console.log(atoms);
     event.sender.send('got-atoms', atoms ? atoms : {})
+})
+
+ipcMain.on(GET_ATOM, (event, projectKey, atomKey) => {
+    let atom = store.get(`projects.${projectKey}.atoms.${atomKey}`);
+    event.sender.send('got-atom', atom)
+})
+
+ipcMain.on(GET_ATOM_INSTANCE, (event, projectKey, testKey, atomKey, returnChannel) => {
+    let atom = store.get(`projects.${projectKey}.tests.${testKey}.canvas.atoms.${atomKey}`)
+    event.sender.send(returnChannel, atom)
 })
 
 ipcMain.on(GET_PROJECTS, (event) => {
@@ -449,28 +489,29 @@ ipcMain.on(CREATE_NEW_PROJECT, (event, alloyFile, projectName, projectDirectory)
     createNewFolder(testsFolder);
     createNewFolder(projectFilesFolder);
 
+    // TODO: Can delete this code if we don't want to move the alloy file anymore.
     // Move alloy file into /projectFiles
-    let alloyFileNoPath = alloyFile.split('/').pop();
-    let newAlloyFilePath = projectFilesFolder + '/' + alloyFileNoPath;
-
-    fs.rename(alloyFile, newAlloyFilePath, (err) =>{
-        if (err) {
-            console.log(err);
-        }
-    });
+    // let alloyFileNoPath = alloyFile.split('/').pop();
+    // let newAlloyFilePath = projectFilesFolder + '/' + alloyFileNoPath;
+    //
+    // fs.rename(alloyFile, newAlloyFilePath, (err) =>{
+    //     if (err) {
+    //         console.log(err);
+    //     }
+    // });
 
     // Save filepath and project name to store
     let projectKey = uuidv4();
-    store.set(`projects.${projectKey}.path`, projectFolder)
-    store.set(`projects.${projectKey}.alloyFile`, newAlloyFilePath)
     store.set(`projects.${projectKey}.name`, projectName)
-    store.set(`projects.${projectKey}.tests`, {})
+    store.set(`projects.${projectKey}.path`, projectFolder)
+    store.set(`projects.${projectKey}.alloyFile`, alloyFile)
+    store.set(`projects.${projectKey}.predicates`, [])
     store.set(`projects.${projectKey}.tabs`, [])
     store.set(`projects.${projectKey}.activeTab`, "")
+    store.set(`projects.${projectKey}.tests`, {})
 
     // Get atom data from springBoot API and write to store
-    storeAtomData(newAlloyFilePath, projectKey)
-
+    initProjectData(alloyFile, projectKey)
 
     // Open new project
     openProject(projectKey);
@@ -494,6 +535,7 @@ ipcMain.on(CREATE_NEW_TEST, (event, projectKey, testName) => {
     let newTest = {"name": testName,
                    "testFile": testFilePath,
                    "canvas": {
+                        "atomCount": 0,  // For use with atom nickname
                         "atoms": {},
                         "connections": {}
                    }}
@@ -528,9 +570,7 @@ ipcMain.on(GET_ATOM_MULTIPLICITY, (event, projectKey, atomKey, returnChannel) =>
             returnValue = key;
         }
     })
-
     event.sender.send(returnChannel, returnValue)
-
 })
 
 ipcMain.on(DELETE_ATOM, (event, projectKey, testKey, atomID) => {
@@ -562,9 +602,9 @@ ipcMain.on(DELETE_CONNECTION, (event, projectKey, testKey, atomID) => {
     mainWindow.webContents.send("canvas-update")
 })
 
-ipcMain.on(MAKE_CONNECTION, (event, projectKey, testKey, fromAtom, toAtom, fromAtomLabel, toAtomLabel, connectionLabel) => {
+ipcMain.on(CREATE_CONNECTION, (event, projectKey, testKey, fromAtom, toAtom, fromAtomLabel, toAtomLabel, fromNickname, toNickname, connectionLabel) => {
     let connectionId = uuidv4()
-    let connection = {from: fromAtom, to: toAtom, fromLabel: fromAtomLabel, toLabel: toAtomLabel, connectionLabel: connectionLabel}
+    let connection = {from: fromAtom, to: toAtom, fromLabel: fromAtomLabel, toLabel: toAtomLabel, fromNickname: fromNickname, toNickname: toNickname, connectionLabel: connectionLabel}
 
     // Todo: Get relation label based on sourceAtomKeys?
     //  Filter relations down based to toLabel compared to relatedLabel
@@ -578,17 +618,25 @@ ipcMain.on(GET_ACCEPT_TYPES, (event, projectKey, sourceAtomKey, returnChannel) =
     const atoms = store.get(`projects.${projectKey}.atoms`);
     let types = [];
     let typesLabels = [];
+    const sourceAtom = store.get(`projects.${projectKey}.atoms.${sourceAtomKey}`)
     // for atom in atoms
     // for relation in relations
     // if atom related to sourceAtomKey
     // accept type found
     // atom.label added to the types array
+    // if atom has children, add children to accept types
+
+    let targetLabels = [sourceAtom.label, ...sourceAtom.parents]
+    console.log(targetLabels)
+
     Object.entries(atoms).map(([key, atom]) => {
         if (atom["relations"]) {
             Object.entries(atom["relations"]).map(([relationKey, relation]) => {
-                if (relation["related_key"] === sourceAtomKey) {
-                    types.push(key);
-                }
+                targetLabels.forEach(label => {
+                    if (relation["related_label"] === label) {
+                        types.push(key);
+                    }
+                })
             })
         }
     })
@@ -597,7 +645,7 @@ ipcMain.on(GET_ACCEPT_TYPES, (event, projectKey, sourceAtomKey, returnChannel) =
         typesLabels.push(store.get(`projects.${projectKey}.atoms.${x}.label`))
     })
 
-    //console.log(`MAIN FOUND TYPES FOR ${sourceAtomKey}: ${typesLabels}`)
+    console.log(`MAIN FOUND TYPES FOR ${sourceAtomKey}: ${typesLabels}`)
     event.sender.send(returnChannel, typesLabels);
 })
 
@@ -626,10 +674,11 @@ ipcMain.on(RUN_TEST, (event, projectKey, testKey, returnChannel) => {
     // Type assignment
     // For atomType in project.atoms
     Object.entries(atoms).map(([sourceAtomKey, sourceAtom]) => {
-        // Assign each atom a numeral for use in command string
-        Object.entries(canvas["atoms"]).map(([canvasAtomKey, canvasAtom], index) => {
-          atomsWithIndexes[canvasAtomKey] = index;
-        })
+        // // Assign each atom a numeral for use in command string
+        // Object.entries(canvas["atoms"]).map(([canvasAtomKey, canvasAtom], index) => {
+        //   atomsWithIndexes[canvasAtomKey] = index;
+        // })
+
         // For atom in canvas where type matches atomType
         commandString += 'some disj'
         let atomsOfType = Object.entries(canvas["atoms"]).filter(([canvasAtomKey, canvasAtom]) => (sourceAtomKey === canvasAtom["sourceAtomKey"]))
@@ -649,15 +698,16 @@ ipcMain.on(RUN_TEST, (event, projectKey, testKey, returnChannel) => {
         // Get atoms on the canvas with a matching type.
         let matchedAtoms = Object.entries(canvas["atoms"]).filter(([key, value]) => (sourceAtomKey === value["sourceAtomKey"]));
         // console.log(matchedAtoms)
-        // For each matching atom, append their label and corresponding numerical to the command string.
+        // For each matching atom, append their nickname to the string
         for (let i = 0; i < matchedAtoms.length; i++) {
-            commandString += `${matchedAtoms[i][1]['atomLabel']}${atomsWithIndexes[matchedAtoms[i][0]]}`;
+            commandString += `${matchedAtoms[i][1]['nickname']} `;
             if (i < matchedAtoms.length - 1) {
                 commandString += '+';
             }
         }
         commandString += ` and `
     })
+
     // Get a list of the unique connection types in the canvas
     let connectionTypes = [...new Set(Object.entries(canvas['connections']).map((value) => value[1]['connectionLabel']))];
 
@@ -679,6 +729,25 @@ ipcMain.on(RUN_TEST, (event, projectKey, testKey, returnChannel) => {
             commandString += ' and ';
         }
     }
+
+    // Get the active predicates
+    let activePreds = Object.entries(store.get(`projects.${projectKey}.predicates`)).filter(([key, value]) =>
+        (value.status === 'equals' || value.status === 'negate')
+    )
+
+    if (activePreds.length > 0) { commandString += ' and '}
+
+    // Iterate over the active predicates and add them in
+    // for (let i = 0; i < activePreds.length; i++) {
+    //     if (activePreds[i][1] === "negate") {
+    //         commandString += `not ${activePreds[i][0]}`
+    //         if activePreds
+    //     } else if (activePreds[i][1] === "equals") {
+    //         commandString += `${activePreds[i][0]}`
+    //     }
+    //
+    //     if (i < activePreds.length - 1 ) { commandString += ' and '}
+    // }
 
     // Close our brackets all at the end
     commandString += "}".repeat((commandString.split("{").length - 1));
@@ -737,15 +806,28 @@ ipcMain.on(OPEN_AND_SET_ACTIVE, (event, projectKey, newTab) => {
 ipcMain.on(CLOSE_TAB, (event, projectKey, tabName) => {
 
     let projectTabs = store.get(`projects.${projectKey}.tabs`);
-    store.set(`projects.${projectKey}.tabs`,
-        projectTabs.filter((tab) => (tabName !== tab.name))
-    )
+
+    function updateActiveTab(projectKey) {
+        let name = store.get(`projects.${projectKey}.tabs`)[0].name;
+        store.set(`projects.${projectKey}.activeTab`, name)
+    }
 
     if (store.get(`projects.${projectKey}.activeTab`) === tabName) {
-        if (store.get(`projects.${projectKey}.tabs`).length > 0) {
-            store.set(`projects.${projectKey}.activeTab`, projectTabs[projectTabs.length -1].name);
+        console.log("Closing tab is active")
+        if (store.get(`projects.${projectKey}.activeTab`) === tabName) {
+            if (store.get(`projects.${projectKey}.tabs`).length > 0) {
+                store.set(`projects.${projectKey}.tabs`,
+                    projectTabs.filter((tab) => (tabName !== tab.name))
+                );
+                console.log(store.get(`projects.${projectKey}.tabs`))
+                store.set(`projects.${projectKey}.tabs`,
+                    projectTabs.filter((tab) => (tabName !== tab.name))
+                );
+                updateActiveTab(projectKey);
+            }
         }
     }
+
     mainWindow.webContents.send('tabs-update');
 })
 
@@ -754,6 +836,41 @@ ipcMain.on(DELETE_TEST, (event, projectKey, testKey) => {
 })
 
 ipcMain.on(CREATE_ATOM, (event, projectKey, testKey, atomKey, atom) => {
-    store.set(`projects.${projectKey}.tests.${testKey}.canvas.atoms.${atomKey}`, atom)
+    // Count up atoms of atomType and add nickname with count appended to it.
+    let canvas = store.get(`projects.${projectKey}.tests.${testKey}.canvas`);
+
+    if (!(atomKey in canvas.atoms)) {
+        atom["nickname"] = `${atom.atomLabel}${canvas.atomCount}`;
+        canvas.atomCount++;
+    }
+
+    canvas.atoms[atomKey] = atom;
+
+    store.set(`projects.${projectKey}.tests.${testKey}.canvas`, canvas)
     mainWindow.webContents.send('canvas-update')
+})
+
+ipcMain.on(GET_PREDICATES, (event, projectKey) => {
+    let predicates = store.get(`projects.${projectKey}.predicates`)
+    event.sender.send('got-predicates', predicates)
+})
+
+ipcMain.on(SET_PREDICATE_TEST, (event, projectKey, predicateName, value) => {
+    store.set(`projects.${projectKey}.predicates.${predicateName}`, value);
+    mainWindow.webContents.send('predicates-update');
+})
+
+ipcMain.on(GET_ATOM_SHAPE, (event, projectKey, sourceAtomKey) => {
+    let shape = store.get(`projects.${projectKey}.atoms.${sourceAtomKey}.shape`);
+    event.sender.send('got-atom-shape', shape);
+})
+
+ipcMain.on(SET_ATOM_SHAPE, (event, projectKey, sourceAtomKey, shape) => {
+    store.set(`projects.${projectKey}.atoms.${sourceAtomKey}.shape`, shape);
+    mainWindow.webContents.send('shape-update');
+})
+
+ipcMain.on(SET_ATOM_INSTANCE_NICKNAME, (event, projectKey, testKey, atomKey, nickname) => {
+    store.set(`projects.${projectKey}.tests.${testKey}.canvas.atoms.${atomKey}.nickname`, nickname)
+    mainWindow.webContents.send('nickname-update');
 })

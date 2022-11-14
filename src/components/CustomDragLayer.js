@@ -2,13 +2,14 @@ import {useDragLayer} from 'react-dnd'
 import {ATOM, ATOM_SOURCE, CONNECTION} from '../utils/constants'
 import { snapToGrid } from './examples/SnapToGrid.js'
 import {Atom} from "./atoms/Atom";
-import {Text} from "@mantine/core";
+import {Text, useMantineTheme} from "@mantine/core";
 import Xarrow from "react-xarrows";
+import { Arrow } from 'react-absolute-svg-arrows';
 import {useEffect, useRef, useState} from "react";
 import * as PropTypes from "prop-types";
 
 const layerStyles = {
-    position: 'fixed',
+    position: 'absolute',
     pointerEvents: 'none',
     zIndex: 100,
     left: 0,
@@ -17,8 +18,9 @@ const layerStyles = {
     height: '100%',
 }
 
-function getItemStyles(item, initialOffset, currentOffset, delta,) {
-    let { x, y } = currentOffset
+function getItemStyles(item, initialSourceOffset, initialOffset, currentSourceOffset, currentOffset, delta, mousePos) {
+    let { x, y } = currentSourceOffset
+
     if (item.renderType === ATOM_SOURCE) {
         const transform = `translate(${x}px, ${y}px)`
         return {
@@ -26,29 +28,35 @@ function getItemStyles(item, initialOffset, currentOffset, delta,) {
             WebkitTransform: transform,
         }
     }
-
-    console.log("Initial Offset: " + initialOffset.x + "," + initialOffset.y );
-    console.log("Current Offset: " + currentOffset.x + "," + currentOffset.y );
-
-    let left = Math.round(delta.x)
-    let top = Math.round(delta.y)
-    let translated_x = left + 500;
-    let translated_y = top + 150;
-    const transform = `translate(${translated_x}px, ${translated_y}px)`
-    return {
-        transform,
-        WebkitTransform: transform,
+    if (item.renderType === CONNECTION) {
+    //     console.log("Initial Offset: " + initialSourceOffset.x + "," + initialSourceOffset.y );
+    //     console.log("Current Offset: " + currentOffset.x + "," + currentOffset.y );
+    //
+    //     let left = Math.round(delta.x)
+    //     let top = Math.round(delta.y)
+    //     let translated_x = left + 500;
+    //     let translated_y = top + 150;
+            const transform = `translate(${initialSourceOffset.x - initialOffset.x}px, ${initialSourceOffset.y - initialOffset.y}px)`
+        return {
+            transform,
+            WebkitTransform: transform,
+        }
     }
+
 }
 
-export const CustomDragLayer = (props) => {
+export const CustomDragLayer = ({mousePos}) => {
 
-    const { itemType, isDragging, item, initialOffset, currentOffset, delta } =
+    const theme = useMantineTheme();
+
+    const { itemType, isDragging, item, initialOffset, initialSourceOffset, currentSourceOffset, currentOffset, delta } =
         useDragLayer((monitor) => ({
             item: monitor.getItem(),
             itemType: monitor.getItemType(),
-            initialOffset: monitor.getInitialSourceClientOffset(),
+            initialSourceOffset: monitor.getInitialSourceClientOffset(),
+            initialOffset: monitor.getInitialClientOffset(),
             delta: monitor.getDifferenceFromInitialOffset(),
+            currentSourceOffset: monitor.getSourceClientOffset(),
             currentOffset: monitor.getSourceClientOffset(),
             isDragging: monitor.isDragging(),
         }))
@@ -57,7 +65,7 @@ export const CustomDragLayer = (props) => {
 
         switch (item.renderType) {
             case ATOM:
-
+                console.log("existing atom")
                 return (
                     <Atom id={item.id} left={item.left} top={item.top} sourceAtomKey={item.sourceAtomKey} projectKey={item.projectKey} testKey={item.testKey} />
                 );
@@ -66,11 +74,12 @@ export const CustomDragLayer = (props) => {
                     <Atom id={item.id} left={item.left} top={item.top} sourceAtomKey={item.sourceAtomKey} projectKey={item.projectKey} testKey={item.testKey} />
                 );
             case CONNECTION:
+                console.log("dragging connection")
+                console.log(`Atom coords: \n X: ${item.left}, ${item.top}`);
+                console.log(`Mouse coords: \n X: ${mousePos.x}`);
 
                 return (
-                    <>
-                        <Xarrow start={item.atomId} end={item}/>
-                    </>
+                    <Arrow startPoint={{x: mousePos.x, y: mousePos.y}} endPoint={{x: mousePos.x + delta.x + 120, y: mousePos.y + delta.y + 30}} config={{arrowColor: theme.colors.blue[5], strokeWidth: 5}}/>
                 )
 
             default:
@@ -79,7 +88,7 @@ export const CustomDragLayer = (props) => {
     };
 
     if (!isDragging) {
-        return null;
+        return null
     }
 
     // if (isDragging && (itemType === CONNECTION)) {
@@ -94,7 +103,7 @@ export const CustomDragLayer = (props) => {
 
     return (
         <div style={layerStyles}>
-            <div style={getItemStyles(item, initialOffset, currentOffset, delta)}>
+            <div style={getItemStyles(item, initialSourceOffset, initialOffset, currentSourceOffset, currentOffset, delta)}>
                 {renderItem()}
             </div>
         </div>

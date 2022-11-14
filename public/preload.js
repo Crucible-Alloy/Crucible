@@ -12,7 +12,7 @@ const {SAVE_CANVAS_STATE, LOAD_CANVAS_STATE, UPDATE_PROJECT_FILE, GET_PROJECT_FI
     GET_ATOM_COLOR,
     GET_ATOM_LABEL,
     SET_ATOM_LABEL,
-    MAKE_CONNECTION,
+    CREATE_CONNECTION,
     DELETE_ATOM,
     DELETE_CONNECTION,
     GET_ATOM_MULTIPLICITY,
@@ -27,7 +27,14 @@ const {SAVE_CANVAS_STATE, LOAD_CANVAS_STATE, UPDATE_PROJECT_FILE, GET_PROJECT_FI
     SET_ACTIVE_TAB,
     CLOSE_TAB,
     DELETE_TEST,
-    CREATE_ATOM
+    CREATE_ATOM,
+    GET_ATOM,
+    GET_PREDICATES,
+    SET_PREDICATE_TEST,
+    GET_ATOM_SHAPE,
+    SET_ATOM_SHAPE,
+    GET_ATOM_INSTANCE,
+    SET_ATOM_INSTANCE_NICKNAME
 } = require("../src/utils/constants");
 
 //const projectSelect = require("../src/components/projectSelection/ProjectSelect");
@@ -74,6 +81,23 @@ contextBridge.exposeInMainWorld('electronAPI', {
         return new Promise( (resolve) => {
             console.log("BRIDGE RECEIVED: GOT_ATOMS FROM MAIN");
             ipcRenderer.once('got-atoms', (event, atoms) => resolve(atoms))
+        })
+    },
+
+    getAtom: (projectKey, atomKey) => {
+        ipcRenderer.send(GET_ATOM, projectKey, atomKey)
+
+        return new Promise((resolve) => {
+            ipcRenderer.once('got-atom', (event, atom) => resolve(atom))
+        })
+    },
+
+    getAtomInstance: (projectKey, testKey, atomKey) => {
+        let returnChannel= uuidv4();
+        ipcRenderer.send(GET_ATOM_INSTANCE, projectKey, testKey, atomKey, returnChannel)
+
+        return new Promise((resolve) => {
+            ipcRenderer.once(returnChannel, (event, atom) => resolve(atom))
         })
     },
 
@@ -135,12 +159,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.send(SET_ATOM_LABEL, projectKey, atomKey, atomLabel)
     },
 
-    deleteAtom: (projectKey, testKey, atomID) => {
-        ipcRenderer.send(DELETE_ATOM, projectKey, testKey, atomID)
-        return new Promise((resolve) => {
-             ipcRenderer.once('deleted-atom', (event, canvasState) => resolve(canvasState))
-        })
-    },
+    deleteAtom: (projectKey, testKey, atomID) => { ipcRenderer.send(DELETE_ATOM, projectKey, testKey, atomID) },
 
     deleteConnections: (projectKey, testKey, atomId) => {
         ipcRenderer.send(DELETE_CONNECTION, projectKey, testKey, atomId)
@@ -151,8 +170,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
         })
     },
 
-    makeConnection: (projectKey, testKey, fromAtom, toAtom, fromAtomLabel, toAtomLabel, connectionLabel) => {
-        ipcRenderer.send(MAKE_CONNECTION, projectKey, testKey, fromAtom, toAtom, fromAtomLabel, toAtomLabel, connectionLabel)
+    makeConnection: (projectKey, testKey, fromAtom, toAtom, fromAtomLabel, toAtomLabel, fromNickname, toNickname, connectionLabel) => {
+        ipcRenderer.send(CREATE_CONNECTION, projectKey, testKey, fromAtom, toAtom, fromAtomLabel, toAtomLabel, fromNickname, toNickname, connectionLabel)
     },
 
     listenForCanvasChange: (callback) => {
@@ -165,6 +184,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
     listenForTabsChange: (callback) => {
         ipcRenderer.on("tabs-update", callback)
+    },
+
+    listenForPredicatesChange: (callback) => {
+        ipcRenderer.on("predicates-update", callback)
+    },
+
+    listenForShapeChange: (callback) => {
+        ipcRenderer.on("shape-update", callback)
     },
 
     getAtomMultiplicity: (projectKey, atomKey) => {
@@ -242,5 +269,34 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
     createAtom: (projectKey, testKey, atomKey, atom) => {
         ipcRenderer.send(CREATE_ATOM, projectKey, testKey, atomKey, atom);
+    },
+
+    getPredicates: (projectKey) => {
+        ipcRenderer.send(GET_PREDICATES, projectKey)
+        return new Promise((resolve) => {
+            ipcRenderer.once('got-predicates',
+                (event, predicates) => resolve(predicates)
+            )
+        })
+    },
+
+    setPredicate: (projectKey, predicateName, value) => {
+        ipcRenderer.send(SET_PREDICATE_TEST, projectKey, predicateName, value);
+    },
+
+    getAtomShape: (projectKey, sourceAtomKey) => {
+        ipcRenderer.send(GET_ATOM_SHAPE, projectKey, sourceAtomKey);
+        return new Promise((resolve) => {
+            ipcRenderer.once('got-atom-shape',
+                (event, shape) => resolve(shape));
+        })
+    },
+
+    setAtomShape: (projectKey, sourceAtomKey, shape) => {
+        ipcRenderer.send(SET_ATOM_SHAPE, projectKey, sourceAtomKey, shape)
+    },
+
+    setAtomInstanceNickname: (projectKey, testKey, atomKey, nickname) => {
+        ipcRenderer.send(SET_ATOM_INSTANCE_NICKNAME, projectKey, testKey, atomKey, nickname)
     }
 })

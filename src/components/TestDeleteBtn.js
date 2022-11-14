@@ -1,4 +1,4 @@
-import {IconDeviceFloppy, IconTrash} from "@tabler/icons";
+import {IconTrash} from "@tabler/icons";
 import {Button} from "@mantine/core";
 
 function TestDeleteBtn ({projectKey, testKey}) {

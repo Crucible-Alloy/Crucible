@@ -1,9 +1,9 @@
-import {CloseButton, Group, Tabs} from '@mantine/core';
+import {CloseButton, Group, Tabs, Text} from '@mantine/core';
 import {IconChartDots3} from "@tabler/icons";
 import TabContent from "./TabContent";
-import {useCallback, useEffect, useState} from "react";
+import {useEffect, useState} from "react";
 
-function BodyWrapper({projectKey}) {
+function BodyWrapper({projectKey, mousePos}) {
     const [tabs, setTabs] = useState([]);
     const [activeTab, setActiveTab] = useState("");
 
@@ -40,20 +40,30 @@ function BodyWrapper({projectKey}) {
     if (tabs) {
         return (
             <>
-                <Tabs sx={{height: "100%"}} value={activeTab} onTabChange={updateActiveTab} keepMounted={false} variant={"outline"}>
+                <Tabs
+                    value={activeTab}
+                    onTabChange={updateActiveTab}
+                    keepMounted={false}
+                    radius={"md"}
+                >
                     <Tabs.List>
                         {tabs.map((tab, index) => (
                             <Tabs.Tab
                                 value={tab.name}
                                 icon={<IconChartDots3 size={16} />}
+                                sx={(theme) => ({
+                                        backgroundColor: (activeTab === tab.name) ? "white" : theme.colors.gray[2],
+                                        height: 36,
+                                        borderRadius: (activeTab === tab.name) ? "2px 8px 0 0" : "0 0 0 0",
+                                })}
                             >
-                                {<Group>{tab.name} <CloseButton onClick={() => closeTab(tab.name)}/> </Group>}
+                                {<Group position={"apart"}><Text>{tab.name}</Text> <CloseButton onClick={() => closeTab(tab.name)}/></Group>}
                             </Tabs.Tab>
                         ))}
                     </Tabs.List>
                     {tabs.map((tab, index) => (
-                        <Tabs.Panel value={tab.name}>
-                            <TabContent projectKey={projectKey} testKey={tab.testKey} tab={tab}/>
+                        <Tabs.Panel value={tab.name} sx={{backgroundColor: "white", border: "1px", margin:0, height: "parent"}}>
+                            <TabContent sx={{height: "90vh"}} projectKey={projectKey} testKey={tab.testKey} tab={tab} mousePos={mousePos}/>
                         </Tabs.Panel>
                     ))}
                 </Tabs>

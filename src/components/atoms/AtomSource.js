@@ -1,10 +1,30 @@
 import {memo, useEffect, useState} from 'react';
-import {ActionIcon, ColorInput, ColorPicker, Group, List, ListItem, Modal, Paper, Text} from "@mantine/core";
+import {
+    ActionIcon,
+    ColorInput,
+    ColorPicker,
+    Group,
+    Input,
+    Modal,
+    Box,
+    Center,
+    Paper,
+    SegmentedControl,
+    Text, Title
+} from "@mantine/core";
 import {useDrag} from "react-dnd";
 import { ATOM_SOURCE } from "../../utils/constants";
 import {getEmptyImage} from "react-dnd-html5-backend";
 import React from "react";
-import {IconArrowMoveRight, IconCaretDown, IconCaretUp, IconChartCircles, IconEdit} from "@tabler/icons";
+import {
+    IconArrowMoveRight,
+    IconCaretDown,
+    IconCaretUp,
+    IconChartCircles,
+    IconCircle,
+    IconEdit,
+    IconRectangle, IconSubtask, IconTriangle
+} from "@tabler/icons";
 
 function getStyles(left, top, isDragging) {
     //const transform = `translate3d(${left}px, ${top}px, 0)`
@@ -23,10 +43,23 @@ export function AtomSource({ id, label, left, top, atom, sourceAtomKey, projectK
     const [multiplicity, setMultiplicity] = useState("not Defined");
     const [dropDown, setDropdown] = useState(false)
     const [atomColor, setAtomColor] = useState(color);
+    const [shapeValue, setShapeValue] = useState('rectangle');
 
-    useEffect(() => {
-        window.electronAPI.setAtomColor(projectKey, sourceAtomKey, atomColor)
-    }, []);
+    const renderType = ATOM_SOURCE;
+
+    const [{isDragging}, drag, preview] = useDrag(() => ({
+            type: ATOM_SOURCE,
+            item: {id, left, top, label, sourceAtomKey, projectKey, renderType},
+            collect: (monitor) => ({
+                isDragging: monitor.isDragging(),
+            })
+        }),
+        [id, left, top, label, sourceAtomKey],
+    )
+
+    // useEffect(() => {
+    //     window.electronAPI.setAtomColor(projectKey, sourceAtomKey, atomColor)
+    // }, []);
 
 
     useEffect(() => {
@@ -34,6 +67,10 @@ export function AtomSource({ id, label, left, top, atom, sourceAtomKey, projectK
             findAndSetMultiplicity()
         };
     }, []);
+
+    useEffect(() => {
+        preview(getEmptyImage(), {captureDraggingState: true})
+    }, [preview])
 
     function findAndSetMultiplicity() {
         //console.log(atom)
@@ -51,20 +88,10 @@ export function AtomSource({ id, label, left, top, atom, sourceAtomKey, projectK
         window.electronAPI.setAtomColor(projectKey, sourceAtomKey, color)
     }
 
-    const renderType = ATOM_SOURCE;
-
-    const [{isDragging}, drag, preview] = useDrag(() => ({
-            type: ATOM_SOURCE,
-            item: {id, left, top, label, sourceAtomKey, projectKey, renderType},
-            collect: (monitor) => ({
-                isDragging: monitor.isDragging(),
-            })
-        }),
-        [id, left, top, label, sourceAtomKey],
-    )
-    useEffect(() => {
-        preview(getEmptyImage(), {captureDraggingState: true})
-    }, [preview])
+    function handleShapeChange(shape) {
+        setShapeValue(shape)
+        window.electronAPI.setAtomShape(projectKey, sourceAtomKey, shape)
+    }
 
     function editAtom() {
         setModalOpened(true)
@@ -76,17 +103,57 @@ export function AtomSource({ id, label, left, top, atom, sourceAtomKey, projectK
                 <Modal
                     opened={modalOpened}
                     onClose={() => setModalOpened(false)}
-                    title={`Edit Atom - ${label}`}
+                    title={<Title size={"sm"}>{`Edit Atom - ${label}`}</Title>}
                 >
-                    <ColorInput
+                    <Input.Wrapper
+                        mt={"xs"}
                         label={"Atom Color"}
-                        description={"The color of the atom as it appears on the canvas."}
-                        format="hex"
-                        value={atomColor}
-                        swatchesPerRow={12}
-                        onChange={(e) => handleColorChange(e)}
-                        swatches={["#ffa94d", "#ffd43b", "#a9e34b", "#69db7c", "#38d9a9", "#3bc9db", "#4dabf7", "#748ffc", "#9775fa", "#da77f2", "#f783ac", "#ff8787"]}
-                    />
+                        description={"The color of the atom as it appears on the canvas."}>
+                        <ColorInput
+                            mt={"xs"}
+                            mb={"sm"}
+                            format="hex"
+                            value={atomColor}
+                            swatchesPerRow={12}
+                            onChange={(e) => handleColorChange(e)}
+                            swatches={["#ffa94d", "#ffd43b", "#a9e34b", "#69db7c", "#38d9a9", "#3bc9db", "#4dabf7", "#748ffc", "#9775fa", "#da77f2", "#f783ac", "#ff8787"]}
+                        />
+                    </Input.Wrapper>
+
+                    <Input.Wrapper
+                        mt={"xs"}
+                        label={"Atom Shape"}
+                        description={"The shape of the atom as it appears on the canvas."}>
+                        <SegmentedControl
+                            size={"xs"}
+                            mt={"xs"}
+                            mb={"sm"}
+                            value={shapeValue}
+                            onChange={(e) => handleShapeChange(e)}
+                            data={[{
+                                label: (
+                                    <Center>
+                                        <IconRectangle size={16} />
+                                        <Box ml={10}>Rectangle</Box>
+                                    </Center>
+                                ), value: 'rectangle' },
+                                {label: (
+                                    <Center>
+                                        <IconCircle size={16} />
+                                        <Box ml={10}>Circle</Box>
+                                    </Center>
+                                ), value: 'circle' },
+                                {label: (
+                                        <Center>
+                                            <IconTriangle size={16} />
+                                            <Box ml={10}>Triangle</Box>
+                                        </Center>
+                                    ), value: 'triangle' },
+                            ]}
+                        />
+                    </Input.Wrapper>
+
+
                 </Modal>
 
                 <Paper
@@ -100,7 +167,7 @@ export function AtomSource({ id, label, left, top, atom, sourceAtomKey, projectK
                     sx={(theme) => ({
                         backgroundColor: theme.colors.dark[4],
                         border: `solid 6px ${atomColor}`,
-                        width: 300,
+                        width: "100%",
                     })}
                 >
                     <Group>
@@ -121,12 +188,31 @@ export function AtomSource({ id, label, left, top, atom, sourceAtomKey, projectK
                         <IconArrowMoveRight color={"gray"} />
                         <Text color="white" size={"md"} weight={800}> Relations </Text>
                     </Group>
-                        { atom["relations"].map(item =>
-                            ( <Group>
-                                <Text ml={"sm"} color="white" weight={600}> {item["label"]}:</Text>
-                                <Text color="white"> {item["multiplicity"]} </Text>
-                            </Group>)
-                        )}
+                        { atom["relations"].length > 0 ?
+                            atom["relations"].map(item => (
+                                <Group>
+                                    <Text ml={"sm"} color="white" weight={600}> {item["label"]}:</Text>
+                                    <Text color="white"> {item["multiplicity"]} </Text>
+                                </Group>
+                            )) : (
+                                <Text color={"dimmed"}> None </Text>
+                            )
+                        }
+
+                    <Group mt={"xs"}>
+                        <IconSubtask color={"gray"} />
+                        <Text color="white" size={"md"} weight={800}> Extends </Text>
+                    </Group>
+                        { atom["parents"].length > 0 ?
+                            atom["parents"].map(item => (
+                                <Group>
+                                    <Text ml={"sm"} color="white" weight={600}> {item}</Text>
+                                </Group>
+                            )) : (
+                                <Text color={"dimmed"}> None </Text>
+                            )
+                        }
+
                     <Group position={"right"}>
                         <ActionIcon onClick={editAtom}>
                             <IconEdit/>
@@ -157,7 +243,7 @@ export function AtomSource({ id, label, left, top, atom, sourceAtomKey, projectK
                     sx={(theme) => ({
                         backgroundColor: theme.colors.dark[4],
                         border: `solid 6px ${atomColor}`,
-                        width: 300,
+                        width: "100%",
                     })}
                 >
                     <Group>

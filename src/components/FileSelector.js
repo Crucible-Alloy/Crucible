@@ -1,5 +1,5 @@
 import React from 'react';
-import {Input, InputWrapper} from "@mantine/core";
+import {Input} from "@mantine/core";
 import {IconFileSearch} from "@tabler/icons";
 import {useState} from "react";
 
