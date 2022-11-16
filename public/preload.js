@@ -178,6 +178,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.on("canvas-update", callback)
     },
 
+    listenForMetaDataChange: (callback) => {
+        ipcRenderer.on("meta-data-update", callback)
+    },
+
     listenForColorChange: (callback) => {
         ipcRenderer.on("color-update", callback)
     },

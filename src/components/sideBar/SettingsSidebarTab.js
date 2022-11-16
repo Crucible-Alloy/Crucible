@@ -11,7 +11,7 @@ function SettingsSidebarTab({projectKey}) {
         window.electronAPI.getProjectFile(projectKey).then(filePath => {
             setProjectFile(trimFullPath(filePath))
         })
-    }, );
+    }, []);
 
     function trimFullPath(filePath) {
         let segments = filePath.split('/')

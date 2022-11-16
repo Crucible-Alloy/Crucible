@@ -130,8 +130,8 @@ export const Canvas = ({ snapToGrid, tab, projectKey, testKey }) => {
 
             if (monitor.getItemType() === ATOM) {
                 console.log("Existing atom dragged.")
-                console.log(item.label)
-                updateAtom(item.atomId, left, top, item.sourceAtomKey, item.label, item.nickname)
+                console.log(item.id)
+                updateAtom(item.id, left, top, item.sourceAtomKey, item.metaData.label, item.atomData.nickname)
             }
 
             if (monitor.getItemType() === ATOM_SOURCE) {
@@ -144,8 +144,6 @@ export const Canvas = ({ snapToGrid, tab, projectKey, testKey }) => {
         },}),
         [updateAtom, addNewAtom],
     )
-
-
 
     if (canvasItems) {
         return (
@@ -196,7 +194,7 @@ export const Canvas = ({ snapToGrid, tab, projectKey, testKey }) => {
                     </Popover>
                 </Affix>
                 {Object.entries(canvasItems["atoms"]).map(([key, value]) => (
-                    <AtomV2 id={key} projectKey={projectKey} testKey={testKey} sourceAtomKey={value["sourceAtomKey"]} label={value["atomLabel"]} atomColor={value["color"]} {...canvasItems["atoms"][key]} />
+                    <AtomV2 contentsBeingDragged={false} id={key} projectKey={projectKey} testKey={testKey} sourceAtomKey={value["sourceAtomKey"]} label={value["atomLabel"]} atomColor={value["color"]} {...canvasItems["atoms"][key]} />
                 ))}
                 {Object.entries(canvasItems["connections"]).map(([key, value]) => (
                     <Xarrow start={value["from"]} end={value["to"]} />

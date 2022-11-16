@@ -553,7 +553,7 @@ ipcMain.on(GET_ATOM_COLOR, (event, projectKey, atomSourceKey, returnChannel) => 
 ipcMain.on(SET_ATOM_COLOR, (event, projectKey, atomKey, atomColor) => {
     //console.log("MAIN RECEIVED: SET_ATOM_COLOR WITH:", atomColor)
     store.set(`projects.${projectKey}.atoms.${atomKey}.color`, atomColor)
-    mainWindow.webContents.send("color-update");
+    mainWindow.webContents.send("meta-data-update");
 })
 
 ipcMain.on(GET_ATOM_LABEL, (event, projectKey, atomKey, returnChannel) => {
@@ -867,7 +867,7 @@ ipcMain.on(GET_ATOM_SHAPE, (event, projectKey, sourceAtomKey) => {
 
 ipcMain.on(SET_ATOM_SHAPE, (event, projectKey, sourceAtomKey, shape) => {
     store.set(`projects.${projectKey}.atoms.${sourceAtomKey}.shape`, shape);
-    mainWindow.webContents.send('shape-update');
+    mainWindow.webContents.send('meta-data-update');
 })
 
 ipcMain.on(SET_ATOM_INSTANCE_NICKNAME, (event, projectKey, testKey, atomKey, nickname) => {

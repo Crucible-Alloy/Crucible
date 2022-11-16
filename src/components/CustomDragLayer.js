@@ -7,6 +7,7 @@ import Xarrow from "react-xarrows";
 import { Arrow } from 'react-absolute-svg-arrows';
 import {useEffect, useRef, useState} from "react";
 import * as PropTypes from "prop-types";
+import {AtomV2} from "./atoms/AtomV2";
 
 const layerStyles = {
     position: 'absolute',
@@ -20,7 +21,6 @@ const layerStyles = {
 
 function getItemStyles(item, initialSourceOffset, initialOffset, currentSourceOffset, currentOffset, delta, mousePos) {
     let { x, y } = currentSourceOffset
-
     if (item.renderType === ATOM_SOURCE) {
         const transform = `translate(${x}px, ${y}px)`
         return {
@@ -28,21 +28,15 @@ function getItemStyles(item, initialSourceOffset, initialOffset, currentSourceOf
             WebkitTransform: transform,
         }
     }
-    if (item.renderType === CONNECTION) {
-    //     console.log("Initial Offset: " + initialSourceOffset.x + "," + initialSourceOffset.y );
-    //     console.log("Current Offset: " + currentOffset.x + "," + currentOffset.y );
-    //
-    //     let left = Math.round(delta.x)
-    //     let top = Math.round(delta.y)
-    //     let translated_x = left + 500;
-    //     let translated_y = top + 150;
-            const transform = `translate(${initialSourceOffset.x - initialOffset.x}px, ${initialSourceOffset.y - initialOffset.y}px)`
-        return {
-            transform,
-            WebkitTransform: transform,
-        }
+    if (item.renderType === ATOM) {
+        let left = Math.round(delta.x)
+        let top = Math.round(delta.y)
+        const transform = `translate(
+            ${(mousePos.x + (initialSourceOffset.x - initialOffset.x)) + left}px, 
+            ${(mousePos.y + (initialSourceOffset.y - initialOffset.y)) + top}px
+        )`
+        return { transform, WebkitTransform: transform }
     }
-
 }
 
 export const CustomDragLayer = ({mousePos}) => {
@@ -62,48 +56,39 @@ export const CustomDragLayer = ({mousePos}) => {
         }))
 
     const renderItem = () => {
-
         switch (item.renderType) {
             case ATOM:
-                console.log("existing atom")
                 return (
-                    <Atom id={item.id} left={item.left} top={item.top} sourceAtomKey={item.sourceAtomKey} projectKey={item.projectKey} testKey={item.testKey} />
+                    <AtomV2 contentsBeingDragged={true}
+                            id={item.id} left={item.left}
+                            atomLabel={item.metaData.label}
+                            top={item.top} sourceAtomKey={item.sourceAtomKey}
+                            projectKey={item.projectKey} testKey={item.testKey} />
                 );
             case ATOM_SOURCE:
                 return (
-                    <Atom id={item.id} left={item.left} top={item.top} sourceAtomKey={item.sourceAtomKey} projectKey={item.projectKey} testKey={item.testKey} />
+                    <AtomV2 contentsBeingDragged={true}
+                            id={item.id} left={item.left}
+                            atomLabel={item.label}
+                            top={item.top} sourceAtomKey={item.sourceAtomKey}
+                            projectKey={item.projectKey} testKey={item.testKey} />
                 );
             case CONNECTION:
-                console.log("dragging connection")
-                console.log(`Atom coords: \n X: ${item.left}, ${item.top}`);
-                console.log(`Mouse coords: \n X: ${mousePos.x}`);
-
                 return (
-                    <Arrow startPoint={{x: mousePos.x, y: mousePos.y}} endPoint={{x: mousePos.x + delta.x + 120, y: mousePos.y + delta.y + 30}} config={{arrowColor: theme.colors.blue[5], strokeWidth: 5}}/>
+                    <Arrow startPoint={{x: mousePos.x, y: mousePos.y}}
+                           endPoint={{x: (mousePos.x + delta.x + 16), y: (mousePos.y + delta.y + 16)}}
+                           config={{arrowColor: theme.colors.blue[5], strokeWidth: 5}} />
                 )
-
             default:
                 return null;
         }
     };
 
-    if (!isDragging) {
-        return null
-    }
-
-    // if (isDragging && (itemType === CONNECTION)) {
-    //     return (
-    //         <div style={layerStyles}>
-    //             <div style={getItemStyles(initialOffset, currentOffset, false)} >
-    //                 <Xarrow start={item.atomId} end={item.outPort}/>
-    //             </div>
-    //         </div>
-    //     )
-    // }
+    if (!isDragging) { return null }
 
     return (
         <div style={layerStyles}>
-            <div style={getItemStyles(item, initialSourceOffset, initialOffset, currentSourceOffset, currentOffset, delta)}>
+            <div style={getItemStyles(item, initialSourceOffset, initialOffset, currentSourceOffset, currentOffset, delta, mousePos)}>
                 {renderItem()}
             </div>
         </div>

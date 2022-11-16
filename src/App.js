@@ -39,8 +39,6 @@ function App() {
         };
     }, []);
 
-    console.log(mousePos.x)
-
     return (
             <div onMouseMove={handleMouseMove}>
                 <DndProvider backend={HTML5Backend} >
