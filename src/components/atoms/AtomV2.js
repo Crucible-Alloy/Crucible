@@ -1,7 +1,7 @@
 import {useEffect, useState} from 'react'
 import { useDrag } from 'react-dnd'
 import { getEmptyImage } from 'react-dnd-html5-backend'
-import {CONNECTION} from '../../utils/constants'
+import {ATOM, CONNECTION} from '../../utils/constants'
 import {Paper, useMantineTheme, MantineTheme, Container} from "@mantine/core";
 import {AtomContents} from "./AtomContents";
 const { v4: uuidv4 } = require('uuid');
@@ -73,12 +73,12 @@ export function AtomV2({ contentsBeingDragged, id, atomLabel, sourceAtomKey, nic
     const [{isDragging}, drag, preview] = useDrag(
         () => ({
             type: atomLabel,
-            item: {id, renderType, atomLabel, sourceAtomKey, nickname, top, left},
+            item: {id, renderType, atomLabel, sourceAtomKey, nickname, top, left, metaData},
             collect: (monitor) => ({
                 isDragging: monitor.isDragging(),
             }),
         }),
-        [id, atomLabel, sourceAtomKey, nickname, top, left],
+        [id, atomLabel, sourceAtomKey, nickname, top, left, metaData],
     )
 
     return isDragging ? (

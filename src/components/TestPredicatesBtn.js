@@ -48,9 +48,18 @@ function TestPredicatesBtn ({projectKey, testKey}) {
         window.electronAPI.setPredicate(projectKey, predicateName, predicate[predicateName])
     }
 
-    function setPredicateParams(predicateName, paramlabel, value) {
+    function setPredicateParams(predicateName, paramlabel, selectValue) {
         let predicate = Object.fromEntries(Object.entries(predicates).filter(([key, value]) => (key === predicateName)))
-        // TODO: fix this shit!
+        console.log(paramlabel)
+        console.log(selectValue)
+        console.log(predicate[predicateName]);
+        predicate[predicateName].params.forEach(param => {
+            if (param.label === paramlabel) {
+                console.log("Found the right param")
+                param.atom = selectValue;
+            }
+        });
+        console.log(predicate[predicateName])
         window.electronAPI.setPredicate(projectKey, predicateName, predicate[predicateName]);
     }
 
@@ -95,20 +104,21 @@ function TestPredicatesBtn ({projectKey, testKey}) {
                                     ), value: 'negate' },
                             ]}
                         />
-                        {value['params'].map(param =>
+                        {value['params'].map((param) => (
                                 <Select description={`Parameter: ${param.label}`}
-                                    placeholder="Pick one"
-                                    value={param.atom}
-                                    onSelect={(event) => setPredicateParams(key, param.label, event.currentTarget.value)}
-                                    data={
-                                        // Get the atoms from the canvas that match the type of the parameter
-                                        Object.entries(canvasAtoms).filter(([key, atom]) => {
-                                            return (atom.atomLabel === param.paramType.split('/')[1])
-                                        }).map(([key, atom]) => (
-                                                {value: atom.nickname, label: atom.nickname}
-                                        )
-                                    )}
+                                        placeholder="Pick one"
+                                        value={param.atom}
+                                        onChange={(value) => setPredicateParams(key, param.label, value)}
+                                        data={
+                                            // Get the atoms from the canvas that match the type of the parameter
+                                            Object.entries(canvasAtoms).filter(([key, atom]) => (
+                                                (atom.atomLabel === param['paramType'])
+                                            )).map(([key, atom]) => (
+                                                    {value: atom.nickname, label: atom.nickname}
+                                                )
+                                            )}
                                 />
+                            )
                         )}
                     </Input.Wrapper>
                 )}

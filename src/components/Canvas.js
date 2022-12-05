@@ -89,7 +89,7 @@ export const Canvas = ({ snapToGrid, tab, projectKey, testKey }) => {
                     top: top,
                     left: left,
                     sourceAtomKey: sourceAtomKey,
-                    atomLabel: `${atomLabel.split('/')[1]}`
+                    atomLabel: atomLabel
                 })
             } else {
                 showNotification({

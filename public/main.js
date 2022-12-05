@@ -269,16 +269,20 @@ function initProjectData(filePath, projectKey) {
                     // Get the multiplicity and related atom label from the response returned to the API
                     atom["relations"].forEach(function (item) {
                         let multiplicity = item["multiplicity"].split(" ")[0];
-                        let related_atom_label = item["type"].split("->")[1].split("}")[0];
+                        let relationFromLabel = item["type"].split("->")[0].split("{")[1];
+                        let relationToLabel = item["type"].split("->")[1].split("}")[0];
 
                         // Overwrite the multiplicity key and set related_label
                         item["multiplicity"] = multiplicity;
-                        item["related_label"] = related_atom_label;
+                        item["toLabel"] = relationToLabel;
+                        item["fromLabel"] = relationFromLabel;
 
                         // Find the related atom key
                         for (const [key, value] of Object.entries(atomData)) {
-                            if (value["label"] === related_atom_label) {
-                                item["related_key"] = key
+                            if (value["label"] === relationToLabel) {
+                                item["toKey"] = key
+                            } else if ( value["label"] === relationFromLabel ) {
+                                item["fromKey"] = key
                             }
                         }
                     });
@@ -605,7 +609,7 @@ ipcMain.on(DELETE_CONNECTION, (event, projectKey, testKey, atomID) => {
 ipcMain.on(CREATE_CONNECTION, (event, projectKey, testKey, fromAtom, toAtom, fromAtomLabel, toAtomLabel, fromNickname, toNickname, connectionLabel) => {
     let connectionId = uuidv4()
     let connection = {from: fromAtom, to: toAtom, fromLabel: fromAtomLabel, toLabel: toAtomLabel, fromNickname: fromNickname, toNickname: toNickname, connectionLabel: connectionLabel}
-
+    console.log(connection);
     // Todo: Get relation label based on sourceAtomKeys?
     //  Filter relations down based to toLabel compared to relatedLabel
 
@@ -627,13 +631,13 @@ ipcMain.on(GET_ACCEPT_TYPES, (event, projectKey, sourceAtomKey, returnChannel) =
     // if atom has children, add children to accept types
 
     let targetLabels = [sourceAtom.label, ...sourceAtom.parents]
-    console.log(targetLabels)
+    console.log(`Target Labels: ${targetLabels}`)
 
     Object.entries(atoms).map(([key, atom]) => {
         if (atom["relations"]) {
             Object.entries(atom["relations"]).map(([relationKey, relation]) => {
                 targetLabels.forEach(label => {
-                    if (relation["related_label"] === label) {
+                    if (relation["toLabel"] === label) {
                         types.push(key);
                     }
                 })
@@ -645,7 +649,6 @@ ipcMain.on(GET_ACCEPT_TYPES, (event, projectKey, sourceAtomKey, returnChannel) =
         typesLabels.push(store.get(`projects.${projectKey}.atoms.${x}.label`))
     })
 
-    console.log(`MAIN FOUND TYPES FOR ${sourceAtomKey}: ${typesLabels}`)
     event.sender.send(returnChannel, typesLabels);
 })
 
@@ -683,7 +686,8 @@ ipcMain.on(RUN_TEST, (event, projectKey, testKey, returnChannel) => {
         commandString += 'some disj'
         let atomsOfType = Object.entries(canvas["atoms"]).filter(([canvasAtomKey, canvasAtom]) => (sourceAtomKey === canvasAtom["sourceAtomKey"]))
         for (let i = 0; i < atomsOfType.length; i++) {
-            commandString += ` ${sourceAtom["label"].split('/')[1]}${atomsWithIndexes[atomsOfType[i][0]]}`;
+            console.log(atomsOfType[i][1].nickname)
+            commandString += ` ${atomsOfType[i][1].nickname.split('/')[1]}`;
             if (i < atomsOfType.length - 1) {
                 commandString += ',';
             }
@@ -700,9 +704,9 @@ ipcMain.on(RUN_TEST, (event, projectKey, testKey, returnChannel) => {
         // console.log(matchedAtoms)
         // For each matching atom, append their nickname to the string
         for (let i = 0; i < matchedAtoms.length; i++) {
-            commandString += `${matchedAtoms[i][1]['nickname']} `;
+            commandString += `${matchedAtoms[i][1].nickname.split('/')[1]} `;
             if (i < matchedAtoms.length - 1) {
-                commandString += '+';
+                commandString += '+ ';
             }
         }
         commandString += ` and `
@@ -719,7 +723,7 @@ ipcMain.on(RUN_TEST, (event, projectKey, testKey, returnChannel) => {
         // Add each connection to the commandString, and if we aren't on the last one, add a plus.
         for (let j=0; j < canvasConnections.length; j++) {
             let value = canvasConnections[j][1];
-            commandString += `${value["fromLabel"]}${atomsWithIndexes[value["from"]]}->${value["toLabel"]}${atomsWithIndexes[value["to"]]}`
+            commandString += `${value["fromNickname"].split('/')[1]}->${value["toNickname"].split('/')[1]}`
             if (j < canvasConnections.length - 1) {
                 commandString += `+`
             }
@@ -738,16 +742,16 @@ ipcMain.on(RUN_TEST, (event, projectKey, testKey, returnChannel) => {
     if (activePreds.length > 0) { commandString += ' and '}
 
     // Iterate over the active predicates and add them in
-    // for (let i = 0; i < activePreds.length; i++) {
-    //     if (activePreds[i][1] === "negate") {
-    //         commandString += `not ${activePreds[i][0]}`
-    //         if activePreds
-    //     } else if (activePreds[i][1] === "equals") {
-    //         commandString += `${activePreds[i][0]}`
-    //     }
-    //
-    //     if (i < activePreds.length - 1 ) { commandString += ' and '}
-    // }
+    for (let i = 0; i < activePreds.length; i++) {
+        console.log(activePreds[i]);
+        if (activePreds[i][1].status === "negate") {
+            commandString += `not ${activePreds[i][0]}[${activePreds[i][1].params[0].atom.split('/')[1]}]`
+        } else if (activePreds[i][1].status === "equals") {
+            commandString += `${activePreds[i][0]}[${activePreds[i][1].params[0].atom.split('/')[1]}]`
+        }
+
+        if (i < activePreds.length - 1 ) { commandString += ' and '}
+    }
 
     // Close our brackets all at the end
     commandString += "}".repeat((commandString.split("{").length - 1));
