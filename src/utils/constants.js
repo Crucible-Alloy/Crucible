@@ -32,7 +32,7 @@ module.exports = {
     GET_PROJECT_FILE: 'get-project-file',
     GET_HOME_DIRECTORY: 'get-home-directory',
     GET_PROJECT_TABS: 'get-project-tabs',
-    VALIDATE_PROJECT_NAME: 'validate-project-name',
+    VALIDATE_NEW_PROJECT_FORM: 'validate-project-name',
 
     SET_PROJECT_TABS: 'set-project-tabs',
     SET_ACTIVE_TAB: 'set-active-tab',

@@ -7,6 +7,7 @@ import {IconSettings} from "@tabler/icons";
 import NewProjectModal from "./NewProjectModal";
 
 import { Project } from "@prisma/client"
+import {NewProject} from "../../../public/ipc/ipcMain";
 
 // TODO: Import Window electronAPI types in App.js or somewhere more appropriate once we
 //  get it to refactored Typescript.
@@ -14,7 +15,7 @@ import { Project } from "@prisma/client"
 interface ElectronAPI {
     getHomeDirectory: () => Promise<string>;
     validateProjectName: (projectName: string) => Promise<boolean>;
-    createNewProject: (projectName: string, projectLocation: string, alloyFile?: string) => any;
+    createNewProject: (data: NewProject) => { success: boolean, error: any; };
     getProjects: () => Promise<Project[]>
     openProject: (projectId: number) => any;
     selectFile: () => string;

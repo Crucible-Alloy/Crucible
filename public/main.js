@@ -5,15 +5,25 @@ const {v4: uuidv4} = require("uuid");
 const axios = require('axios');
 const fs = require('fs');
 
+// Import ipcMain API so that it loads and listeners are created.
+const ipcMainCalls = require('./ipc/ipcMain');
+
 const prisma = new PrismaClient()
 
 // Global window variable
 let mainWindow, projectSelectWindow;
 
 // State persistence constants.
-const { FETCH_DATA_FROM_STORAGE, HANDLE_FETCH_DATA,
-        SAVE_CANVAS_STATE, LOAD_CANVAS_STATE, UPDATE_PROJECT_FILE, GET_PROJECT_FILE, GET_ATOMS, GET_PROJECTS, OPEN_PROJECT,
-    GET_TESTS,
+const {
+    FETCH_DATA_FROM_STORAGE,
+    HANDLE_FETCH_DATA,
+    SAVE_CANVAS_STATE,
+    LOAD_CANVAS_STATE,
+    UPDATE_PROJECT_FILE,
+    GET_PROJECT_FILE,
+    GET_ATOMS,
+    GET_PROJECTS,
+    OPEN_PROJECT, GET_TESTS,
     SELECT_FILE,
     CREATE_NEW_PROJECT,
     GET_HOME_DIRECTORY,
@@ -45,7 +55,6 @@ const { FETCH_DATA_FROM_STORAGE, HANDLE_FETCH_DATA,
     SET_ATOM_SHAPE,
     GET_ATOM_INSTANCE,
     SET_ATOM_INSTANCE_NICKNAME,
-    VALIDATE_PROJECT_NAME
 } = require("../src/utils/constants")
 
 let itemsToTrack;
@@ -457,17 +466,6 @@ ipcMain.on(OPEN_PROJECT, (event, projectKey) => {
     openProject(projectKey);
 })
 
-ipcMain.on(VALIDATE_PROJECT_NAME, async (event, projectName) => {
-    const project = await prisma.project.findFirst( {
-        where: {
-            name: { equals: projectName }
-        }
-    })
-    console.log(project);
-    // If project is found, return false (invalid), else no project found, return true.
-    event.sender.send('project-name-validation', !project)
-})
-
 ipcMain.on(GET_TESTS, (event, projectKey) => {
     //console.log("RECEIVED 'GET-TESTS' FROM RENDERER")
     let tests = store.get(`projects.${projectKey}.tests`);
@@ -496,49 +494,47 @@ ipcMain.on(SELECT_FILE, (event) => {
     });
 })
 
-ipcMain.on(CREATE_NEW_PROJECT, (event, alloyFile, projectName, projectDirectory) => {
-    //console.log("Main Received: CREATE_NEW_PROJECT");
-
-    // Create project directories
-    const projectFolder = projectDirectory + projectName;
-    const testsFolder = path.join(projectFolder, "tests");
-    const projectFilesFolder = path.join(projectFolder, "projectFiles");
-
-    createNewFolder(projectFolder);
-    createNewFolder(testsFolder);
-    createNewFolder(projectFilesFolder);
-
-    // Save filepath and project name to store
-    let projectKey = uuidv4();
-    store.set(`projects.${projectKey}.name`, projectName)
-    store.set(`projects.${projectKey}.path`, projectFolder)
-    store.set(`projects.${projectKey}.alloyFile`, alloyFile)
-
-    // Insert into sqlite database
-    async function main() {
-        await prisma.project.create({
-            data: {
-                name: projectName,
-                projectPath: projectFolder,
-                alloyFile: alloyFile,
-            },
-        })
-    }
-
-    main().then(() => console.log("Inserted new project"))
-
-    // TODO: Remove old store code
-    store.set(`projects.${projectKey}.predicates`, [])
-    store.set(`projects.${projectKey}.tabs`, [])
-    store.set(`projects.${projectKey}.activeTab`, "")
-    store.set(`projects.${projectKey}.tests`, {})
-
-    // Get atom data from springBoot API and write to sqlite db
-    initProjectData(alloyFile, projectKey)
-
-    // Open new project
-    openProject(projectKey);
-})
+// ipcMain.on(CREATE_NEW_PROJECT, (event, alloyFile, projectName, projectDirectory) => {
+//
+//     // Create project directories
+//     const projectFolder = projectDirectory + projectName;
+//     const testsFolder = path.join(projectFolder, "tests");
+//     const projectFilesFolder = path.join(projectFolder, "projectFiles");
+//     createNewFolder(projectFolder);
+//     createNewFolder(testsFolder);
+//     createNewFolder(projectFilesFolder);
+//
+//     // Save filepath and project name to store
+//     let projectKey = uuidv4();
+//     store.set(`projects.${projectKey}.name`, projectName)
+//     store.set(`projects.${projectKey}.path`, projectFolder)
+//     store.set(`projects.${projectKey}.alloyFile`, alloyFile)
+//
+//     // Insert into sqlite database
+//     async function main() {
+//         await prisma.project.create({
+//             data: {
+//                 name: projectName,
+//                 projectPath: projectFolder,
+//                 alloyFile: alloyFile,
+//             },
+//         })
+//     }
+//
+//     main().then(() => console.log("Inserted new project"))
+//
+//     // TODO: Remove old store code
+//     store.set(`projects.${projectKey}.predicates`, [])
+//     store.set(`projects.${projectKey}.tabs`, [])
+//     store.set(`projects.${projectKey}.activeTab`, "")
+//     store.set(`projects.${projectKey}.tests`, {})
+//
+//     // Get atom data from springBoot API and write to sqlite db
+//     initProjectData(alloyFile, projectKey)
+//
+//     // Open new project
+//     openProject(projectKey);
+// })
 
 ipcMain.on(GET_HOME_DIRECTORY, (event) => {
     const homedir = require('os').homedir();
@@ -568,6 +564,7 @@ ipcMain.on(CREATE_NEW_TEST, (event, projectKey, testName) => {
 
     event.sender.send('created-new-test', newTest)
 })
+
 ipcMain.on(GET_ATOM_COLOR, (event, projectKey, atomSourceKey, returnChannel) => {
     let loadedColor = store.get(`projects.${projectKey}.atoms.${atomSourceKey}.color`);
     event.sender.send(returnChannel, loadedColor)

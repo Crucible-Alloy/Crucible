@@ -3,6 +3,8 @@ import {Button, Modal, Stack, TextInput} from "@mantine/core";
 import {IconFileSearch, IconFolders, IconTag} from "@tabler/icons";
 import {useEffect} from "react";
 import {useForm} from '@mantine/form';
+import {NewProject} from "../../../public/ipc/ipcMain";
+import {ZodError} from "zod";
 
 // TODO: Validation for project location to ensure no conflicting paths
 // TODO: Zod schema validation for form?
@@ -12,18 +14,12 @@ interface Props {
     opened: boolean;
 }
 
-interface NewProjectForm {
-    projectName: string;
-    projectLocation: string;
-    alloyFile: string;
-}
-
 function NewProjectModal({setModalOpened, opened}: Props) {
 
     const form = useForm({
         initialValues: {
             projectName: '',
-            projectLocation: '',
+            projectPath: '',
             alloyFile: '',
         }
     });
@@ -32,17 +28,17 @@ function NewProjectModal({setModalOpened, opened}: Props) {
     // TODO: Can this be moved into initial values somehow? I think the issue is that it is async.
     useEffect(() => {
         window.electronAPI.getHomeDirectory().then( (homedir:string) => {
-            form.setFieldValue('projectLocation', `${homedir}/aSketchProjects/`);
+            form.setFieldValue('projectPath', `${homedir}/aSketchProjects/`);
         });
     }, [opened]);
 
     /* Asynchronously check for validation errors and if none, create the project on ipcMain */
-    function createProject({projectName, projectLocation, alloyFile} : NewProjectForm) {
-        window.electronAPI.validateProjectName(projectName).then((isValid: boolean) => {
-            if (alloyFile) {
-                isValid ?
-                window.electronAPI.createNewProject(alloyFile, projectName, projectLocation) :
-                form.setFieldError('projectName', "This project name is already in use.")
+    function createProject( data : NewProject ) {
+        window.electronAPI.createNewProject( data ).then((resp: {success: boolean, error: any;}) => {
+            if (resp.error) {
+                resp.error.forEach( (error: any ) => {
+                    form.setFieldError(error.path[0], error.message)
+                })
             }
         })
     }
@@ -92,7 +88,7 @@ function NewProjectModal({setModalOpened, opened}: Props) {
                         icon={<IconFolders />}
                         label={"Project Location"}
                         description={"Where the project will be saved."}
-                           {...form.getInputProps('projectLocation')}
+                           {...form.getInputProps('projectPath')}
                     />
 
                     <Button  m={"sm"} type="submit">Create Project</Button>

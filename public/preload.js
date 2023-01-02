@@ -35,7 +35,7 @@ const {SAVE_CANVAS_STATE, LOAD_CANVAS_STATE, UPDATE_PROJECT_FILE, GET_PROJECT_FI
     SET_ATOM_SHAPE,
     GET_ATOM_INSTANCE,
     SET_ATOM_INSTANCE_NICKNAME,
-    VALIDATE_PROJECT_NAME
+    VALIDATE_NEW_PROJECT_FORM
 } = require("../src/utils/constants");
 
 //const projectSelect = require("../src/components/projectSelection/ProjectSelect");
@@ -77,7 +77,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     },
 
     validateProjectName: (projectName) => {
-        ipcRenderer.send(VALIDATE_PROJECT_NAME, projectName)
+        ipcRenderer.send(VALIDATE_NEW_PROJECT_FORM, projectName)
         return new Promise( (resolve) => {
             ipcRenderer.once('project-name-validation', (event, valid) => resolve(valid))
         })
@@ -125,7 +125,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
         })
     },
 
-    createNewProject: (alloyFile, projectName, projectDirectory) => { ipcRenderer.send(CREATE_NEW_PROJECT, alloyFile, projectName, projectDirectory) },
+    createNewProject: ( data ) => {
+        ipcRenderer.send(CREATE_NEW_PROJECT, data )
+        return new Promise((resolve) => {
+            ipcRenderer.once('new-project-resp', (event, resp) => resolve(resp))
+        })
+    },
 
     openProject: (projectKey) => { ipcRenderer.send(OPEN_PROJECT, projectKey) },
 

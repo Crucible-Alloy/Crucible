@@ -1,4 +1,4 @@
-import {Box, Tabs} from '@mantine/core';
+import {Tabs} from '@mantine/core';
 import {IconAdjustmentsHorizontal, IconAtom, IconTestPipe} from "@tabler/icons";
 import AtomsSidebarTab from "./AtomsSidebarTab";
 import SettingsSidebarTab from "./SettingsSidebarTab";
