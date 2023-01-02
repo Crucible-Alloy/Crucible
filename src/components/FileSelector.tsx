@@ -3,19 +3,27 @@ import {Input} from "@mantine/core";
 import {IconFileSearch} from "@tabler/icons";
 import {useState} from "react";
 
-function FileSelector(props) {
+interface Props {
+    setSelectedFile(val: string): any;
+    selectedFile: string;
+}
 
-    const [trimmedPath, setTrimmedPath] = useState("");
+function FileSelector(props: Props) {
 
-    function trimFullPath(filePath) {
+    const [trimmedPath, setTrimmedPath] = useState<string>("");
+
+    function trimFullPath(filePath: string): string {
         let segments = filePath.split('/')
-        console.log(segments[-1])
-        return segments.pop()
+        let stringCandidate = segments.pop()
+        if ( stringCandidate ) {
+            return stringCandidate;
+        } else {
+            return ""
+        }
     }
 
     function handleSelectFile() {
-        window.electronAPI.selectFile().then( filePath => {
-            console.log(filePath)
+        window.electronAPI.selectFile().then( ( filePath:string ) => {
             setTrimmedPath(trimFullPath(filePath));
             props.setSelectedFile(filePath);
         })

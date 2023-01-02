@@ -34,7 +34,8 @@ const {SAVE_CANVAS_STATE, LOAD_CANVAS_STATE, UPDATE_PROJECT_FILE, GET_PROJECT_FI
     GET_ATOM_SHAPE,
     SET_ATOM_SHAPE,
     GET_ATOM_INSTANCE,
-    SET_ATOM_INSTANCE_NICKNAME
+    SET_ATOM_INSTANCE_NICKNAME,
+    VALIDATE_PROJECT_NAME
 } = require("../src/utils/constants");
 
 //const projectSelect = require("../src/components/projectSelection/ProjectSelect");
@@ -72,6 +73,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.send(UPDATE_PROJECT_FILE, projectKey)
         return new Promise( (resolve) => {
             ipcRenderer.once('project-file-set', (event, filePath) => resolve(filePath))
+        })
+    },
+
+    validateProjectName: (projectName) => {
+        ipcRenderer.send(VALIDATE_PROJECT_NAME, projectName)
+        return new Promise( (resolve) => {
+            ipcRenderer.once('project-name-validation', (event, valid) => resolve(valid))
         })
     },
 

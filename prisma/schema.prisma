@@ -16,10 +16,10 @@ model Project {
   name         String @unique  // Unique name for use in filepath
   projectPath  String @unique  // Folder path for storage of test files
   alloyFile    String  // Reference to location of alloy file for sending to Springboot API
+  activeTab    String?  // Reference to currently active tab (by tab name)
   tests        Test[]  // Array of test objects created by user
   predicates   Predicate[]  @relation("projectPreds")  // Array of predicates defined in the alloy file
   atoms        AtomSource[] @relation("projectAtoms")  // Array of atoms defined in the alloy file
-  activeTab    String  // Reference to currently active tab (by tab name)
   tabs         Tab[] @relation("projectTabs")  // Array of opened tabs by user.
 }
 

@@ -1,31 +1,48 @@
 import React, {useEffect, useState} from 'react';
 import {
     AppShell, Burger, Header, MediaQuery, Navbar, Text, Title, Footer, useMantineTheme,
-    ActionIcon, Stack, UnstyledButton, Group, Avatar, Button, Loader, Center, Grid, ScrollArea,
+    ActionIcon, Stack, UnstyledButton, Group, Avatar, Button, Loader, Center, ScrollArea,
 } from "@mantine/core";
 import {IconSettings} from "@tabler/icons";
 import NewProjectModal from "./NewProjectModal";
 
-export const ProjectSelect = () => {
+import { Project } from "@prisma/client"
 
+// TODO: Import Window electronAPI types in App.js or somewhere more appropriate once we
+//  get it to refactored Typescript.
+
+interface ElectronAPI {
+    getHomeDirectory: () => Promise<string>;
+    validateProjectName: (projectName: string) => Promise<boolean>;
+    createNewProject: (projectName: string, projectLocation: string, alloyFile?: string) => any;
+    getProjects: () => Promise<Project[]>
+    openProject: (projectId: number) => any;
+    selectFile: () => string;
+}
+
+declare global {
+    interface Window {
+        electronAPI: ElectronAPI | any;
+    }
+}
+
+export const ProjectSelect = () => {
     const theme = useMantineTheme();
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState<boolean>(true);
     const [opened, setOpened] = useState(false);
-    const [projects, setProjects] = useState([]);
+    const [projects, setProjects] = useState<Project[]>([]);
     const [modalOpened, setModalOpened] = useState(false);
 
-    // Load projects from store
+    // Load projects from sqlite db
     useEffect(() => {
-        window.electronAPI.getProjects().then(projects => {
-            setLoading(false)
-            setProjects(projects)
-        })
+        const loadProjects = async () => {
+            window.electronAPI.getProjects().then((projects:Project[]) => {
+                setProjects(projects);
+                }
+            );
+        }
+        loadProjects().then(() => setLoading(false))
     }, []);
-
-
-    function openProject(projectKey) {
-        window.electronAPI.openProject(projectKey);
-    }
 
     if (loading) {
         return (
@@ -47,7 +64,7 @@ export const ProjectSelect = () => {
                     navbar={
                         <Navbar p="md" hiddenBreakpoint="sm" hidden={!opened} width={{sm: 200, lg: 300}}>
                             <Stack>
-                                <Text weight={"600"} color={"blue"}> Projects </Text>
+                                <Text weight={600} color={"blue"}> Projects </Text>
                             </Stack>
                         </Navbar>
                     }
@@ -82,30 +99,33 @@ export const ProjectSelect = () => {
                 >
                     <ScrollArea>
                         <Group spacing={"lg"}>
-                            {Object.entries(projects).map(([key, value]) => (
-                                <>
-                                    <UnstyledButton onClick={() => {
-                                        openProject(key)
-                                    }}>
-                                        <Group p={"xs"} position={"left"} styles={(theme) => ({
-                                            root: {
+                            {projects.map( (project) => {
+                                return (
+                                    <>
+                                        <UnstyledButton
+                                            key={project.id}
+                                            onClick={() => {window.electronAPI.openProject(project.id)}}
+                                        >
+                                            <Group p={"xs"} position={"left"} styles={(theme) => ({
+                                                root: {
 
-                                                borderRadius: 8,
-                                                maxHeight: 60,
-                                                width: 320,
-                                                whitespace: "nowrap",
-                                                textOverflow: "ellipsis",
-                                                '&:hover': {
-                                                    backgroundColor: theme.colors.gray[2],
-                                                },
-                                            }
-                                        })}>
-                                            <Avatar size={40} color="blue">{projects[key]["name"].charAt(0)}</Avatar>
-                                            <Text p={0} m={0}>{projects[key]["name"]}</Text>
-                                        </Group>
-                                    </UnstyledButton>
-                                </>
-                            ))}
+                                                    borderRadius: 8,
+                                                    maxHeight: 60,
+                                                    width: 320,
+                                                    whitespace: "nowrap",
+                                                    textOverflow: "ellipsis",
+                                                    '&:hover': {
+                                                        backgroundColor: theme.colors.gray[2],
+                                                    },
+                                                }
+                                            })}>
+                                                <Avatar size={40} color="blue">{project.name.charAt(0)}</Avatar>
+                                                <Text p={0} m={0}>{project.name}</Text>
+                                            </Group>
+                                        </UnstyledButton>
+                                    </>
+                                )}
+                            )}
                         </Group>
                     </ScrollArea>
                     <NewProjectModal setModalOpened={setModalOpened} opened={modalOpened}/>
@@ -125,7 +145,7 @@ export const ProjectSelect = () => {
                     navbar={
                         <Navbar p="md" hiddenBreakpoint="sm" hidden={!opened} width={{sm: 200, lg: 300}}>
                             <Stack>
-                                <Text weight={"600"} color={"blue"}> Projects </Text>
+                                <Text weight={600} color={"blue"}> Projects </Text>
                             </Stack>
                         </Navbar>
                     }
