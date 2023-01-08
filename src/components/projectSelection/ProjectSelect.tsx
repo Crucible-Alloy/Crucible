@@ -1,13 +1,15 @@
 import React, {useEffect, useState} from 'react';
 import {
     AppShell, Burger, Header, MediaQuery, Navbar, Text, Title, Footer, useMantineTheme,
-    ActionIcon, Stack, UnstyledButton, Group, Avatar, Button, Loader, Center, ScrollArea,
+    ActionIcon, Stack, UnstyledButton, Group, Avatar, Button, Loader, Center, ScrollArea, SimpleGrid, Grid,
 } from "@mantine/core";
-import {IconSettings} from "@tabler/icons";
+import {IconSettings, IconTrash} from "@tabler/icons";
 import NewProjectModal from "./NewProjectModal";
 
 import { Project } from "@prisma/client"
 import {NewProject} from "../../../public/ipc/ipcMain";
+import DeleteProjectModal from './DeleteProjectModal';
+import ProjectListItem from "./ProjectListItem";
 
 // TODO: Import Window electronAPI types in App.js or somewhere more appropriate once we
 //  get it to refactored Typescript.
@@ -16,8 +18,10 @@ interface ElectronAPI {
     getHomeDirectory: () => Promise<string>;
     validateProjectName: (projectName: string) => Promise<boolean>;
     createNewProject: (data: NewProject) => { success: boolean, error: any; };
+    getProject: (projectID: number) => Promise<Project>;
     getProjects: () => Promise<Project[]>
     openProject: (projectId: number) => any;
+    deleteProject: (project: Project) => any;
     selectFile: () => string;
 }
 
@@ -32,6 +36,7 @@ export const ProjectSelect = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [opened, setOpened] = useState(false);
     const [projects, setProjects] = useState<Project[]>([]);
+    const [deleteModalProject, setDeleteModalProject] = useState<number>();
     const [modalOpened, setModalOpened] = useState(false);
 
     // Load projects from sqlite db
@@ -99,38 +104,11 @@ export const ProjectSelect = () => {
                     }
                 >
                     <ScrollArea>
-                        <Group spacing={"lg"}>
-                            {projects.map( (project) => {
-                                return (
-                                    <>
-                                        <UnstyledButton
-                                            key={project.id}
-                                            onClick={() => {window.electronAPI.openProject(project.id)}}
-                                        >
-                                            <Group p={"xs"} position={"left"} styles={(theme) => ({
-                                                root: {
-
-                                                    borderRadius: 8,
-                                                    maxHeight: 60,
-                                                    width: 320,
-                                                    whitespace: "nowrap",
-                                                    textOverflow: "ellipsis",
-                                                    '&:hover': {
-                                                        backgroundColor: theme.colors.gray[2],
-                                                    },
-                                                }
-                                            })}>
-                                                <Avatar size={40} color="blue">{project.name.charAt(0)}</Avatar>
-                                                <Text p={0} m={0}>{project.name}</Text>
-                                            </Group>
-                                        </UnstyledButton>
-                                    </>
-                                )}
-                            )}
-                        </Group>
+                        <Stack mr={'xl'}>
+                            { projects.map( (project:Project) => ( <ProjectListItem project={project} key={project.id}/> ))}
+                        </Stack>
                     </ScrollArea>
                     <NewProjectModal setModalOpened={setModalOpened} opened={modalOpened}/>
-
                 </AppShell>
             )
         } else {

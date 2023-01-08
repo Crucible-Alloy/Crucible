@@ -1,11 +1,13 @@
-import {ipcMain} from 'electron';
+import { ipcMain } from 'electron';
+import { getColorArray } from '../../src/utils/helpers';
 import {PrismaClient, Project} from '@prisma/client';
 import path from "path";
 import fs from "fs";
-import axios from "axios";
 import {z, ZodError} from "zod";
+import axios, {AxiosResponse} from "axios";
 
-const { VALIDATE_NEW_PROJECT_FORM, CREATE_NEW_PROJECT } = require('../../src/utils/constants.js');
+const { VALIDATE_NEW_PROJECT_FORM, CREATE_NEW_PROJECT, GET_PROJECT, DELETE_PROJECT } = require('../../src/utils/constants.js');
+
 
 const prisma = new PrismaClient();
 
@@ -18,7 +20,6 @@ const NewProjectSchema = z.object({
         .min(3, "Project name should be at least 3 characters.")
         .refine(async (val) => {
                 let result = await isProjectNameAvailable(val)
-                console.log(result)
                 return result
             },
             (val) => ( { message: `A project named ${val} already exists.`} )
@@ -30,6 +31,26 @@ const NewProjectSchema = z.object({
     (data) => ({ message: `${data.projectName} already exists at the given path.`, path: ['projectName'] })
 )
 export type NewProject = z.infer<typeof NewProjectSchema>;
+
+const AtomRespSchema = z.object({
+    label: z.string(),
+    isEnum: z.coerce.boolean(),
+    isLone: z.coerce.boolean(),
+    isOne: z.coerce.boolean(),
+    isSome: z.coerce.boolean(),
+    isAbstract: z.coerce.boolean(),
+    parents: z.string().array().optional(),
+    children: z.string().array().optional(),
+    relations: z.object({ label: z.string(), multiplicity: z.string(), type: z.string()}).array(),
+})
+
+//     Validation rules for db entry.
+//     color: z.string().regex(/^#(?:[0-9a-fA-F]{3}){1,2}$/, "Invalid hex color code."),
+//     shape: z.enum(['Rectangle', 'Triangle', 'Circle']),
+//     projectID: z.number(),
+
+export type ValidAtomResp = z.infer<typeof AtomRespSchema>;
+
 
 /**
  * Returns false if there is a project with the given name in the database.
@@ -63,82 +84,142 @@ async function validateNewProject( data: NewProject ) : Promise<{success: boolea
     }
 }
 
-// function initProjectData(filePath:string , projectKey:string) {
-//     let colors = getColorArray();
-//     let atomData = {};
-//     let predicateData = {};
-//
-//     try {
-//         // Send file to alloy API and get back metadata
-//         const apiRequest = axios.post("http://localhost:8080/files",null, {params: {"filePath": filePath}})
-//         apiRequest.then(data => {
-//             if (data.data) {
-//                 console.log(data.data)
-//                 for (const atom in data.data["atoms"]) {
-//
-//                     // If colors array is empty, repopulate it.
-//                     if (!colors.length) {
-//                         colors = getColorArray();
-//                     }
-//                     // Pop a random color from the colors array and assign to the atom
-//                     data.data["atoms"][atom]["color"] = colors.splice(Math.floor(Math.random() * colors.length), 1)[0]
-//
-//                     // Set the shape of the atom.
-//                     data.data["atoms"][atom]["shape"] = "rectangle"
-//
-//                     atomData[uuidv4()] = data.data["atoms"][atom]
-//                 }
-//
-//                 // Post-processing on the relations information for multiplicity enforcement
-//                 for (const [key, atom] of Object.entries(atomData)) {
-//
-//                     // Get the multiplicity and related atom label from the response returned to the API
-//                     atom["relations"].forEach(function (item) {
-//                         let multiplicity = item["multiplicity"].split(" ")[0];
-//                         let relationFromLabel = item["type"].split("->")[0].split("{")[1];
-//                         let relationToLabel = item["type"].split("->")[1].split("}")[0];
-//
-//                         // Overwrite the multiplicity key and set related_label
-//                         item["multiplicity"] = multiplicity;
-//                         item["toLabel"] = relationToLabel;
-//                         item["fromLabel"] = relationFromLabel;
-//
-//                         // Find the related atom key
-//                         for (const [key, value] of Object.entries(atomData)) {
-//                             if (value["label"] === relationToLabel) {
-//                                 item["toKey"] = key
-//                             } else if ( value["label"] === relationFromLabel ) {
-//                                 item["fromKey"] = key
-//                             }
-//                         }
-//                     });
-//                 }
-//
-//                 let preds = data.data.functions
-//
-//                 // Status can be 'null', 'equals', or 'negate'
-//                 preds.forEach(predicate => {
-//                     predicateData[predicate['label'].split('/').at(-1)] = {
-//                         status: "null",
-//                         params: predicate['parameters']};
-//                 })
-//
-//                 Object.values(predicateData).forEach(predicate => {
-//                     predicate.params.forEach(param => {
-//                         param.atom = "null"
-//                     })
-//                 })
-//
-//             }
-//         }).then( () => {
-//             // Write all atom data to the project
-//             store.set(`projects.${projectKey}.atoms`, atomData);
-//             store.set(`projects.${projectKey}.predicates`, predicateData)
-//         });
-//     } catch (err) {
-//         console.log(err)
-//     }
-// }
+async function initializeAtoms(atoms: ValidAtomResp[], projectID: number) {
+
+    let colors = getColorArray();
+
+    // Validate all atoms.
+    atoms.forEach((atom) => {
+        try {
+            AtomRespSchema.parse(atom);
+        } catch (e) {
+            if (e instanceof ZodError) {
+                return {success: false, error: e.issues}
+            } else {
+                throw e
+            }
+        }
+    })
+
+    for (const atom of atoms) {
+        // Reset colors if needed, then grab a color for assignment.
+        if (colors.length === 0) getColorArray();
+        let selectedColor = colors.splice(Math.floor(Math.random() * colors.length), 1)[0]
+
+        // Insert AtomSource data into the database (sans parent/child data)
+        const newAtom = await prisma.atomSource.create({
+            data: {
+                projectID: projectID,
+                label: atom.label,
+                isEnum: atom.isEnum ? true : undefined,  // Prisma cannot handle null, so must be undefined (schema default is false).
+                isLone: atom.isLone ? true : undefined,
+                isOne: atom.isOne ? true : undefined,
+                isSome: atom.isSome ? true : undefined,
+                isAbstract: atom.isAbstract ? true : undefined,
+                color: selectedColor,
+            }
+        })
+        if (newAtom === undefined) {
+            // TODO: Error handling for issue inserting atom.
+        }
+    }
+}
+
+async function initializeInheritance(atoms: ValidAtomResp[], projectID: number) {
+
+    for (const atom of atoms) {
+        // Insert parents of atom to atomInheritance table.
+        if ( atom.parents ) {
+            for( const parent of atom.parents ) {
+                // See if the inheritance is already in the database.
+                await prisma.atomInheritance.upsert({
+                    where: {
+                        atomInheritanceID: {
+                            parentLabel: parent,
+                            childLabel: atom.label,
+                            projectID: projectID
+                        }
+                    },
+                    create: {
+                        parentLabel: parent,
+                        childLabel: atom.label,
+                        projectID: projectID
+                    },
+                    update: {}
+                })
+            }
+        }
+
+        // Insert children of atom to atomChildren table
+        if ( atom.children ) {
+            for( const child of atom.children ) {
+                await prisma.atomInheritance.upsert({
+                    where: {
+                        atomInheritanceID: {
+                            parentLabel: atom.label,
+                            childLabel: child,
+                            projectID: projectID
+                        }
+                    },
+                    create: {
+                        parentLabel: atom.label,
+                        childLabel: child,
+                        projectID: projectID
+                    },
+                    update: {}
+                })
+            }
+        }
+    }
+}
+
+async function initializeRelations(atoms: ValidAtomResp[], projectID: number) {
+    for (const atom of atoms) {
+        // Insert parents of atom to atomInheritance table.
+        if (atom.relations) {
+            for (const relation of atom.relations) {
+                // Nasty transformation to get the last label in a -> chain e.g. "{this/Book->this/Name->this/Listing}"
+                const toLabel = relation.type
+                    .split('->')[relation.type.split('->').length - 1]
+                    .split('}')[0]
+                // See if the inheritance is already in the database.
+                await prisma.relation.upsert({
+                    where: {
+                        relationID: {
+                            projectID: projectID,
+                            label: relation.label,
+                        }
+                    },
+                    create: {
+                        projectID: projectID,
+                        label: relation.label,
+                        multiplicity: relation.multiplicity,
+                        type: relation.type,
+                        fromLabel: atom.label,
+                        toLabel: toLabel,
+                    },
+                    update: {}
+                })
+            }
+        }
+    }
+}
+
+async function initProjectData(data: NewProject, projectID: number) {
+
+    try {
+        // Send file to alloy API and get back metadata
+        const apiRequest = axios.post("http://localhost:8080/files", null, {params: {"filePath": data.alloyFile}})
+        let resp: AxiosResponse<{ atoms : ValidAtomResp[]; }> = await apiRequest;
+        if ( resp.data ) {
+            await initializeAtoms(resp.data.atoms, projectID);
+            await initializeInheritance(resp.data.atoms, projectID);
+            await initializeRelations(resp.data.atoms, projectID);
+        }
+    } catch (err) {
+        console.log(err)
+    }
+}
 
 /**
  * Insert new project record into the database and initialize project assets based on SpringBoot response.
@@ -153,7 +234,6 @@ async function createNewProject( data: NewProject ) {
 
     // Create project directories
     const fullProjectPath = data.projectPath + data.projectName;
-    console.log(`Project Path: ${fullProjectPath}`)
     const projectFolder =  fs.mkdirSync( fullProjectPath, {recursive: true} );
     const testsFolder = fs.mkdirSync(path.join(fullProjectPath, "tests"), {recursive: true});
 
@@ -170,20 +250,14 @@ async function createNewProject( data: NewProject ) {
         if (!project) {
             return { success: false, error: "Could not create project." }
         }
+
+        await initProjectData(data, project.id);
     }
 
     // TODO: Refactor this stuff next
     // store.set(`projects.${projectKey}.predicates`, [])
-    // store.set(`projects.${projectKey}.tabs`, [])
-    // store.set(`projects.${projectKey}.activeTab`, "")
-    // store.set(`projects.${projectKey}.tests`, {})
-    //
-    // // Get atom data from springBoot API and write to sqlite db
-    // initProjectData(alloyFile, projectKey)
-    //
-    // // Open new project
+    // Open new project
     // openProject(projectKey);
-
 }
 
 ipcMain.on(VALIDATE_NEW_PROJECT_FORM, async (event: Electron.IpcMainEvent, data : NewProject) => {
@@ -194,4 +268,23 @@ ipcMain.on(VALIDATE_NEW_PROJECT_FORM, async (event: Electron.IpcMainEvent, data 
 ipcMain.on(CREATE_NEW_PROJECT, async (event, data : NewProject) => {
     const result = await createNewProject(data);
     event.sender.send('new-project-resp', result)
+})
+
+ipcMain.on(GET_PROJECT, async(event, projectID: number) => {
+    const project = await prisma.project.findFirst({ where: { id: projectID } });
+    event.sender.send('get-project-resp', project);
+})
+
+ipcMain.on(DELETE_PROJECT, async(event, project: Project) => {
+    await fs.rmdir(project.projectPath,
+        { recursive: true }, (err) => {
+
+            if (err) {
+                return console.log("error occurred in deleting directory", err);
+            }
+        }
+    );
+
+    const delResp = await prisma.project.delete({ where: { id: project.id } } );
+    event.sender.send('delete-project-resp', delResp);
 })

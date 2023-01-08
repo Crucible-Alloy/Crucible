@@ -35,7 +35,9 @@ const {SAVE_CANVAS_STATE, LOAD_CANVAS_STATE, UPDATE_PROJECT_FILE, GET_PROJECT_FI
     SET_ATOM_SHAPE,
     GET_ATOM_INSTANCE,
     SET_ATOM_INSTANCE_NICKNAME,
-    VALIDATE_NEW_PROJECT_FORM
+    VALIDATE_NEW_PROJECT_FORM,
+    GET_PROJECT,
+    DELETE_PROJECT
 } = require("../src/utils/constants");
 
 //const projectSelect = require("../src/components/projectSelection/ProjectSelect");
@@ -50,6 +52,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
         return new Promise((resolve) => {
             ipcRenderer.once(returnKey, (event, canvasState) => resolve(canvasState))
+        })
+    },
+
+    getProject: (projectID) => {
+        ipcRenderer.send(GET_PROJECT, projectID);
+
+        return new Promise((resolve) => {
+            ipcRenderer.once('get-project-resp', (event, project) => resolve(project))
         })
     },
 
@@ -80,6 +90,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.send(VALIDATE_NEW_PROJECT_FORM, projectName)
         return new Promise( (resolve) => {
             ipcRenderer.once('project-name-validation', (event, valid) => resolve(valid))
+        })
+    },
+
+    deleteProject: ( project ) => {
+        ipcRenderer.send(DELETE_PROJECT, project)
+        return new Promise( (resolve ) => {
+            ipcRenderer.once('delete-project-resp', (event, resp) => resolve(resp))
         })
     },
 

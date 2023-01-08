@@ -28,11 +28,13 @@ module.exports = {
 
 
     // PROJECT
+    GET_PROJECT: 'get-project',
     GET_PROJECTS: 'get-projects',
     GET_PROJECT_FILE: 'get-project-file',
     GET_HOME_DIRECTORY: 'get-home-directory',
     GET_PROJECT_TABS: 'get-project-tabs',
     VALIDATE_NEW_PROJECT_FORM: 'validate-project-name',
+    DELETE_PROJECT: 'delete-project',
 
     SET_PROJECT_TABS: 'set-project-tabs',
     SET_ACTIVE_TAB: 'set-active-tab',

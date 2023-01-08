@@ -40,11 +40,13 @@ const react_1 = __importStar(require("react"));
 const core_1 = require("@mantine/core");
 const icons_1 = require("@tabler/icons");
 const NewProjectModal_1 = __importDefault(require("./NewProjectModal"));
+const ProjectListItem_1 = __importDefault(require("./ProjectListItem"));
 const ProjectSelect = () => {
     const theme = (0, core_1.useMantineTheme)();
     const [loading, setLoading] = (0, react_1.useState)(true);
     const [opened, setOpened] = (0, react_1.useState)(false);
     const [projects, setProjects] = (0, react_1.useState)([]);
+    const [deleteModalProject, setDeleteModalProject] = (0, react_1.useState)();
     const [modalOpened, setModalOpened] = (0, react_1.useState)(false);
     // Load projects from sqlite db
     (0, react_1.useEffect)(() => {
@@ -77,24 +79,7 @@ const ProjectSelect = () => {
                             react_1.default.createElement(core_1.Burger, { opened: opened, onClick: () => setOpened((o) => !o), size: "sm", color: theme.colors.gray[6], mr: "xl" })),
                         react_1.default.createElement(core_1.Title, null, "ASketch"))) },
                 react_1.default.createElement(core_1.ScrollArea, null,
-                    react_1.default.createElement(core_1.Group, { spacing: "lg" }, projects.map((project) => {
-                        return (react_1.default.createElement(react_1.default.Fragment, null,
-                            react_1.default.createElement(core_1.UnstyledButton, { key: project.id, onClick: () => { window.electronAPI.openProject(project.id); } },
-                                react_1.default.createElement(core_1.Group, { p: "xs", position: "left", styles: (theme) => ({
-                                        root: {
-                                            borderRadius: 8,
-                                            maxHeight: 60,
-                                            width: 320,
-                                            whitespace: "nowrap",
-                                            textOverflow: "ellipsis",
-                                            '&:hover': {
-                                                backgroundColor: theme.colors.gray[2],
-                                            },
-                                        }
-                                    }) },
-                                    react_1.default.createElement(core_1.Avatar, { size: 40, color: "blue" }, project.name.charAt(0)),
-                                    react_1.default.createElement(core_1.Text, { p: 0, m: 0 }, project.name)))));
-                    }))),
+                    react_1.default.createElement(core_1.Stack, { mr: 'xl' }, projects.map((project) => (react_1.default.createElement(ProjectListItem_1.default, { project: project, key: project.id }))))),
                 react_1.default.createElement(NewProjectModal_1.default, { setModalOpened: setModalOpened, opened: modalOpened })));
         }
         else {
