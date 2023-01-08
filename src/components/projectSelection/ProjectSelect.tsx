@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
     AppShell, Burger, Header, MediaQuery, Navbar, Text, Title, Footer, useMantineTheme,
     ActionIcon, Stack, UnstyledButton, Group, Avatar, Button, Loader, Center, ScrollArea, SimpleGrid, Grid,
@@ -36,10 +36,9 @@ export const ProjectSelect = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [opened, setOpened] = useState(false);
     const [projects, setProjects] = useState<Project[]>([]);
-    const [deleteModalProject, setDeleteModalProject] = useState<number>();
     const [modalOpened, setModalOpened] = useState(false);
-
     // Load projects from sqlite db
+    // TODO: Dynamically reload after project deletion
     useEffect(() => {
         const loadProjects = async () => {
             window.electronAPI.getProjects().then((projects:Project[]) => {

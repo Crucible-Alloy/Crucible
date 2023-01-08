@@ -51,6 +51,15 @@ const AtomRespSchema = z.object({
 
 export type ValidAtomResp = z.infer<typeof AtomRespSchema>;
 
+const PredicateRespSchema = z.object({
+    label: z.string(),
+    parameters: z.object({
+        label: z.string(),
+        paramType: z.string(),
+    }).array(),
+});
+
+export type ValidPredResp = z.infer<typeof PredicateRespSchema>;
 
 /**
  * Returns false if there is a project with the given name in the database.
@@ -205,16 +214,37 @@ async function initializeRelations(atoms: ValidAtomResp[], projectID: number) {
     }
 }
 
+async function initializePredicates(predicates: ValidPredResp[], projectID: number) {
+    for (const pred of predicates) {
+        const newPred = await prisma.predicate.create({
+            data: {
+                projectID: projectID,
+                name: pred.label
+            }
+        })
+        for (const param of pred.parameters) {
+            await  prisma.predParam.create({
+                data: {
+                    predID: newPred.id,
+                    label: param.label,
+                    paramType: param.paramType,
+                }
+            })
+        }
+    }
+}
+
 async function initProjectData(data: NewProject, projectID: number) {
 
     try {
         // Send file to alloy API and get back metadata
         const apiRequest = axios.post("http://localhost:8080/files", null, {params: {"filePath": data.alloyFile}})
-        let resp: AxiosResponse<{ atoms : ValidAtomResp[]; }> = await apiRequest;
+        let resp: AxiosResponse<{ atoms : ValidAtomResp[];  functions: ValidPredResp[] }> = await apiRequest;
         if ( resp.data ) {
             await initializeAtoms(resp.data.atoms, projectID);
             await initializeInheritance(resp.data.atoms, projectID);
             await initializeRelations(resp.data.atoms, projectID);
+            await initializePredicates(resp.data.functions, projectID);
         }
     } catch (err) {
         console.log(err)

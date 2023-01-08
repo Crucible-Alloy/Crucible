@@ -45,6 +45,13 @@ const AtomRespSchema = zod_1.z.object({
     children: zod_1.z.string().array().optional(),
     relations: zod_1.z.object({ label: zod_1.z.string(), multiplicity: zod_1.z.string(), type: zod_1.z.string() }).array(),
 });
+const PredicateRespSchema = zod_1.z.object({
+    label: zod_1.z.string(),
+    parameters: zod_1.z.object({
+        label: zod_1.z.string(),
+        paramType: zod_1.z.string(),
+    }).array(),
+});
 /**
  * Returns false if there is a project with the given name in the database.
  * @param name
@@ -202,6 +209,27 @@ function initializeRelations(atoms, projectID) {
         }
     });
 }
+function initializePredicates(predicates, projectID) {
+    return __awaiter(this, void 0, void 0, function* () {
+        for (const pred of predicates) {
+            const newPred = yield prisma.predicate.create({
+                data: {
+                    projectID: projectID,
+                    name: pred.label
+                }
+            });
+            for (const param of pred.parameters) {
+                yield prisma.predParam.create({
+                    data: {
+                        predID: newPred.id,
+                        label: param.label,
+                        paramType: param.paramType,
+                    }
+                });
+            }
+        }
+    });
+}
 function initProjectData(data, projectID) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -212,6 +240,7 @@ function initProjectData(data, projectID) {
                 yield initializeAtoms(resp.data.atoms, projectID);
                 yield initializeInheritance(resp.data.atoms, projectID);
                 yield initializeRelations(resp.data.atoms, projectID);
+                yield initializePredicates(resp.data.functions, projectID);
             }
         }
         catch (err) {

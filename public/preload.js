@@ -228,6 +228,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.on("shape-update", callback)
     },
 
+    listenForProjectsChange: (callback) => {
+        ipcRenderer.on("project-update", callback)
+    },
+
     getAtomMultiplicity: (projectKey, atomKey) => {
         let returnChannel = uuidv4();
         ipcRenderer.send(GET_ATOM_MULTIPLICITY, projectKey, atomKey, returnChannel)
