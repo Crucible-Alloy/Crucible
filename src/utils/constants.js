@@ -3,7 +3,7 @@ module.exports = {
     // API CHANNELS
 
     // ATOMS
-    GET_ATOMS: 'get-atoms',
+    GET_ATOM_SOURCES: 'get-atoms',
     GET_ATOM: 'get-atom',
     GET_ATOM_INSTANCE: 'get-atom-instance',
     GET_CONNECTIONS: 'get-connection',

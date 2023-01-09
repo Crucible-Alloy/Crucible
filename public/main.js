@@ -6,7 +6,8 @@ const axios = require('axios');
 const fs = require('fs');
 
 // Import ipcMain API so that it loads and listeners are created.
-const ipcMainCalls = require('./ipc/ipcMain');
+const ipcMainProjects = require('./ipc/projects');
+const ipcMainAtoms = require('./ipc/atoms');
 
 const prisma = new PrismaClient()
 
@@ -438,13 +439,13 @@ ipcMain.on(UPDATE_PROJECT_FILE, (event, projectKey) => {
     })
 })
 
-ipcMain.on(GET_ATOMS, (event, projectKey) => {
-    //console.log("MAIN RECEIVED GET_ATOMS FROM RENDERER")
-    //console.log(projectKey);
-    let atoms = store.get(`projects.${projectKey}.atoms`);
-    //console.log(atoms);
-    event.sender.send('got-atoms', atoms ? atoms : {})
-})
+// ipcMain.on(GET_ATOMS, (event, projectKey) => {
+//     //console.log("MAIN RECEIVED GET_ATOMS FROM RENDERER")
+//     //console.log(projectKey);
+//     let atoms = store.get(`projects.${projectKey}.atoms`);
+//     //console.log(atoms);
+//     event.sender.send('got-atoms', atoms ? atoms : {})
+// })
 
 ipcMain.on(GET_ATOM, (event, projectKey, atomKey) => {
     let atom = store.get(`projects.${projectKey}.atoms.${atomKey}`);

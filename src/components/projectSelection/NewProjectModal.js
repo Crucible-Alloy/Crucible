@@ -31,6 +31,9 @@ function NewProjectModal({ setModalOpened, opened }) {
                     form.setFieldError(error.path[0], error.message);
                 });
             }
+            else if (resp.projectID) {
+                window.electronAPI.openProject(resp.projectID);
+            }
         });
     }
     /* Close the modal and reset the form to default values. */

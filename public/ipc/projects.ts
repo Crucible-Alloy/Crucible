@@ -282,12 +282,8 @@ async function createNewProject( data: NewProject ) {
         }
 
         await initProjectData(data, project.id);
+        return { success: true, error: null, projectID: project.id }
     }
-
-    // TODO: Refactor this stuff next
-    // store.set(`projects.${projectKey}.predicates`, [])
-    // Open new project
-    // openProject(projectKey);
 }
 
 ipcMain.on(VALIDATE_NEW_PROJECT_FORM, async (event: Electron.IpcMainEvent, data : NewProject) => {

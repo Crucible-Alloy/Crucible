@@ -37,7 +37,8 @@ const {SAVE_CANVAS_STATE, LOAD_CANVAS_STATE, UPDATE_PROJECT_FILE, GET_PROJECT_FI
     SET_ATOM_INSTANCE_NICKNAME,
     VALIDATE_NEW_PROJECT_FORM,
     GET_PROJECT,
-    DELETE_PROJECT
+    DELETE_PROJECT,
+    GET_ATOM_SOURCES
 } = require("../src/utils/constants");
 
 //const projectSelect = require("../src/components/projectSelection/ProjectSelect");
@@ -97,6 +98,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.send(DELETE_PROJECT, project)
         return new Promise( (resolve ) => {
             ipcRenderer.once('delete-project-resp', (event, resp) => resolve(resp))
+        })
+    },
+
+    getAtomSources: (projectID) => {
+        ipcRenderer.send(GET_ATOM_SOURCES, projectID)
+
+        return new Promise( ( resolve ) => {
+            ipcRenderer.once('get-atom-sources-resp', (event, atoms) => resolve(atoms))
         })
     },
 

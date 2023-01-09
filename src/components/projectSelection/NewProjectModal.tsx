@@ -3,8 +3,9 @@ import {Button, Modal, Stack, TextInput} from "@mantine/core";
 import {IconFileSearch, IconFolders, IconTag} from "@tabler/icons";
 import {useEffect} from "react";
 import {useForm} from '@mantine/form';
-import {NewProject} from "../../../public/ipc/ipcMain";
+import {NewProject} from "../../../public/ipc/projects";
 import {ZodError} from "zod";
+import {ipcMain} from "electron";
 
 // TODO: Validation for project location to ensure no conflicting paths
 // TODO: Zod schema validation for form?
@@ -34,11 +35,13 @@ function NewProjectModal({setModalOpened, opened}: Props) {
 
     /* Asynchronously check for validation errors and if none, create the project on ipcMain */
     function createProject( data : NewProject ) {
-        window.electronAPI.createNewProject( data ).then((resp: {success: boolean, error: any;}) => {
+        window.electronAPI.createNewProject( data ).then((resp: {success: boolean, error: any, projectID? : number;}) => {
             if (resp.error) {
                 resp.error.forEach( (error: any ) => {
                     form.setFieldError(error.path[0], error.message)
                 })
+            } else if ( resp.projectID ) {
+                window.electronAPI.openProject( resp.projectID )
             }
         })
     }

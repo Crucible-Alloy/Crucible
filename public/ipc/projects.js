@@ -275,11 +275,8 @@ function createNewProject(data) {
                 return { success: false, error: "Could not create project." };
             }
             yield initProjectData(data, project.id);
+            return { success: true, error: null, projectID: project.id };
         }
-        // TODO: Refactor this stuff next
-        // store.set(`projects.${projectKey}.predicates`, [])
-        // Open new project
-        // openProject(projectKey);
     });
 }
 electron_1.ipcMain.on(VALIDATE_NEW_PROJECT_FORM, (event, data) => __awaiter(void 0, void 0, void 0, function* () {

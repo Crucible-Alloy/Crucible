@@ -50,6 +50,9 @@ function ProjectListItem( { project } : Props) {
                 </Grid.Col>
             </Grid>
             <DeleteProjectModal setModalOpened={setDeleteModal} opened={deleteModal} project={project}/>
+            {/* TODO: Project Settings Modal
+                - Rename project
+                - Associate to project file */}
         </>
     );
 }

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AtomSource = void 0;
+exports.AtomSourceItem = void 0;
 const react_1 = require("react");
 const core_1 = require("@mantine/core");
 const react_dnd_1 = require("react-dnd");
@@ -22,7 +22,7 @@ function getStyles(left, top, isDragging) {
         height: isDragging ? 0 : '',
     };
 }
-function AtomSource({ id, label, left, top, atom, sourceAtomKey, projectKey, color }) {
+function AtomSourceItem({ id, label, left, top, atom, sourceAtomKey, projectKey, color }) {
     const [modalOpened, setModalOpened] = (0, react_1.useState)(false);
     const [multiplicity, setMultiplicity] = (0, react_1.useState)("not Defined");
     const [dropDown, setDropdown] = (0, react_1.useState)(false);
@@ -143,4 +143,4 @@ function AtomSource({ id, label, left, top, atom, sourceAtomKey, projectKey, col
                     react_2.default.createElement(core_1.ActionIcon, { onClick: () => setDropdown(!dropDown), style: { float: "right" } }, dropDown ? react_2.default.createElement(icons_1.IconCaretUp, null) : react_2.default.createElement(icons_1.IconCaretDown, null))))));
     }
 }
-exports.AtomSource = AtomSource;
+exports.AtomSourceItem = AtomSourceItem;
