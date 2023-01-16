@@ -19,12 +19,14 @@ const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
 const zod_1 = require("zod");
 const axios_1 = __importDefault(require("axios"));
-const { VALIDATE_NEW_PROJECT_FORM, CREATE_NEW_PROJECT, GET_PROJECT, DELETE_PROJECT } = require('../../src/utils/constants.js');
+const { VALIDATE_NEW_PROJECT_FORM, CREATE_NEW_PROJECT, GET_PROJECT, DELETE_PROJECT, } = require("../../src/utils/constants.js");
 const prisma = new client_1.PrismaClient();
 // Form Validation for project creation.
 const validFileName = /^[-\w^&'@{}[\],$=!#().%+~ ]+$/;
-const NewProjectSchema = zod_1.z.object({
-    projectName: zod_1.z.string()
+const NewProjectSchema = zod_1.z
+    .object({
+    projectName: zod_1.z
+        .string()
         .regex(validFileName, "Invalid file name.")
         .min(3, "Project name should be at least 3 characters.")
         .refine((val) => __awaiter(void 0, void 0, void 0, function* () {
@@ -32,8 +34,12 @@ const NewProjectSchema = zod_1.z.object({
         return result;
     }), (val) => ({ message: `A project named ${val} already exists.` })),
     projectPath: zod_1.z.string(),
-    alloyFile: zod_1.z.string()
-}).refine((data) => !fs_1.default.existsSync(data.projectPath + data.projectName), (data) => ({ message: `${data.projectName} already exists at the given path.`, path: ['projectName'] }));
+    alloyFile: zod_1.z.string(),
+})
+    .refine((data) => !fs_1.default.existsSync(data.projectPath + data.projectName), (data) => ({
+    message: `${data.projectName} already exists at the given path.`,
+    path: ["projectName"],
+}));
 const AtomRespSchema = zod_1.z.object({
     label: zod_1.z.string(),
     isEnum: zod_1.z.coerce.boolean(),
@@ -43,14 +49,18 @@ const AtomRespSchema = zod_1.z.object({
     isAbstract: zod_1.z.coerce.boolean(),
     parents: zod_1.z.string().array().optional(),
     children: zod_1.z.string().array().optional(),
-    relations: zod_1.z.object({ label: zod_1.z.string(), multiplicity: zod_1.z.string(), type: zod_1.z.string() }).array(),
+    relations: zod_1.z
+        .object({ label: zod_1.z.string(), multiplicity: zod_1.z.string(), type: zod_1.z.string() })
+        .array(),
 });
 const PredicateRespSchema = zod_1.z.object({
     label: zod_1.z.string(),
-    parameters: zod_1.z.object({
+    parameters: zod_1.z
+        .object({
         label: zod_1.z.string(),
         paramType: zod_1.z.string(),
-    }).array(),
+    })
+        .array(),
 });
 /**
  * Returns false if there is a project with the given name in the database.
@@ -62,7 +72,7 @@ function isProjectNameAvailable(name) {
         let project = yield prisma.project.findFirst({
             where: {
                 name: { equals: name },
-            }
+            },
         });
         return project == null;
     });
@@ -91,7 +101,7 @@ function validateNewProject(data) {
 function initializeAtoms(atoms, projectID) {
     return __awaiter(this, void 0, void 0, function* () {
         let colors = (0, helpers_1.getColorArray)();
-        // Validate all atoms.
+        // Validate all Atom.
         atoms.forEach((atom) => {
             try {
                 AtomRespSchema.parse(atom);
@@ -121,7 +131,7 @@ function initializeAtoms(atoms, projectID) {
                     isSome: atom.isSome ? true : undefined,
                     isAbstract: atom.isAbstract ? true : undefined,
                     color: selectedColor,
-                }
+                },
             });
             if (newAtom === undefined) {
                 // TODO: Error handling for issue inserting atom.
@@ -141,15 +151,15 @@ function initializeInheritance(atoms, projectID) {
                             atomInheritanceID: {
                                 parentLabel: parent,
                                 childLabel: atom.label,
-                                projectID: projectID
-                            }
+                                projectID: projectID,
+                            },
                         },
                         create: {
                             parentLabel: parent,
                             childLabel: atom.label,
-                            projectID: projectID
+                            projectID: projectID,
                         },
-                        update: {}
+                        update: {},
                     });
                 }
             }
@@ -161,15 +171,15 @@ function initializeInheritance(atoms, projectID) {
                             atomInheritanceID: {
                                 parentLabel: atom.label,
                                 childLabel: child,
-                                projectID: projectID
-                            }
+                                projectID: projectID,
+                            },
                         },
                         create: {
                             parentLabel: atom.label,
                             childLabel: child,
-                            projectID: projectID
+                            projectID: projectID,
                         },
-                        update: {}
+                        update: {},
                     });
                 }
             }
@@ -184,15 +194,14 @@ function initializeRelations(atoms, projectID) {
                 for (const relation of atom.relations) {
                     // Nasty transformation to get the last label in a -> chain e.g. "{this/Book->this/Name->this/Listing}"
                     const toLabel = relation.type
-                        .split('->')[relation.type.split('->').length - 1]
-                        .split('}')[0];
+                        .split("->")[relation.type.split("->").length - 1].split("}")[0];
                     // See if the inheritance is already in the database.
                     yield prisma.relation.upsert({
                         where: {
                             relationID: {
                                 projectID: projectID,
                                 label: relation.label,
-                            }
+                            },
                         },
                         create: {
                             projectID: projectID,
@@ -202,7 +211,7 @@ function initializeRelations(atoms, projectID) {
                             fromLabel: atom.label,
                             toLabel: toLabel,
                         },
-                        update: {}
+                        update: {},
                     });
                 }
             }
@@ -215,8 +224,8 @@ function initializePredicates(predicates, projectID) {
             const newPred = yield prisma.predicate.create({
                 data: {
                     projectID: projectID,
-                    name: pred.label
-                }
+                    name: pred.label,
+                },
             });
             for (const param of pred.parameters) {
                 yield prisma.predParam.create({
@@ -224,7 +233,7 @@ function initializePredicates(predicates, projectID) {
                         predID: newPred.id,
                         label: param.label,
                         paramType: param.paramType,
-                    }
+                    },
                 });
             }
         }
@@ -234,7 +243,9 @@ function initProjectData(data, projectID) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             // Send file to alloy API and get back metadata
-            const apiRequest = axios_1.default.post("http://localhost:8080/files", null, { params: { "filePath": data.alloyFile } });
+            const apiRequest = axios_1.default.post("http://localhost:8080/files", null, {
+                params: { filePath: data.alloyFile },
+            });
             let resp = yield apiRequest;
             if (resp.data) {
                 yield initializeAtoms(resp.data.atoms, projectID);
@@ -261,7 +272,9 @@ function createNewProject(data) {
         // Create project directories
         const fullProjectPath = data.projectPath + data.projectName;
         const projectFolder = fs_1.default.mkdirSync(fullProjectPath, { recursive: true });
-        const testsFolder = fs_1.default.mkdirSync(path_1.default.join(fullProjectPath, "tests"), { recursive: true });
+        const testsFolder = fs_1.default.mkdirSync(path_1.default.join(fullProjectPath, "tests"), {
+            recursive: true,
+        });
         if (projectFolder && testsFolder) {
             // Insert project data if paths are good.
             const project = yield prisma.project.create({
@@ -281,15 +294,15 @@ function createNewProject(data) {
 }
 electron_1.ipcMain.on(VALIDATE_NEW_PROJECT_FORM, (event, data) => __awaiter(void 0, void 0, void 0, function* () {
     const response = yield validateNewProject(data);
-    event.sender.send('project-name-validation', response);
+    event.sender.send("project-name-validation", response);
 }));
 electron_1.ipcMain.on(CREATE_NEW_PROJECT, (event, data) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield createNewProject(data);
-    event.sender.send('new-project-resp', result);
+    event.sender.send("new-project-resp", result);
 }));
 electron_1.ipcMain.on(GET_PROJECT, (event, projectID) => __awaiter(void 0, void 0, void 0, function* () {
     const project = yield prisma.project.findFirst({ where: { id: projectID } });
-    event.sender.send('get-project-resp', project);
+    event.sender.send("get-project-resp", project);
 }));
 electron_1.ipcMain.on(DELETE_PROJECT, (event, project) => __awaiter(void 0, void 0, void 0, function* () {
     yield fs_1.default.rmdir(project.projectPath, { recursive: true }, (err) => {
@@ -298,5 +311,5 @@ electron_1.ipcMain.on(DELETE_PROJECT, (event, project) => __awaiter(void 0, void
         }
     });
     const delResp = yield prisma.project.delete({ where: { id: project.id } });
-    event.sender.send('delete-project-resp', delResp);
+    event.sender.send("delete-project-resp", delResp);
 }));

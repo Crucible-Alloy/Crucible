@@ -1,53 +1,63 @@
-import {Center, Group, Loader, ScrollArea, Stack, Text, Title} from "@mantine/core";
-import {useState} from "react";
-import {AtomSourceItem} from "../atoms/AtomSourceItem";
-import {useEffect} from "react";
-import {SIDEBAR_HEIGHT} from "../../utils/constants";
+import { Center, Group, Loader, ScrollArea, Stack, Title } from "@mantine/core";
+import { useState } from "react";
+import { AtomSourceItem } from "../AtomSource/AtomSourceItem";
+import { useEffect } from "react";
+import React from "react";
+import { AtomSourceWithRelations } from "../../../public/ipc/atoms";
+const { SIDEBAR_HEIGHT } = require("../../utils/constants.js");
 
-function AtomsSidebarTab({ projectKey }) {
+interface Props {
+  projectID: number;
+}
 
-    const [atoms, setAtoms] = useState([]);
-    const [loading, setLoading] = useState(true);
+function AtomsSidebarTab({ projectID }: Props) {
+  const [atoms, setAtoms] = useState<AtomSourceWithRelations[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
-    const getAtoms = () => {
-        setLoading(true)
-        window.electronAPI.getAtomSources(projectKey).then(atoms => {
-            if (atoms.length > 0) {
-                setAtoms(atoms)
-                setLoading(false)
-            }
-        })
-    }
+  const getAtoms = () => {
+    setLoading(true);
+    window.electronAPI
+      .getAtomSources(projectID)
+      .then((atoms: AtomSourceWithRelations[]) => {
+        if (atoms.length > 0) {
+          setAtoms(atoms);
+          setLoading(false);
+        }
+      });
+  };
 
-    useEffect(() => {
-        getAtoms();
-    }, []);
+  useEffect(() => {
+    getAtoms();
+  }, []);
 
-    if (loading) {
-        return (
-            <Stack sx={{marginTop: "40%"}}>
-                <Center>
-                        <Title order={4} color={'dimmed'}>Loading atoms...</Title>
-                </Center>
-                <Center>
-                    <Loader/>
-                </Center>
-            </Stack>
-        )
-    } else {
-        return (
-            <ScrollArea style={{height: SIDEBAR_HEIGHT}}>
-                <Group p={"lg"}>
-
-                    {Object.entries(atoms).map(([key, value]) => (
-                        value["isAbstract"] ?
-                            <></> :
-                            <AtomSourceItem label={value["label"]} color={value["color"]} sourceAtomKey={key} projectKey={projectKey} atom={ value } top={0} left={0}/>
-                    ))}
-                </Group>
-            </ScrollArea>
-        );
-    }
+  if (loading) {
+    return (
+      <Stack sx={{ marginTop: "40%" }}>
+        <Center>
+          <Title order={4} color={"dimmed"}>
+            Loading atoms...
+          </Title>
+        </Center>
+        <Center>
+          <Loader />
+        </Center>
+      </Stack>
+    );
+  } else {
+    return (
+      <ScrollArea style={{ height: SIDEBAR_HEIGHT }}>
+        <Group p={"lg"}>
+          {atoms.map((atom) =>
+            atom.isAbstract ? (
+              <></>
+            ) : (
+              <AtomSourceItem key={atom.id} atomSource={atom} />
+            )
+          )}
+        </Group>
+      </ScrollArea>
+    );
+  }
 }
 
 export default AtomsSidebarTab;

@@ -10,7 +10,7 @@ const react_2 = require("react");
 function FileSelector(props) {
     const [trimmedPath, setTrimmedPath] = (0, react_2.useState)("");
     function trimFullPath(filePath) {
-        let segments = filePath.split('/');
+        let segments = filePath.split("/");
         let stringCandidate = segments.pop();
         if (stringCandidate) {
             return stringCandidate;

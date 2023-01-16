@@ -32,7 +32,10 @@ function DeleteProjectModal({ setModalOpened, opened, project }) {
     function deleteProject() {
         window.electronAPI.deleteProject(project).then((respProject) => {
             closeModal();
-            (0, notifications_1.showNotification)({ title: "Project Deleted", message: `Successfully deleted ${respProject.name}` });
+            (0, notifications_1.showNotification)({
+                title: "Project Deleted",
+                message: `Successfully deleted ${respProject.name}`,
+            });
         });
     }
     /* Close the modal and reset the form to default values. */
@@ -48,13 +51,15 @@ function DeleteProjectModal({ setModalOpened, opened, project }) {
         }
     }
     return (react_1.default.createElement(core_1.Modal, { opened: opened, onClose: () => closeModal(), title: "Delete Project" },
-        react_1.default.createElement(core_1.Title, { mb: 'md', order: 3 }, "Delete this project?"),
+        react_1.default.createElement(core_1.Title, { mb: "md", order: 3 }, "Delete this project?"),
         react_1.default.createElement(core_1.Code, null, project ? project.projectPath : "..."),
-        react_1.default.createElement(core_1.Text, { size: "sm", my: 'lg' }, "This will delete the project, its tests, and all associated files from your projects directory and the application database. This action cannot be undone. "),
+        react_1.default.createElement(core_1.Text, { size: "sm", my: "lg" },
+            "This will delete the project, its tests, and all associated files from your projects directory and the application database. This action cannot be undone.",
+            " "),
         react_1.default.createElement("br", null),
         react_1.default.createElement(core_1.TextInput, { label: `Type "${project.name}" to delete the project`, onChange: (event) => checkEquivalency(event.target.value) }),
-        react_1.default.createElement(core_1.Group, { position: 'right', mt: 'lg' },
-            react_1.default.createElement(core_1.Button, { variant: 'outline', color: 'gray', onClick: () => closeModal() }, "Cancel"),
-            react_1.default.createElement(core_1.Button, { color: 'red', onClick: () => deleteProject(), disabled: !equiv }, "Delete My Project"))));
+        react_1.default.createElement(core_1.Group, { position: "right", mt: "lg" },
+            react_1.default.createElement(core_1.Button, { variant: "outline", color: "gray", onClick: () => closeModal() }, "Cancel"),
+            react_1.default.createElement(core_1.Button, { color: "red", onClick: () => deleteProject(), disabled: !equiv }, "Delete My Project"))));
 }
 exports.default = DeleteProjectModal;

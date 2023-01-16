@@ -1,1 +1,1 @@
-declare module './components/FileSelector';
+declare module "./components/FileSelector";

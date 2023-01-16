@@ -19,7 +19,7 @@ model Project {
   activeTab    String?  // Reference to currently active tab (by tab name)
   tests        Test[]  // Array of test objects created by user
   predicates   Predicate[]  @relation("projectPreds")  // Array of predicates defined in the alloy file
-  atoms        AtomSource[] @relation("projectAtoms")  // Array of atoms defined in the alloy file
+  atoms        AtomSource[] @relation("projectAtoms")  // Array of Atom defined in the alloy file
   tabs         Tab[] @relation("projectTabs")  // Array of opened tabs by user.
   inheritances AtomInheritance[] @relation("projectInheritance")
   relations    Relation[] @relation("projectRelations")
@@ -32,7 +32,7 @@ model Test {
   projectID    Int
   name         String @unique  // Unique name for use in filepath
   testFile     String @unique  // File path for storage of command string
-  canvas       Canvas? @relation("testCanvas") // Canvas Object that holds atoms and connections
+  canvas       Canvas? @relation("testCanvas") // Canvas Object that holds Atom and connections
   tab          Tab? @relation
 }
 
@@ -89,7 +89,7 @@ model AtomInheritance {
   @@unique( fields: [projectID, parentLabel, childLabel], name: "atomInheritanceID")
 }
 
-// Instance of a connection between two atoms on a canvas
+// Instance of a connection between two Atom on a canvas
 model Connection {
   id           Int @id @default(autoincrement())
   canvasID     Int

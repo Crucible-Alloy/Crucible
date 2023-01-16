@@ -64,24 +64,29 @@ const ProjectSelect = () => {
     else {
         return (react_1.default.createElement(core_1.AppShell, { styles: {
                 main: {
-                    background: theme.colorScheme === 'dark' ? theme.colors.dark[8] : theme.colors.gray[0],
+                    background: theme.colorScheme === "dark"
+                        ? theme.colors.dark[8]
+                        : theme.colors.gray[0],
                 },
             }, navbarOffsetBreakpoint: "sm", asideOffsetBreakpoint: "sm", navbar: react_1.default.createElement(core_1.Navbar, { p: "md", hiddenBreakpoint: "sm", hidden: !opened, width: { sm: 200, lg: 300 } },
                 react_1.default.createElement(core_1.Stack, null,
-                    react_1.default.createElement(core_1.Text, { weight: 600, color: "blue" }, " Projects "))), footer: react_1.default.createElement(core_1.Footer, { height: 60, p: "md" },
+                    react_1.default.createElement(core_1.Text, { weight: 600, color: "blue" },
+                        " ",
+                        "Projects",
+                        " "))), footer: react_1.default.createElement(core_1.Footer, { height: 60, p: "md" },
                 react_1.default.createElement(core_1.Group, { position: "apart" },
                     react_1.default.createElement(core_1.ActionIcon, null,
                         react_1.default.createElement(icons_1.IconSettings, null)),
                     react_1.default.createElement(core_1.Button, { onClick: () => setModalOpened(true) }, "New Project"))), header: react_1.default.createElement(core_1.Header, { height: 70, p: "md" },
-                react_1.default.createElement("div", { style: { display: 'flex', alignItems: 'center', height: '100%' } },
-                    react_1.default.createElement(core_1.MediaQuery, { largerThan: "sm", styles: { display: 'none' } },
+                react_1.default.createElement("div", { style: { display: "flex", alignItems: "center", height: "100%" } },
+                    react_1.default.createElement(core_1.MediaQuery, { largerThan: "sm", styles: { display: "none" } },
                         react_1.default.createElement(core_1.Burger, { opened: opened, onClick: () => setOpened((o) => !o), size: "sm", color: theme.colors.gray[6], mr: "xl" })),
                     react_1.default.createElement(core_1.Title, null, "ASketch"))) },
             react_1.default.createElement(core_1.ScrollArea, null,
-                react_1.default.createElement(core_1.Stack, { mr: 'xl' }, projects.length > 0 ?
-                    projects.map((project) => (react_1.default.createElement(ProjectListItem_1.default, { project: project, key: project.id }))) :
-                    react_1.default.createElement(core_1.Center, { m: "xl" },
-                        react_1.default.createElement(core_1.Title, { size: "lg", color: "dimmed" }, " Looks like you don't have any projects yet...")))),
+                react_1.default.createElement(core_1.Stack, { mr: "xl" }, projects.length > 0 ? (projects.map((project) => (react_1.default.createElement(ProjectListItem_1.default, { project: project, key: project.id })))) : (react_1.default.createElement(core_1.Center, { m: "xl" },
+                    react_1.default.createElement(core_1.Title, { size: "lg", color: "dimmed" },
+                        " ",
+                        "Looks like you don't have any projects yet..."))))),
             react_1.default.createElement(NewProjectModal_1.default, { setModalOpened: setModalOpened, opened: modalOpened })));
     }
 };

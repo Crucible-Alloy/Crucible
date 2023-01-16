@@ -1,48 +1,29 @@
-import React from 'react';
-import {Button, Input, InputWrapper, Modal, TextInput} from "@mantine/core";
-import {IconFolders, IconTag} from "@tabler/icons";
-import FileSelector from "../FileSelector";
-import {useState} from "react";
-import {useEffect} from "react";
-
-function NewTestModal({opened, setModalOpened, setTests, tests, projectKey}) {
-    const [testName, setTestName] = useState("");
-
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const react_1 = __importDefault(require("react"));
+const core_1 = require("@mantine/core");
+const icons_1 = require("@tabler/icons");
+const react_2 = require("react");
+function NewTestModal({ opened, setModalOpened, setTests, tests, projectID, }) {
+    const [testName, setTestName] = (0, react_2.useState)("");
     function createNewTest() {
-        window.electronAPI.createNewTest(projectKey, testName).then((test) => {
-                window.electronAPI.getTests(projectKey).then((newTests) => {
-                    setTests(newTests)
-                    setModalOpened(false)
-                })
-
-        })
+        window.electronAPI.createNewTest(projectID, testName).then(() => {
+            window.electronAPI.getTests(projectID).then((newTests) => {
+                setTests(newTests);
+                setModalOpened(false);
+            });
+        });
     }
-
     function updateName(val) {
         //console.log(val)
         setTestName(val);
     }
-
-    return (
-        <Modal
-            opened={opened}
-            onClose={() => setModalOpened(false)}
-            title="Create a New Test"
-        >
-            <TextInput
-                required
-                placeholder="New Test"
-                onChange={(event) => updateName(event.target.value)}
-                label="Test Name"
-                description={"Enter a name for the new test"}
-                icon={<IconTag />}
-            />
-            <br/>
-
-            <Button  m={"sm"} onClick={() => createNewTest()} >Create Test</Button>
-
-        </Modal>
-    );
+    return (react_1.default.createElement(core_1.Modal, { opened: opened, onClose: () => setModalOpened(false), title: "Create a New Test" },
+        react_1.default.createElement(core_1.TextInput, { required: true, placeholder: "New Test", onChange: (event) => updateName(event.target.value), label: "Test Name", description: "Enter a name for the new test", icon: react_1.default.createElement(icons_1.IconTag, null) }),
+        react_1.default.createElement("br", null),
+        react_1.default.createElement(core_1.Button, { m: "sm", onClick: () => createNewTest() }, "Create Test")));
 }
-
-export default NewTestModal;
+exports.default = NewTestModal;
