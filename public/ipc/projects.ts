@@ -3,8 +3,14 @@ import { getColorArray } from "../../src/utils/helpers";
 import { PrismaClient, Project } from "@prisma/client";
 import path from "path";
 import fs from "fs";
-import { z, ZodError } from "zod";
+import { ZodError } from "zod";
 import axios, { AxiosResponse } from "axios";
+import {
+  NewProject,
+  ValidAtomResp,
+  ValidPredResp,
+} from "../validation/formValidation";
+import { NewProjectSchema, AtomRespSchema } from "../validation/formValidation";
 
 const {
   VALIDATE_NEW_PROJECT_FORM,
@@ -14,81 +20,6 @@ const {
 } = require("../../src/utils/constants.js");
 
 const prisma = new PrismaClient();
-
-// Form Validation for project creation.
-const validFileName = /^[-\w^&'@{}[\],$=!#().%+~ ]+$/;
-
-const NewProjectSchema = z
-  .object({
-    projectName: z
-      .string()
-      .regex(validFileName, "Invalid file name.")
-      .min(3, "Project name should be at least 3 characters.")
-      .refine(
-        async (val) => {
-          let result = await isProjectNameAvailable(val);
-          return result;
-        },
-        (val) => ({ message: `A project named ${val} already exists.` })
-      ),
-    projectPath: z.string(),
-    alloyFile: z.string(),
-  })
-  .refine(
-    (data) => !fs.existsSync(data.projectPath + data.projectName),
-    (data) => ({
-      message: `${data.projectName} already exists at the given path.`,
-      path: ["projectName"],
-    })
-  );
-export type NewProject = z.infer<typeof NewProjectSchema>;
-
-const AtomRespSchema = z.object({
-  label: z.string(),
-  isEnum: z.coerce.boolean(),
-  isLone: z.coerce.boolean(),
-  isOne: z.coerce.boolean(),
-  isSome: z.coerce.boolean(),
-  isAbstract: z.coerce.boolean(),
-  parents: z.string().array().optional(),
-  children: z.string().array().optional(),
-  relations: z
-    .object({ label: z.string(), multiplicity: z.string(), type: z.string() })
-    .array(),
-});
-
-//     Validation rules for db entry.
-//     color: z.string().regex(/^#(?:[0-9a-fA-F]{3}){1,2}$/, "Invalid hex color code."),
-//     shape: z.enum(['Rectangle', 'Triangle', 'Circle']),
-//     projectID: z.number(),
-
-export type ValidAtomResp = z.infer<typeof AtomRespSchema>;
-
-const PredicateRespSchema = z.object({
-  label: z.string(),
-  parameters: z
-    .object({
-      label: z.string(),
-      paramType: z.string(),
-    })
-    .array(),
-});
-
-export type ValidPredResp = z.infer<typeof PredicateRespSchema>;
-
-/**
- * Returns false if there is a project with the given name in the database.
- * @param name
- * @returns Promise<Project | null>
- */
-async function isProjectNameAvailable(name: string): Promise<boolean> {
-  let project = await prisma.project.findFirst({
-    where: {
-      name: { equals: name },
-    },
-  });
-  return project == null;
-}
 
 /**
  * Validate the form data to ensure no duplicate project names are used and all paths are valid.

@@ -46,14 +46,17 @@ module.exports = {
   // TESTS
   FETCH_DATA_FROM_STORAGE: "fetch-data-from-storage",
   HANDLE_FETCH_DATA: "handle-fetch-data",
-  SAVE_CANVAS_STATE: "save-canvas-state",
-  LOAD_CANVAS_STATE: "load-canvas-state",
   SAVE_DATA_TO_STORAGE: "save-data-to-storage",
   HANDLE_SAVE_DATA: "handle-save-data",
   GET_TESTS: "get-tests",
   RUN_TEST: "convert-to-command-string",
   CREATE_NEW_TEST: "create-new-test",
+  READ_TEST: "read-test",
   SET_PREDICATE_TEST: "set-predicate-test",
+  TEST_CAN_ADD_ATOM: "test-can-add-atom", // is atom at multiplicity constraint? true / false
+  TEST_ADD_ATOM: "test-add-atom",
+  // CANVAS
+  SAVE_CANVAS_STATE: "save-canvas-state",
 
   CLOSE_TAB: "close-tab",
   DELETE_TEST: "delete-test",

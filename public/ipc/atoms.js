@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const electron_1 = require("electron");
 const client_1 = require("@prisma/client");
 const zod_1 = require("zod");
-const { GET_ATOM_SOURCES, SET_ATOM_COLOR, SET_ATOM_SHAPE, } = require("../../src/utils/constants.js");
+const { GET_ATOM_SOURCES, SET_ATOM_COLOR, } = require("../../src/utils/constants.js");
 const prisma = new client_1.PrismaClient();
 electron_1.ipcMain.on(GET_ATOM_SOURCES, (event, projectID) => __awaiter(void 0, void 0, void 0, function* () {
     const number = zod_1.z.coerce.number();

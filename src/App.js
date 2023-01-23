@@ -7,7 +7,7 @@ import {
   Title,
   Center,
 } from "@mantine/core";
-import SidebarWrapper from "./components/sideBar/SidebarWrapper";
+import SidebarWrapper from "./components/SideBar/SidebarWrapper";
 import BodyWrapper from "./components/BodyWrapper";
 import { useViewportSize } from "@mantine/hooks";
 import { DndProvider } from "react-dnd";

@@ -32,8 +32,10 @@ model Test {
   projectID    Int
   name         String @unique  // Unique name for use in filepath
   testFile     String @unique  // File path for storage of command string
-  canvas       Canvas? @relation("testCanvas") // Canvas Object that holds Atom and connections
   tab          Tab? @relation
+  atomCount    Int @default(0) // Used in autogenerating nicknames. Increments on atom being added. Does not decrement.
+  atoms        Atom[] @relation("testAtoms") // Array of atom instances
+  connections  Connection[]  @relation("testConnections") // Array of connection instances
 }
 
 // TODO: This model may not be necesarry once refactored
@@ -47,14 +49,14 @@ model Tab {
 }
 
 // The Canvas for a Test
-model Canvas {
-  id           Int @id @default(autoincrement())
-  test         Test @relation(name: "testCanvas", fields: [testId], references: [id], onDelete: Cascade)
-  testId       Int @unique
-  atomCount    Int @default(0) // Used in autogenerating nicknames. Increments on atom being added. Does not decrement.
-  atoms        Atom[]  // Array of atom instances
-  connections  Connection[]  @relation("canvasConnections") // Array of connection instances
-}
+//model Canvas {
+//  id           Int @id @default(autoincrement())
+//  test         Test @relation(name: "testCanvas", fields: [testId], references: [id], onDelete: Cascade)
+//  testId       Int @unique
+//  atomCount    Int @default(0) // Used in autogenerating nicknames. Increments on atom being added. Does not decrement.
+//  atoms        Atom[]  // Array of atom instances
+//  connections  Connection[]  @relation("canvasConnections") // Array of connection instances
+//}
 
 // Metadata for an Atom type -- As defined in the alloy file
 model AtomSource {
@@ -92,11 +94,11 @@ model AtomInheritance {
 // Instance of a connection between two Atom on a canvas
 model Connection {
   id           Int @id @default(autoincrement())
-  canvasID     Int
+  testID       Int
   toID         Int
   connLabel    String  // TODO: Name of Relation object defined in alloy file, can probably be defined as relation
   fromID       Int
-  canvas       Canvas @relation(name: "canvasConnections", fields: [canvasID], references: [id], onDelete: Cascade)
+  test         Test @relation(name: "testConnections", fields: [testID], references: [id], onDelete: Cascade)
   from         Atom @relation(name: "connectionFrom", fields: [fromID], references: [id], onDelete: Cascade)
   to           Atom @relation(name: "connectionTo", fields: [fromID], references: [id], onDelete: Cascade)
 }
@@ -104,16 +106,16 @@ model Connection {
 // Instance of an Atom on a canvas
 model Atom {
   id           Int @id @default(autoincrement())
-  canvasID     Int
+  testID       Int
   top          Int  // Y Coord
   left         Int  // X Coord
   srcID        Int
   nickname     String // Name displayed on atom and used in command strings
   srcAtom      AtomSource @relation(fields: [srcID], references: [id]) // Reference to the atom metadata
-  canvas       Canvas @relation(fields: [canvasID], references: [id], onDelete: Cascade)
+  test         Test @relation(name: "testAtoms", fields: [testID], references: [id], onDelete: Cascade)
   connsFrom    Connection[] @relation("connectionFrom")  // List of connections where instance is the FROM
   connsTo      Connection[] @relation("connectionTo")  // List of connections where instance is the TO
-  @@unique(fields: [nickname, canvasID], name:"atomNickID")
+  @@unique(fields: [nickname, testID], name:"atomNickID")
 }
 
 // Predicate Data -- As defined in alloy file

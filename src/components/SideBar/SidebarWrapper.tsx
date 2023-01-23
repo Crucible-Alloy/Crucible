@@ -1,13 +1,4 @@
-import {
-  Tabs,
-  NavLink,
-  Center,
-  ActionIcon,
-  Stack,
-  Drawer,
-  Space,
-  Box,
-} from "@mantine/core";
+import { Center, ActionIcon, Stack, Drawer, Box } from "@mantine/core";
 import {
   IconAdjustmentsHorizontal,
   IconAtom,
@@ -19,7 +10,7 @@ import {
 import { useRef, useState } from "react";
 import React from "react";
 import AtomsSidebarTab from "./AtomsSidebarTab";
-import TestsSidebarTab from "./TestsSidebarTab";
+import TestsSidebarTab from "./Tests/TestsSidebarTab";
 import SettingsSidebarTab from "./SettingsSidebarTab";
 
 interface Props {

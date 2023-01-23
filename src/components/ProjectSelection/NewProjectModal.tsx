@@ -3,9 +3,7 @@ import { Button, Modal, Stack, TextInput } from "@mantine/core";
 import { IconFileSearch, IconFolders, IconTag } from "@tabler/icons";
 import { useEffect } from "react";
 import { useForm } from "@mantine/form";
-import { NewProject } from "../../../public/ipc/projects";
-import { ZodError } from "zod";
-import { ipcMain } from "electron";
+import { NewProject } from "../../../public/validation/formValidation";
 
 // TODO: Validation for project location to ensure no conflicting paths
 // TODO: Zod schema validation for form?

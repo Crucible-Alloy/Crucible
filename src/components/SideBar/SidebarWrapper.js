@@ -11,7 +11,7 @@ const icons_1 = require("@tabler/icons");
 const react_1 = require("react");
 const react_2 = __importDefault(require("react"));
 const AtomsSidebarTab_1 = __importDefault(require("./AtomsSidebarTab"));
-const TestsSidebarTab_1 = __importDefault(require("./TestsSidebarTab"));
+const TestsSidebarTab_1 = __importDefault(require("./Tests/TestsSidebarTab"));
 const SettingsSidebarTab_1 = __importDefault(require("./SettingsSidebarTab"));
 function SidebarWrapper({ projectID }) {
     const [active, setActive] = (0, react_1.useState)(null);

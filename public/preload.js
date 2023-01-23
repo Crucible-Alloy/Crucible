@@ -4,7 +4,7 @@ const { v4: uuidv4 } = require("uuid");
 
 const {
   SAVE_CANVAS_STATE,
-  LOAD_CANVAS_STATE,
+  GET_CANVAS,
   UPDATE_PROJECT_FILE,
   GET_PROJECT_FILE,
   GET_ATOMS,
@@ -47,6 +47,9 @@ const {
   DELETE_PROJECT,
   GET_ATOM_SOURCES,
   GET_ATOM_SOURCE_RELATIONS_FROM,
+  READ_TEST,
+  TEST_CAN_ADD_ATOM,
+  TEST_ADD_ATOM,
 } = require("../src/utils/constants");
 
 //const projectSelect = require("../src/components/ProjectSelection/ProjectSelect");
@@ -55,10 +58,9 @@ contextBridge.exposeInMainWorld("electronAPI", {
   saveCanvasState: (canvasItems, projectKey, testKey) =>
     ipcRenderer.send(SAVE_CANVAS_STATE, canvasItems, projectKey, testKey),
 
-  loadCanvasState: (projectKey, testKey) => {
+  readTest: ({ testID }) => {
     let returnKey = uuidv4();
-    console.log("API received LOAD_CANVAS_STATE from tab ", testKey);
-    ipcRenderer.send(LOAD_CANVAS_STATE, projectKey, testKey, returnKey);
+    ipcRenderer.send(READ_TEST, { testID, returnKey });
 
     return new Promise((resolve) => {
       ipcRenderer.once(returnKey, (event, canvasState) => resolve(canvasState));
@@ -200,6 +202,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
 
   createNewTest: ({ projectID, testName }) => {
     ipcRenderer.send(CREATE_NEW_TEST, projectID, testName);
+    console.log("IPC RENDERER");
     return new Promise((resolve) => {
       ipcRenderer.once("created-new-test", (event, test) => resolve(test));
     });
@@ -381,8 +384,8 @@ contextBridge.exposeInMainWorld("electronAPI", {
     ipcRenderer.send(DELETE_TEST, projectKey, testKey);
   },
 
-  createAtom: (projectKey, testKey, atomKey, atom) => {
-    ipcRenderer.send(CREATE_ATOM, projectKey, testKey, atomKey, atom);
+  testAddAtom: ({ testID, sourceAtomID }) => {
+    ipcRenderer.send(TEST_ADD_ATOM, { testID, sourceAtomID });
   },
 
   getPredicates: (projectKey) => {
@@ -417,5 +420,15 @@ contextBridge.exposeInMainWorld("electronAPI", {
       atomKey,
       nickname
     );
+  },
+
+  testCanAddAtom: ({ testID, sourceAtomID }) => {
+    ipcRenderer.send(TEST_CAN_ADD_ATOM, { testID, sourceAtomID });
+
+    return new Promise((resolve) => {
+      ipcRenderer.once(`${TEST_CAN_ADD_ATOM}-resp`, (event, resp) =>
+        resolve(resp)
+      );
+    });
   },
 });

@@ -6,7 +6,6 @@ import { z, ZodError } from "zod";
 const {
   GET_ATOM_SOURCES,
   SET_ATOM_COLOR,
-  SET_ATOM_SHAPE,
 } = require("../../src/utils/constants.js");
 
 const prisma = new PrismaClient();

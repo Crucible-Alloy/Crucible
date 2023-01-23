@@ -19,64 +19,9 @@ const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
 const zod_1 = require("zod");
 const axios_1 = __importDefault(require("axios"));
+const formValidation_1 = require("../validation/formValidation");
 const { VALIDATE_NEW_PROJECT_FORM, CREATE_NEW_PROJECT, GET_PROJECT, DELETE_PROJECT, } = require("../../src/utils/constants.js");
 const prisma = new client_1.PrismaClient();
-// Form Validation for project creation.
-const validFileName = /^[-\w^&'@{}[\],$=!#().%+~ ]+$/;
-const NewProjectSchema = zod_1.z
-    .object({
-    projectName: zod_1.z
-        .string()
-        .regex(validFileName, "Invalid file name.")
-        .min(3, "Project name should be at least 3 characters.")
-        .refine((val) => __awaiter(void 0, void 0, void 0, function* () {
-        let result = yield isProjectNameAvailable(val);
-        return result;
-    }), (val) => ({ message: `A project named ${val} already exists.` })),
-    projectPath: zod_1.z.string(),
-    alloyFile: zod_1.z.string(),
-})
-    .refine((data) => !fs_1.default.existsSync(data.projectPath + data.projectName), (data) => ({
-    message: `${data.projectName} already exists at the given path.`,
-    path: ["projectName"],
-}));
-const AtomRespSchema = zod_1.z.object({
-    label: zod_1.z.string(),
-    isEnum: zod_1.z.coerce.boolean(),
-    isLone: zod_1.z.coerce.boolean(),
-    isOne: zod_1.z.coerce.boolean(),
-    isSome: zod_1.z.coerce.boolean(),
-    isAbstract: zod_1.z.coerce.boolean(),
-    parents: zod_1.z.string().array().optional(),
-    children: zod_1.z.string().array().optional(),
-    relations: zod_1.z
-        .object({ label: zod_1.z.string(), multiplicity: zod_1.z.string(), type: zod_1.z.string() })
-        .array(),
-});
-const PredicateRespSchema = zod_1.z.object({
-    label: zod_1.z.string(),
-    parameters: zod_1.z
-        .object({
-        label: zod_1.z.string(),
-        paramType: zod_1.z.string(),
-    })
-        .array(),
-});
-/**
- * Returns false if there is a project with the given name in the database.
- * @param name
- * @returns Promise<Project | null>
- */
-function isProjectNameAvailable(name) {
-    return __awaiter(this, void 0, void 0, function* () {
-        let project = yield prisma.project.findFirst({
-            where: {
-                name: { equals: name },
-            },
-        });
-        return project == null;
-    });
-}
 /**
  * Validate the form data to ensure no duplicate project names are used and all paths are valid.
  * @param data Form data to be validated.
@@ -85,7 +30,7 @@ function isProjectNameAvailable(name) {
 function validateNewProject(data) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            yield NewProjectSchema.parseAsync(data);
+            yield formValidation_1.NewProjectSchema.parseAsync(data);
             return { success: true, error: null };
         }
         catch (e) {
@@ -104,7 +49,7 @@ function initializeAtoms(atoms, projectID) {
         // Validate all Atom.
         atoms.forEach((atom) => {
             try {
-                AtomRespSchema.parse(atom);
+                formValidation_1.AtomRespSchema.parse(atom);
             }
             catch (e) {
                 if (e instanceof zod_1.ZodError) {

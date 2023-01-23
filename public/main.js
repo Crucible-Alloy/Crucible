@@ -27,7 +27,7 @@ const {
   FETCH_DATA_FROM_STORAGE,
   HANDLE_FETCH_DATA,
   SAVE_CANVAS_STATE,
-  LOAD_CANVAS_STATE,
+  GET_CANVAS,
   UPDATE_PROJECT_FILE,
   GET_PROJECT_FILE,
   GET_ATOMS,
@@ -424,13 +424,13 @@ ipcMain.on(SAVE_CANVAS_STATE, (event, canvasItems, projectKey, testKey) => {
   store.set(`projects.${projectKey}.tests.${testKey}.canvas`, canvasItems);
 });
 
-ipcMain.on(LOAD_CANVAS_STATE, (event, projectKey, testKey, returnKey) => {
-  //console.log("Main Received: LOAD_CANVAS_STATE with: ", projectKey, testKey)
-
-  // Send canvas state back to ipcRenderer via api.
-  let canvasState = store.get(`projects.${projectKey}.tests.${testKey}.canvas`);
-  event.sender.send(returnKey, canvasState ? canvasState : {});
-});
+// ipcMain.on(GET_CANVAS, (event, projectKey, testKey, returnKey) => {
+//   //console.log("Main Received: LOAD_CANVAS_STATE with: ", projectKey, testKey)
+//
+//   // Send canvas state back to ipcRenderer via api.
+//   let canvasState = store.get(`projects.${projectKey}.tests.${testKey}.canvas`);
+//   event.sender.send(returnKey, canvasState ? canvasState : {});
+// });
 
 ipcMain.on(GET_PROJECT_FILE, (event, projectKey) => {
   //console.log("MAIN: GET_PROJECT_FILE");
@@ -498,13 +498,6 @@ ipcMain.on(OPEN_PROJECT, (event, projectID) => {
   openProject(projectID);
 });
 
-// ipcMain.on(GET_TESTS, (event, projectKey) => {
-//   //console.log("RECEIVED 'GET-TESTS' FROM RENDERER")
-//   let tests = store.get(`projects.${projectKey}.tests`);
-//   //console.log(tests)
-//   event.sender.send("got-tests", tests ? tests : {});
-// });
-
 ipcMain.on(SELECT_FILE, (event) => {
   //console.log("Main Received: SELECT_FILE")
 
@@ -533,31 +526,6 @@ ipcMain.on(GET_HOME_DIRECTORY, (event) => {
   event.sender.send("got-home-directory", homedir);
 });
 
-// ipcMain.on(CREATE_NEW_TEST, (event, projectKey, testName) => {
-//   // Create placeholder test file in /tests, write test to store with blank canvas, return test object to ipcRender
-//   let parentProject = store.get(`projects.${projectKey}`);
-//   let testFilePath = path.join(parentProject["path"], `tests/${testName}.txt`);
-//
-//   fs.writeFile(testFilePath, "Placeholder file...", function (err) {
-//     if (err) throw err;
-//   });
-//
-//   let newTest = {
-//     name: testName,
-//     testFile: testFilePath,
-//     canvas: {
-//       atomCount: 0, // For use with atom nickname
-//       atoms: {},
-//       connections: {},
-//     },
-//   };
-//
-//   let testID = uuidv4();
-//   store.set(`projects.${projectKey}.tests.${testID}`, newTest);
-//
-//   event.sender.send("created-new-test", newTest);
-// });
-
 ipcMain.on(
   GET_ATOM_COLOR,
   (event, projectKey, atomSourceKey, returnChannel) => {
@@ -567,12 +535,6 @@ ipcMain.on(
     event.sender.send(returnChannel, loadedColor);
   }
 );
-
-// ipcMain.on(SET_ATOM_COLOR, (event, projectKey, atomKey, atomColor) => {
-//   //console.log("MAIN RECEIVED: SET_ATOM_COLOR WITH:", atomColor)
-//   store.set(`projects.${projectKey}.Atom.${atomKey}.color`, atomColor);
-//   mainWindow.webContents.send("meta-data-update");
-// });
 
 ipcMain.on(GET_ATOM_LABEL, (event, projectKey, atomKey, returnChannel) => {
   let atomLabel = store.get(`projects.${projectKey}.atoms.${atomKey}.label`);
@@ -933,10 +895,6 @@ ipcMain.on(CLOSE_TAB, (event, projectKey, tabName) => {
 
   mainWindow.webContents.send("tabs-update");
 });
-
-// ipcMain.on(DELETE_TEST, (event, projectKey, testKey) => {
-//   store.delete(`projects.${projectKey}.tests.${testKey}`);
-// });
 
 ipcMain.on(CREATE_ATOM, (event, projectKey, testKey, atomKey, atom) => {
   // Count up Atom of atomType and add nickname with count appended to it.

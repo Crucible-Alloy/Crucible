@@ -2,20 +2,19 @@ import {
   Button,
   Center,
   Container,
-  Group,
   ScrollArea,
   Stack,
-  Text,
   Title,
+  Flex,
 } from "@mantine/core";
 import { useState } from "react";
 import { useEffect } from "react";
 import React from "react";
-import { IconPlus } from "@tabler/icons";
 import { Test } from "@prisma/client";
 import NewTestModal from "./NewTestModal";
-const { SidebarTestRow } = require("./SidebarTestRow");
-const { SIDEBAR_WIDTH } = require("../../utils/constants");
+import TestListItem from "./TestListItem";
+
+const { SIDEBAR_WIDTH } = require("../../../utils/constants");
 
 interface Props {
   projectID: number;
@@ -42,10 +41,10 @@ function TestsSidebarTab({ projectID }: Props) {
   }
 
   return (
-    <Container>
+    <Container style={{ height: "100vh" }}>
       {tests.length > 0 ? (
-        <>
-          <ScrollArea style={{}} offsetScrollbars>
+        <Stack sx={{ height: "100vh" }}>
+          <ScrollArea offsetScrollbars>
             {Object.entries(tests).map(([key, value]) => (
               <>
                 <Container
@@ -61,25 +60,35 @@ function TestsSidebarTab({ projectID }: Props) {
                     },
                   })}
                 >
-                  <SidebarTestRow
+                  <TestListItem
                     test={value}
-                    testKey={key}
+                    testID={value.id}
                     handleRowClick={handleRowClick}
                   />
                 </Container>
               </>
             ))}
           </ScrollArea>
-          <Button onClick={() => setModalOpened((o) => !o)}>New Test</Button>
-        </>
+          <Button
+            sx={{ position: "absolute", bottom: 16 }}
+            onClick={() => setModalOpened((o) => !o)}
+          >
+            New Test
+          </Button>
+        </Stack>
       ) : (
         <Center sx={{ height: "60vh" }}>
           <Stack>
             <Title order={4} color={"dimmed"} align={"center"}>
               You don't have any tests!
             </Title>
-            <Button onClick={() => setModalOpened((o) => !o)}>New Test</Button>
           </Stack>
+          <Button
+            sx={{ position: "fixed", bottom: 0 }}
+            onClick={() => setModalOpened((o) => !o)}
+          >
+            New Test
+          </Button>
         </Center>
       )}
       <NewTestModal
