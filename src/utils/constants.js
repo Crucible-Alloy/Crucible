@@ -2,7 +2,8 @@ module.exports = {
   // API CHANNELS
 
   // ATOMS
-  GET_ATOM_SOURCES: "get-Atom",
+  GET_ATOM_SOURCES: "get-atom-sources",
+  GET_ATOM_SOURCE: "get-atom-source",
   GET_ATOM: "get-atom",
   GET_ATOM_INSTANCE: "get-atom-instance",
   GET_CONNECTIONS: "get-connection",
@@ -36,6 +37,7 @@ module.exports = {
 
   SET_PROJECT_TABS: "set-project-tabs",
   SET_ACTIVE_TAB: "set-active-tab",
+  GET_ACTIVE_TAB: "get-active-tab",
 
   OPEN_AND_SET_ACTIVE: "open-and-set-active",
   SELECT_FILE: "select-file",
@@ -55,6 +57,8 @@ module.exports = {
   SET_PREDICATE_TEST: "set-predicate-test",
   TEST_CAN_ADD_ATOM: "test-can-add-atom", // is atom at multiplicity constraint? true / false
   TEST_ADD_ATOM: "test-add-atom",
+  OPEN_TEST: "open-test",
+
   // CANVAS
   SAVE_CANVAS_STATE: "save-canvas-state",
 

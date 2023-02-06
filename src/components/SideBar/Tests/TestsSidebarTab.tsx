@@ -33,11 +33,8 @@ function TestsSidebarTab({ projectID }: Props) {
   }, []);
 
   // TODO: Determine type of testObj
-  function handleRowClick(testID: number, testObj: any) {
-    let newTab = testObj;
-    newTab.testKey = testID;
-    // If there isn't a tab with a matching name, add the tab.
-    window.electronAPI.openTab(projectID, newTab);
+  function handleRowClick(testID: number, projectID: number) {
+    window.electronAPI.openTest({ testID, projectID });
   }
 
   return (
@@ -62,8 +59,7 @@ function TestsSidebarTab({ projectID }: Props) {
                 >
                   <TestListItem
                     test={value}
-                    testID={value.id}
-                    handleRowClick={handleRowClick}
+                    handleRowClick={() => handleRowClick(value.id, projectID)}
                   />
                 </Container>
               </>

@@ -21,11 +21,8 @@ function TestsSidebarTab({ projectID }) {
         });
     }, []);
     // TODO: Determine type of testObj
-    function handleRowClick(testID, testObj) {
-        let newTab = testObj;
-        newTab.testKey = testID;
-        // If there isn't a tab with a matching name, add the tab.
-        window.electronAPI.openTab(projectID, newTab);
+    function handleRowClick(testID, projectID) {
+        window.electronAPI.openTest({ testID, projectID });
     }
     return (react_3.default.createElement(core_1.Container, { style: { height: "100vh" } },
         tests.length > 0 ? (react_3.default.createElement(core_1.Stack, { sx: { height: "100vh" } },
@@ -39,7 +36,7 @@ function TestsSidebarTab({ projectID }) {
                             },
                         },
                     }) },
-                    react_3.default.createElement(TestListItem_1.default, { test: value, testID: value.id, handleRowClick: handleRowClick })))))),
+                    react_3.default.createElement(TestListItem_1.default, { test: value, handleRowClick: () => handleRowClick(value.id, projectID) })))))),
             react_3.default.createElement(core_1.Button, { sx: { position: "absolute", bottom: 16 }, onClick: () => setModalOpened((o) => !o) }, "New Test"))) : (react_3.default.createElement(core_1.Center, { sx: { height: "60vh" } },
             react_3.default.createElement(core_1.Stack, null,
                 react_3.default.createElement(core_1.Title, { order: 4, color: "dimmed", align: "center" }, "You don't have any tests!")),

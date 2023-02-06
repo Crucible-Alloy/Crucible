@@ -5,11 +5,10 @@ import { showNotification } from "@mantine/notifications";
 import { IconAlertTriangle } from "@tabler/icons";
 import { useClickOutside } from "@mantine/hooks";
 import { Affix, Popover, Select, Title } from "@mantine/core";
-import { Atom, Project } from "@prisma/client";
-import { TestWithCanvas } from "../../public/ipc/tests";
-
-//@ts-ignore
-import { Atom as AtomInstance } from "../components/Atom/Atom.js";
+import { AtomWithSource, TestWithCanvas } from "../../public/main";
+import { AtomInstance } from "./Atom/AtomInstance";
+import { AtomSourceWithRelations } from "../../public/ipc/atoms";
+import { Atom } from "@prisma/client";
 
 const { ATOM, ATOM_SOURCE } = require("../utils/constants.js");
 
@@ -18,7 +17,7 @@ interface Props {
   testID: number;
 }
 
-export const Canvas = ({ projectID, testID }: Props) => {
+function Canvas({ projectID, testID }: Props) {
   const [canvasItems, setCanvas] = useState<TestWithCanvas>();
   const [atomMenu, setAtomMenu] = useState(false);
   const [coords, setCoords] = useState<{
@@ -28,14 +27,6 @@ export const Canvas = ({ projectID, testID }: Props) => {
   const [atoms, setAtoms] = useState<Atom[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [quickInsertData, setQuickInsertData] = useState([]);
-
-  useEffect(() => {
-    return () => {
-      window.electronAPI.getAtoms(projectID).then((atoms: Atom[]) => {
-        setAtoms(atoms);
-      }, []);
-    };
-  }, []);
 
   useEffect(() => {
     window.electronAPI.listenForCanvasChange((_event: any, value: any) => {
@@ -67,8 +58,6 @@ export const Canvas = ({ projectID, testID }: Props) => {
   const ref = useClickOutside(() => setCoords({ clickX: null, clickY: null }));
 
   const validCoords = coords.clickX !== null && coords.clickY !== null;
-
-  function initializeCanvas() {}
 
   const addNewAtom = (
     left: number,
@@ -216,15 +205,11 @@ export const Canvas = ({ projectID, testID }: Props) => {
             </div>
           </Popover>
         </Affix>
-        {canvasItems.atoms.map((atom) => (
+        {canvasItems.atoms.map((atom: AtomWithSource) => (
           <AtomInstance
             contentsBeingDragged={false}
-            id={atom.id}
-            projectKey={projectID}
-            testKey={testID}
-            sourceAtomID={atom.srcID}
-            label={"atom"}
-            atomColor={"color"}
+            atom={atom}
+            projectID={projectID}
           />
         ))}
         {canvasItems.connections.map((connection) => (
@@ -239,6 +224,6 @@ export const Canvas = ({ projectID, testID }: Props) => {
     // Loading items
     return <div ref={drop} className={"canvas"}></div>;
   }
-};
+}
 
 export default Canvas;

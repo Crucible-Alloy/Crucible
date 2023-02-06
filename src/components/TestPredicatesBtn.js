@@ -18,14 +18,14 @@ import {
 } from "@mantine/core";
 import React, { useEffect, useState } from "react";
 
-function TestPredicatesBtn({ projectKey, testKey }) {
+export function TestPredicatesBtn({ projectID, testID }) {
   const [opened, setOpened] = useState(false);
   const [predicates, setPredicates] = useState({});
   const [canvasAtoms, setCanvasAtoms] = useState(loadCanvasAtoms);
 
   useEffect(() => {
     return () => {
-      window.electronAPI.getPredicates(projectKey).then((predicates) => {
+      window.electronAPI.getPredicates(projectID).then((predicates) => {
         setPredicates(predicates);
       });
     };
@@ -33,7 +33,7 @@ function TestPredicatesBtn({ projectKey, testKey }) {
 
   useEffect(() => {
     window.electronAPI.listenForPredicatesChange((_event, value) => {
-      window.electronAPI.getPredicates(projectKey).then((predicates) => {
+      window.electronAPI.getPredicates(projectID).then((predicates) => {
         console.log(predicates);
         setPredicates(predicates);
       });
@@ -47,13 +47,13 @@ function TestPredicatesBtn({ projectKey, testKey }) {
   }, []);
 
   function loadCanvasAtoms() {
-    window.electronAPI.loadCanvasState(projectKey, testKey).then((data) => {
+    window.electronAPI.loadCanvasState(projectID, testID).then((data) => {
       setCanvasAtoms(data.atoms);
     });
   }
 
   function updatePredicate(predicateName, predicate) {
-    window.electronAPI.setPredicate(projectKey, predicateName, predicate);
+    window.electronAPI.setPredicate(projectID, predicateName, predicate);
   }
 
   function setPredicateMode(value, predicateName) {
@@ -62,7 +62,7 @@ function TestPredicatesBtn({ projectKey, testKey }) {
     );
     predicate[predicateName].status = value;
     window.electronAPI.setPredicate(
-      projectKey,
+      projectID,
       predicateName,
       predicate[predicateName]
     );
@@ -83,7 +83,7 @@ function TestPredicatesBtn({ projectKey, testKey }) {
     });
     console.log(predicate[predicateName]);
     window.electronAPI.setPredicate(
-      projectKey,
+      projectID,
       predicateName,
       predicate[predicateName]
     );

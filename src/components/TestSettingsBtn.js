@@ -2,7 +2,7 @@ import { IconSettings, IconTag } from "@tabler/icons";
 import { Modal, TextInput, ActionIcon } from "@mantine/core";
 import { useState } from "react";
 
-function TestSettingsBtn({ tab }) {
+export function TestSettingsBtn({ test }) {
   const [opened, setOpened] = useState(false);
 
   return (
@@ -13,7 +13,7 @@ function TestSettingsBtn({ tab }) {
         title={"Test Settings"}
       >
         <TextInput
-          defaultValue={tab.title}
+          defaultValue={test.name}
           label="Test Name"
           icon={<IconTag />}
         />

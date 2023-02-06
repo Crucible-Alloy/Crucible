@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import { ActionIcon, Grid, Group, Text } from "@mantine/core";
 import { IconPlayerPlay, IconSettings } from "@tabler/icons";
+import { Test } from "@prisma/client";
 
 interface Props {
-  test: any;
-  testID: number;
-  handleRowClick: (testID: number, test: any) => any;
+  test: Test;
+  handleRowClick: () => any;
 }
 
-function TestListItem({ test, testID, handleRowClick }: Props) {
+function TestListItem({ test, handleRowClick }: Props) {
   const [settingsModal, setSettingsModal] = useState<boolean>(false);
 
   return (
@@ -22,13 +22,7 @@ function TestListItem({ test, testID, handleRowClick }: Props) {
         },
       })}
     >
-      <Grid.Col
-        m={"sx"}
-        span={"auto"}
-        onClick={() => {
-          handleRowClick(test, testID);
-        }}
-      >
+      <Grid.Col m={"sx"} span={"auto"} onClick={handleRowClick}>
         <Group
           position={"left"}
           styles={(theme) => ({

@@ -50,6 +50,9 @@ const {
   READ_TEST,
   TEST_CAN_ADD_ATOM,
   TEST_ADD_ATOM,
+  OPEN_TEST,
+  GET_ACTIVE_TAB,
+  GET_ATOM_SOURCE,
 } = require("../src/utils/constants");
 
 //const projectSelect = require("../src/components/ProjectSelection/ProjectSelect");
@@ -124,6 +127,16 @@ contextBridge.exposeInMainWorld("electronAPI", {
 
   getAtomSources: (projectID) => {
     ipcRenderer.send(GET_ATOM_SOURCES, projectID);
+
+    return new Promise((resolve) => {
+      ipcRenderer.once("get-atom-sources-resp", (event, atoms) =>
+        resolve(atoms)
+      );
+    });
+  },
+
+  getAtomSource: (srcAtomID) => {
+    ipcRenderer.send(GET_ATOM_SOURCE, { srcAtomID });
 
     return new Promise((resolve) => {
       ipcRenderer.once("get-atom-sources-resp", (event, atoms) =>
@@ -368,16 +381,26 @@ contextBridge.exposeInMainWorld("electronAPI", {
     ipcRenderer.send(SET_PROJECT_TABS, projectKey, tabs, activeTab);
   },
 
-  setActiveTab: (projectKey, activeTab) => {
-    ipcRenderer.send(SET_ACTIVE_TAB, projectKey, activeTab);
+  setActiveTab: ({ projectID, testName }) => {
+    ipcRenderer.send(SET_ACTIVE_TAB, { projectID, testName });
+  },
+
+  getActiveTab: (projectID) => {
+    ipcRenderer.send(GET_ACTIVE_TAB, projectID);
+
+    return new Promise((resolve) => {
+      ipcRenderer.once(`${GET_ACTIVE_TAB}-resp`, (event, activeTab) =>
+        resolve(activeTab)
+      );
+    });
   },
 
   openTab: (projectKey, tab) => {
     ipcRenderer.send(OPEN_AND_SET_ACTIVE, projectKey, tab);
   },
 
-  closeTab: (projectKey, tabName) => {
-    ipcRenderer.send(CLOSE_TAB, projectKey, tabName);
+  closeTab: ({ projectID, testID }) => {
+    ipcRenderer.send(CLOSE_TAB, { projectID, testID });
   },
 
   deleteTest: (projectKey, testKey) => {
@@ -429,6 +452,14 @@ contextBridge.exposeInMainWorld("electronAPI", {
       ipcRenderer.once(`${TEST_CAN_ADD_ATOM}-resp`, (event, resp) =>
         resolve(resp)
       );
+    });
+  },
+
+  openTest: ({ testID, projectID }) => {
+    ipcRenderer.send(OPEN_TEST, { testID, projectID });
+
+    return new Promise((resolve) => {
+      ipcRenderer.once(`${OPEN_TEST}-resp`, (event, resp) => resolve(resp));
     });
   },
 });

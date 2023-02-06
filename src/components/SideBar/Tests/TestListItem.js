@@ -26,7 +26,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const react_1 = __importStar(require("react"));
 const core_1 = require("@mantine/core");
 const icons_1 = require("@tabler/icons");
-function TestListItem({ test, testID, handleRowClick }) {
+function TestListItem({ test, handleRowClick }) {
     const [settingsModal, setSettingsModal] = (0, react_1.useState)(false);
     return (react_1.default.createElement(core_1.Grid, { p: "xs", sx: (theme) => ({
             borderRadius: theme.radius.sm,
@@ -35,9 +35,7 @@ function TestListItem({ test, testID, handleRowClick }) {
                 backgroundColor: theme.colors.gray[2],
             },
         }) },
-        react_1.default.createElement(core_1.Grid.Col, { m: "sx", span: "auto", onClick: () => {
-                handleRowClick(test, testID);
-            } },
+        react_1.default.createElement(core_1.Grid.Col, { m: "sx", span: "auto", onClick: handleRowClick },
             react_1.default.createElement(core_1.Group, { position: "left", styles: (theme) => ({
                     root: {
                         borderRadius: 8,

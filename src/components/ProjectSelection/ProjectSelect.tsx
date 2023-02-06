@@ -23,9 +23,9 @@ import NewProjectModal from "./NewProjectModal";
 import { Project, Relation, Test } from "@prisma/client";
 import { NewProject } from "../../../public/validation/formValidation";
 import ProjectListItem from "./ProjectListItem";
-import { TestWithCanvas } from "../../../public/ipc/tests";
+import { TestWithCanvas } from "../../../public/main";
 
-// TODO: Import Window electronAPI types in App.js or somewhere more appropriate once we
+// TODO: Import Window electronAPI types in App.ts or somewhere more appropriate once we
 //  get it to refactored Typescript.
 
 interface ElectronAPI {
@@ -52,6 +52,7 @@ interface ElectronAPI {
     testID: number;
     sourceAtomID: number;
   }) => Promise<{ success: boolean; error?: any }>;
+  closeTab: (data: { projectID: number; testID: number }) => any;
 }
 
 declare global {

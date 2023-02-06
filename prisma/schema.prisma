@@ -33,6 +33,7 @@ model Test {
   name         String @unique  // Unique name for use in filepath
   testFile     String @unique  // File path for storage of command string
   tab          Tab? @relation
+  tabIsOpen    Boolean @default(false)
   atomCount    Int @default(0) // Used in autogenerating nicknames. Increments on atom being added. Does not decrement.
   atoms        Atom[] @relation("testAtoms") // Array of atom instances
   connections  Connection[]  @relation("testConnections") // Array of connection instances

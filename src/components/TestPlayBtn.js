@@ -3,12 +3,12 @@ import { Button, Tooltip, ActionIcon } from "@mantine/core";
 import { useState } from "react";
 import { showNotification } from "@mantine/notifications";
 
-function TestPlayBtn({ disabled, projectKey, testKey }) {
+export function TestPlayBtn({ disabled, projectID, testID }) {
   const [running, setRunning] = useState(false);
 
   const runTest = () => {
     setRunning(true);
-    window.electronAPI.runTest(projectKey, testKey).then((data) => {
+    window.electronAPI.runTest(projectID, testID).then((data) => {
       if (data === "Pass") {
         showNotification({
           title: "Passed",

@@ -1,35 +1,25 @@
-import { Group, Container, Tooltip } from "@mantine/core";
-import TestPlayBtn from "./TestPlayBtn";
-import TestSettingsBtn from "./TestSettingsBtn";
-import { CustomDragLayer } from "./CustomDragLayer";
-import Canvas from "./Canvas";
-import TestPredicatesBtn from "./TestPredicatesBtn";
-
-function TabContent({ tab, projectKey, testKey, mousePos }) {
-  return (
-    <Container
-      styles={(theme) => ({
-        height: "100%",
-        width: "100%",
-        position: "relative",
-      })}
-      p={"sm"}
-    >
-      <Group position={"apart"}>
-        <Group>
-          <TestPlayBtn projectKey={projectKey} testKey={testKey} />
-          <TestPredicatesBtn projectKey={projectKey} testKey={testKey} />
-        </Group>
-
-        <TestSettingsBtn tab={tab} />
-      </Group>
-      <Container p={"sm"} sx={{ position: "relative", height: "100%" }}>
-        <div className={"canvasContainer"}>
-          <Canvas projectKey={projectKey} testKey={testKey} tab={tab} />
-        </div>
-      </Container>
-    </Container>
-  );
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const react_1 = __importDefault(require("react"));
+const core_1 = require("@mantine/core");
+const Canvas_1 = __importDefault(require("./Canvas"));
+const hooks_1 = require("@mantine/hooks");
+const TestPlayBtn = require("./TestPlayBtn.js");
+const TestSettingsBtn = require("./TestSettingsBtn.js");
+const TestPredicatesBtn = require("./TestPredicatesBtn.js");
+function TabContent({ test, projectID, mousePos }) {
+    const { width, height } = (0, hooks_1.useViewportSize)();
+    return (react_1.default.createElement(core_1.Box, { sx: (theme) => ({
+            position: "relative",
+            height: "100%",
+            width: "100%",
+            overflow: "scroll",
+            backgroundColor: theme.colors.gray[0],
+            border: "solid 1px gray",
+        }) },
+        react_1.default.createElement(Canvas_1.default, { projectID: projectID, testID: test.id })));
 }
-
-export default TabContent;
+exports.default = TabContent;

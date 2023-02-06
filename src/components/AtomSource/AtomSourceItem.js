@@ -31,9 +31,9 @@ function AtomSourceItem({ atomSource }) {
         type: ATOM_SOURCE,
         item: {
             id: null,
-            left: 0,
             top: 0,
-            label: atomSource.label,
+            left: 0,
+            atomLabel: atomSource.label,
             sourceAtomKey: atomSource.id,
             projectKey: atomSource.projectID,
             renderType,

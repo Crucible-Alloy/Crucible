@@ -6,16 +6,17 @@ import { z, ZodError } from "zod";
 const {
   GET_ATOM_SOURCES,
   SET_ATOM_COLOR,
+  GET_ATOM_SOURCE,
 } = require("../../src/utils/constants.js");
 
 const prisma = new PrismaClient();
+const number = z.coerce.number();
 
 export type AtomSourceWithRelations = Prisma.AtomSourceGetPayload<{
   include: { fromRelations: true; isChildOf: true };
 }>;
 
 ipcMain.on(GET_ATOM_SOURCES, async (event, projectID: number) => {
-  const number = z.coerce.number();
   console.log(`Getting atoms with projectID: ${projectID}`);
   const atoms = await prisma.atomSource.findMany({
     where: { projectID: number.parse(projectID) },
@@ -25,6 +26,17 @@ ipcMain.on(GET_ATOM_SOURCES, async (event, projectID: number) => {
     },
   });
   event.sender.send("get-atom-sources-resp", atoms ? atoms : {});
+});
+
+ipcMain.on(GET_ATOM_SOURCE, async (event, { srcAtomID }) => {
+  const atom = await prisma.atomSource.findFirst({
+    where: { id: number.parse(srcAtomID) },
+    include: {
+      fromRelations: true,
+      isChildOf: true,
+    },
+  });
+  event.sender.send(`${GET_ATOM_SOURCE}-resp`, atom ? atom : {});
 });
 
 ipcMain.on(SET_ATOM_COLOR, async (event, { sourceAtomID, color }: SetColor) => {

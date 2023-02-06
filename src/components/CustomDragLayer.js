@@ -2,7 +2,8 @@ import { useDragLayer } from "react-dnd";
 import { ATOM, ATOM_SOURCE, CONNECTION } from "../utils/constants";
 import { useMantineTheme } from "@mantine/core";
 import { Arrow } from "react-absolute-svg-arrows";
-import { Atom } from "./Atom/Atom";
+import { AtomInstance } from "./Atom/AtomInstance";
+import { AtomSourceItem } from "./AtomSource/AtomSourceItem";
 
 const layerStyles = {
   position: "absolute",
@@ -69,7 +70,7 @@ export const CustomDragLayer = ({ mousePos }) => {
     switch (item.renderType) {
       case ATOM:
         return (
-          <Atom
+          <AtomInstance
             contentsBeingDragged={true}
             id={item.id}
             left={item.left}
@@ -80,19 +81,21 @@ export const CustomDragLayer = ({ mousePos }) => {
             testKey={item.testKey}
           />
         );
+
       case ATOM_SOURCE:
         return (
-          <Atom
+          <AtomInstance
             contentsBeingDragged={true}
             id={item.id}
             left={item.left}
-            atomLabel={item.label}
+            atomLabel={item.metaData.label}
             top={item.top}
             sourceAtomKey={item.sourceAtomKey}
             projectKey={item.projectKey}
             testKey={item.testKey}
           />
         );
+
       case CONNECTION:
         return (
           <Arrow
