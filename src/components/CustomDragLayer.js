@@ -1,5 +1,5 @@
 import { useDragLayer } from "react-dnd";
-import { ATOM, ATOM_SOURCE, CONNECTION } from "../utils/constants";
+import { ATOM, ATOM_SOURCE, CONNECTION } from "../../utils/constants";
 import { useMantineTheme } from "@mantine/core";
 import { Arrow } from "react-absolute-svg-arrows";
 import { AtomInstance } from "./Atom/AtomInstance";

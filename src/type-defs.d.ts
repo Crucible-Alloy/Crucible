@@ -1,2 +1,2 @@
 declare module "./components/FileSelector";
-declare module "./utils/constants";
+declare module "../utils/constants";

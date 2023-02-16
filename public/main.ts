@@ -70,7 +70,7 @@ const {
   TEST_CAN_ADD_ATOM,
   READ_TEST,
   GET_ACTIVE_TAB,
-} = require("../src/utils/constants");
+} = require("../utils/constants");
 
 let itemsToTrack;
 
@@ -205,7 +205,7 @@ function createProjectSelectWindow() {
     height: 640,
     webPreferences: {
       nodeIntegration: true,
-      preload: path.join(__dirname, "preload.js"),
+      preload: path.join(__dirname, "preload.ts"),
     },
   });
 
@@ -227,7 +227,7 @@ function createMainWindow(projectID: number) {
     height: 900,
     webPreferences: {
       nodeIntegration: true,
-      preload: path.join(__dirname, "preload.js"),
+      preload: path.join(__dirname, "preload.ts"),
     },
     //titleBarStyle: "hiddenInset",
   });
@@ -565,42 +565,42 @@ ipcMain.on(DELETE_CONNECTION, (event, projectKey, testKey, atomID) => {
   // mainWindow.webContents.send("canvas-update");
 });
 
-ipcMain.on(
-  CREATE_CONNECTION,
-  (
-    event,
-    projectKey,
-    testKey,
-    fromAtom,
-    toAtom,
-    fromAtomLabel,
-    toAtomLabel,
-    fromNickname,
-    toNickname,
-    connectionLabel
-  ) => {
-    let connectionId = uuidv4();
-    let connection = {
-      from: fromAtom,
-      to: toAtom,
-      fromLabel: fromAtomLabel,
-      toLabel: toAtomLabel,
-      fromNickname: fromNickname,
-      toNickname: toNickname,
-      connectionLabel: connectionLabel,
-    };
-    console.log(connection);
-    // Todo: Get relation label based on sourceAtomKeys?
-    //  Filter relations down based to toLabel compared to relatedLabel
-
-    store.set(
-      `projects.${projectKey}.tests.${testKey}.canvas.connections.${connectionId}`,
-      connection
-    );
-
-    mainWindow.webContents.send("canvas-update");
-  }
-);
+// ipcMain.on(
+//   CREATE_CONNECTION,
+//   (
+//     event,
+//     projectKey,
+//     testKey,
+//     fromAtom,
+//     toAtom,
+//     fromAtomLabel,
+//     toAtomLabel,
+//     fromNickname,
+//     toNickname,
+//     connectionLabel
+//   ) => {
+//     let connectionId = uuidv4();
+//     let connection = {
+//       from: fromAtom,
+//       to: toAtom,
+//       fromLabel: fromAtomLabel,
+//       toLabel: toAtomLabel,
+//       fromNickname: fromNickname,
+//       toNickname: toNickname,
+//       connectionLabel: connectionLabel,
+//     };
+//     console.log(connection);
+//     // Todo: Get relation label based on sourceAtomKeys?
+//     //  Filter relations down based to toLabel compared to relatedLabel
+//
+//     store.set(
+//       `projects.${projectKey}.tests.${testKey}.canvas.connections.${connectionId}`,
+//       connection
+//     );
+//
+//     mainWindow.webContents.send("canvas-update");
+//   }
+// );
 
 // TODO: Get rid of any types
 ipcMain.on(
@@ -916,7 +916,11 @@ export type TestWithCanvas = Prisma.TestGetPayload<{
 }>;
 
 export type AtomWithSource = Prisma.AtomGetPayload<{
-  include: { srcAtom: { include: { fromRelations: true; isChildOf: true } } };
+  include: {
+    srcAtom: {
+      include: { fromRelations: true; isChildOf: true; toRelations: true };
+    };
+  };
 }>;
 
 /**

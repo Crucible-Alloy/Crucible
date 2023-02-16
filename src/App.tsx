@@ -9,7 +9,24 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 import { useParams } from "react-router-dom";
 import { NotificationsProvider } from "@mantine/notifications";
 import React, { useEffect, useState } from "react";
+import { NewProject } from "../public/validation/formValidation";
+import { Project, Relation, Test } from "@prisma/client";
+import { TestWithCanvas } from "../public/main";
+import { ElectronAPI } from "../public/preload";
 const { CustomDragLayer } = require("./components/CustomDragLayer");
+
+// TODO: Import Window electronAPI types in App.ts or somewhere more appropriate once we
+//  get it to refactored Typescript.
+
+declare global {
+  interface Window {
+    electronAPI: ElectronAPI | any;
+  }
+  interface SetColor {
+    sourceAtomID: number;
+    color: string;
+  }
+}
 
 function App() {
   const { width, height } = useViewportSize();

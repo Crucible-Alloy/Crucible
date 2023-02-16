@@ -13,35 +13,43 @@ exports.AtomContents = void 0;
 const react_1 = require("react");
 const react_dnd_1 = require("react-dnd");
 const react_dnd_html5_backend_1 = require("react-dnd-html5-backend");
-const constants_1 = require("../../utils/constants");
 const core_1 = require("@mantine/core");
 const icons_1 = require("@tabler/icons");
 const notifications_1 = require("@mantine/notifications");
+const { ATOM, CONNECTION } = require("../../../utils/constants");
 function AtomContents({ atom }) {
     const [atomData, setAtomData] = (0, react_1.useState)(initializeAtom);
-    const [metaData, setMetaData] = (0, react_1.useState)(initializeMetaData);
+    const [metaData, setMetaData] = (0, react_1.useState)();
     const [acceptTypes, setAcceptTypes] = (0, react_1.useState)([]);
-    const renderType = constants_1.ATOM;
+    const renderType = ATOM;
     const theme = (0, core_1.useMantineTheme)();
     (0, react_1.useEffect)(() => {
         window.electronAPI.listenForMetaDataChange((_event) => {
-            window.electronAPI.getAtom(projectKey, sourceAtomKey).then((atom) => {
+            window.electronAPI
+                .getAtomSource(atom.id)
+                .then((atom) => {
                 setMetaData(atom);
+            })
+                .then(() => {
+                if (metaData) {
+                    setAcceptTypes(metaData.toRelations.map((entry) => entry.label));
+                }
             });
         });
-    }, []);
-    (0, react_1.useEffect)(() => {
         window.electronAPI
-            .getAcceptTypes(projectKey, sourceAtomKey)
-            .then((types) => {
-            setAcceptTypes(types);
+            .getAtomSource(atom.id)
+            .then((atom) => {
+            setMetaData(atom);
+        })
+            .then(() => {
+            if (metaData) {
+                setAcceptTypes(metaData.toRelations.map((entry) => entry.label));
+            }
         });
-    }, []);
-    (0, react_1.useEffect)(() => {
         preview((0, react_dnd_html5_backend_1.getEmptyImage)(), { captureDraggingState: true });
     }, []);
     const [{ isDragging }, drag, preview] = (0, react_dnd_1.useDrag)(() => ({
-        type: constants_1.ATOM,
+        type: ATOM,
         item: {
             renderType,
             atom,
@@ -60,27 +68,24 @@ function AtomContents({ atom }) {
         drop(item, monitor) {
             const delta = monitor.getDifferenceFromInitialOffset();
             console.log("AttemptedDrop");
-            if (item.renderType === constants_1.CONNECTION) {
+            if (item.renderType === CONNECTION) {
                 console.log("Attempted connection");
                 addNewConnection(item.id, atom.id);
             }
             return undefined;
         },
     }), [createConnection, atomData, metaData]);
-    function createConnection(fromAtom, toAtom, fromAtomLabel, toAtomLabel, fromNickname, toNickname, connectionLabel) {
-        window.electronAPI.makeConnection(projectKey, testKey, fromAtom, toAtom, fromAtomLabel, toAtomLabel, fromNickname, toNickname, connectionLabel);
+    function createConnection(fromID, toID) {
+        window.electronAPI.makeConnection({ fromID, toID });
     }
-    function addNewConnection(fromAtomKey, toAtomKey) {
+    function addNewConnection({ fromAtom, toAtom }) {
         return __awaiter(this, void 0, void 0, function* () {
-            let toAtom, fromAtom;
             let eligibleToAdd = true;
             let targetLabels = [];
             /* Get atom data and metadata. */
             function getAtom(atomKey) {
                 return new Promise((resolve) => {
-                    window.electronAPI
-                        .getAtomInstance(projectKey, testKey, atomKey)
-                        .then((atomInstance) => {
+                    window.electronAPI.getAtomInstance(atomKey).then((atomInstance) => {
                         window.electronAPI
                             .getAtom(projectKey, atomInstance["sourceAtomKey"])
                             .then((atomMetaData) => {
@@ -163,11 +168,6 @@ function AtomContents({ atom }) {
     function initializeAtom() {
         window.electronAPI.getAtomInstance(projectKey, testKey, id).then((atom) => {
             setAtomData(atom);
-        });
-    }
-    function initializeMetaData() {
-        window.electronAPI.getAtom(projectKey, sourceAtomKey).then((atom) => {
-            setMetaData(atom);
         });
     }
     function deleteAtom(id) {

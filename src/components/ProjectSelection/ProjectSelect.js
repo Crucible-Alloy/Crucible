@@ -51,7 +51,7 @@ const ProjectSelect = () => {
     // TODO: Dynamically reload after project deletion
     (0, react_1.useEffect)(() => {
         const loadProjects = () => __awaiter(void 0, void 0, void 0, function* () {
-            window.electronAPI.getProjects().then((projects) => {
+            window.electronAPI.getAllProjects().then((projects) => {
                 setProjects(projects);
             });
         });

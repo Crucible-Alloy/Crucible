@@ -25,7 +25,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const react_1 = __importStar(require("react"));
 const core_1 = require("@mantine/core");
-const helpers_1 = require("../../utils/helpers");
+const helpers_1 = require("../../../utils/helpers");
 const icons_1 = require("@tabler/icons");
 function AtomSourceSettingsModal({ atomSource, opened, setModalOpened, }) {
     const [atomColor, setAtomColor] = (0, react_1.useState)(atomSource.color);

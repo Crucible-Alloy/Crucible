@@ -11,7 +11,7 @@ const react_dnd_html5_backend_1 = require("react-dnd-html5-backend");
 const react_2 = __importDefault(require("react"));
 const icons_1 = require("@tabler/icons");
 const AtomSourceSettingsModal_1 = __importDefault(require("./AtomSourceSettingsModal"));
-const { ATOM_SOURCE } = require("../../utils/constants.js");
+const { ATOM_SOURCE } = require("../../../utils/constants");
 function getStyles(left, top, isDragging) {
     //const transform = `translate3d(${left}px, ${top}px, 0)`
     return {

@@ -5,6 +5,7 @@ let constants = {
   GET_ATOM_SOURCES: "get-atom-sources",
   GET_ATOM_SOURCE: "get-atom-source",
   GET_ATOM: "get-atom",
+  GET_ATOMS: "get-atoms",
   GET_ATOM_INSTANCE: "get-atom-instance",
   GET_CONNECTIONS: "get-connection",
   GET_ATOM_COLOR: "get-atom-color",

@@ -14,7 +14,7 @@ import {
 import AtomSourceSettingsModal from "./AtomSourceSettingsModal";
 import { AtomSourceWithRelations } from "../../../public/ipc/atoms";
 
-const { ATOM_SOURCE } = require("../../utils/constants.js");
+const { ATOM_SOURCE } = require("../../../utils/constants");
 
 function getStyles(left: number, top: number, isDragging: boolean) {
   //const transform = `translate3d(${left}px, ${top}px, 0)`

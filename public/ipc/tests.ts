@@ -14,6 +14,6 @@ const {
   TEST_CAN_ADD_ATOM,
   TEST_ADD_ATOM,
   OPEN_TEST,
-} = require("../../src/utils/constants.js");
+} = require("../../utils/constants");
 
 const prisma = new PrismaClient();

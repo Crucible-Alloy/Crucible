@@ -25,46 +25,6 @@ import { NewProject } from "../../../public/validation/formValidation";
 import ProjectListItem from "./ProjectListItem";
 import { TestWithCanvas } from "../../../public/main";
 
-// TODO: Import Window electronAPI types in App.ts or somewhere more appropriate once we
-//  get it to refactored Typescript.
-
-interface ElectronAPI {
-  getHomeDirectory: () => Promise<string>;
-  validateProjectName: (projectName: string) => Promise<boolean>;
-  createNewProject: (data: NewProject) => { success: boolean; error: any };
-  getProject: (projectID: number) => Promise<Project>;
-  getProjects: () => Promise<Project[]>;
-  openProject: (projectId: number) => any;
-  deleteProject: (project: Project) => any;
-  selectFile: () => string;
-  getAtomRelationsFrom: (
-    projectID: number,
-    sourceAtomLabel: string
-  ) => Promise<Relation[]>;
-  setAtomColor: (data: SetColor) => any;
-  getTests: (projectID: number) => Promise<Test[]>;
-  createNewTest: (data: { projectID: number; testName: string }) => {
-    success: boolean;
-    error: any;
-  };
-  readTest: (data: { testID: number }) => Promise<TestWithCanvas>;
-  testCanAddAtom: (data: {
-    testID: number;
-    sourceAtomID: number;
-  }) => Promise<{ success: boolean; error?: any }>;
-  closeTab: (data: { projectID: number; testID: number }) => any;
-}
-
-declare global {
-  interface Window {
-    electronAPI: ElectronAPI | any;
-  }
-  interface SetColor {
-    sourceAtomID: number;
-    color: string;
-  }
-}
-
 export const ProjectSelect = () => {
   const theme = useMantineTheme();
   const [loading, setLoading] = useState<boolean>(true);
@@ -75,7 +35,7 @@ export const ProjectSelect = () => {
   // TODO: Dynamically reload after project deletion
   useEffect(() => {
     const loadProjects = async () => {
-      window.electronAPI.getProjects().then((projects: Project[]) => {
+      window.electronAPI.getAllProjects().then((projects: Project[]) => {
         setProjects(projects);
       });
     };

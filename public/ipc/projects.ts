@@ -1,5 +1,5 @@
 import { ipcMain } from "electron";
-import { getColorArray } from "../../src/utils/helpers";
+import { getColorArray } from "../../utils/helpers";
 import { PrismaClient, Project } from "@prisma/client";
 import path from "path";
 import fs from "fs";
@@ -17,7 +17,7 @@ const {
   CREATE_NEW_PROJECT,
   GET_PROJECT,
   DELETE_PROJECT,
-} = require("../../src/utils/constants.js");
+} = require("../../utils/constants");
 
 const prisma = new PrismaClient();
 

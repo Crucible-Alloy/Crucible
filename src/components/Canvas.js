@@ -43,7 +43,7 @@ const icons_1 = require("@tabler/icons");
 const hooks_1 = require("@mantine/hooks");
 const core_1 = require("@mantine/core");
 const AtomInstance_1 = require("./Atom/AtomInstance");
-const { ATOM, ATOM_SOURCE } = require("../utils/constants.js");
+const { ATOM, ATOM_SOURCE } = require("../../utils/constants");
 function Canvas({ projectID, testID }) {
     const [canvasItems, setCanvas] = (0, react_1.useState)();
     const [atomMenu, setAtomMenu] = (0, react_1.useState)(false);

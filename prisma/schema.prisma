@@ -97,8 +97,10 @@ model Connection {
   id           Int @id @default(autoincrement())
   testID       Int
   toID         Int
-  connLabel    String  // TODO: Name of Relation object defined in alloy file, can probably be defined as relation
   fromID       Int
+  toLabel      String
+  fromLabel    String
+  connLabel    Relation @relation(name: "connLabel", fields: [toLabel, fromLabel], references: [toLabel, fromLabel])
   test         Test @relation(name: "testConnections", fields: [testID], references: [id], onDelete: Cascade)
   from         Atom @relation(name: "connectionFrom", fields: [fromID], references: [id], onDelete: Cascade)
   to           Atom @relation(name: "connectionTo", fields: [fromID], references: [id], onDelete: Cascade)
@@ -147,10 +149,11 @@ model Relation {
   multiplicity String  // Lone, One, Some, None
   type         String  // Relation signature "{this/List->this/Node}"
   fromLabel    String  // "this/List"
-  toLabel      String  // "this/Node",
-
+  toLabel      String  // "this/Node"
   project      Project @relation(name: "projectRelations", fields: [projectID], references: [id], onDelete: Cascade)
   fromAtom     AtomSource @relation(name: "relationFrom", fields: [projectID, fromLabel], references: [projectID, label])
   toAtom       AtomSource @relation(name: "relationTo", fields: [projectID, toLabel], references: [projectID, label])
+  connections  Connection[] @relation("connLabel")
   @@unique( fields: [projectID, label], name: "relationID")
+  @@unique( fields: [fromLabel, toLabel], name: "relationSignature")
 }

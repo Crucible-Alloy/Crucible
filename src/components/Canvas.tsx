@@ -10,7 +10,7 @@ import { AtomInstance } from "./Atom/AtomInstance";
 import { AtomSourceWithRelations } from "../../public/ipc/atoms";
 import { Atom } from "@prisma/client";
 
-const { ATOM, ATOM_SOURCE } = require("../utils/constants.js");
+const { ATOM, ATOM_SOURCE } = require("../../utils/constants");
 
 interface Props {
   projectID: number;

@@ -26,7 +26,7 @@ const prisma = new PrismaClient();
 // Global window variable
 let mainWindow, projectSelectWindow;
 // State persistence constants.
-const { FETCH_DATA_FROM_STORAGE, HANDLE_FETCH_DATA, SAVE_CANVAS_STATE, GET_CANVAS, UPDATE_PROJECT_FILE, GET_PROJECT_FILE, GET_ATOMS, GET_PROJECTS, OPEN_PROJECT, GET_TESTS, SELECT_FILE, CREATE_NEW_PROJECT, GET_HOME_DIRECTORY, CREATE_NEW_TEST, GET_ATOM_COLOR, GET_ATOM_LABEL, SET_ATOM_COLOR, CREATE_CONNECTION, DELETE_ATOM, DELETE_CONNECTION, GET_ATOM_MULTIPLICITY, GET_ACCEPT_TYPES, GET_RELATION_MULTIPLICITY, GET_RELATIONS, GET_CONNECTION, GET_CONNECTIONS, RUN_TEST, GET_PROJECT_TABS, SET_PROJECT_TABS, OPEN_AND_SET_ACTIVE, SET_ACTIVE_TAB, CLOSE_TAB, DELETE_TEST, CREATE_ATOM, GET_ATOM, GET_PREDICATES, SET_PREDICATE_TEST, GET_ATOM_SHAPE, SET_ATOM_SHAPE, GET_ATOM_INSTANCE, SET_ATOM_INSTANCE_NICKNAME, OPEN_TEST, TEST_ADD_ATOM, TEST_CAN_ADD_ATOM, READ_TEST, GET_ACTIVE_TAB, } = require("../src/utils/constants");
+const { FETCH_DATA_FROM_STORAGE, HANDLE_FETCH_DATA, SAVE_CANVAS_STATE, GET_CANVAS, UPDATE_PROJECT_FILE, GET_PROJECT_FILE, GET_ATOMS, GET_PROJECTS, OPEN_PROJECT, GET_TESTS, SELECT_FILE, CREATE_NEW_PROJECT, GET_HOME_DIRECTORY, CREATE_NEW_TEST, GET_ATOM_COLOR, GET_ATOM_LABEL, SET_ATOM_COLOR, CREATE_CONNECTION, DELETE_ATOM, DELETE_CONNECTION, GET_ATOM_MULTIPLICITY, GET_ACCEPT_TYPES, GET_RELATION_MULTIPLICITY, GET_RELATIONS, GET_CONNECTION, GET_CONNECTIONS, RUN_TEST, GET_PROJECT_TABS, SET_PROJECT_TABS, OPEN_AND_SET_ACTIVE, SET_ACTIVE_TAB, CLOSE_TAB, DELETE_TEST, CREATE_ATOM, GET_ATOM, GET_PREDICATES, SET_PREDICATE_TEST, GET_ATOM_SHAPE, SET_ATOM_SHAPE, GET_ATOM_INSTANCE, SET_ATOM_INSTANCE_NICKNAME, OPEN_TEST, TEST_ADD_ATOM, TEST_CAN_ADD_ATOM, READ_TEST, GET_ACTIVE_TAB, } = require("../utils/constants");
 let itemsToTrack;
 const number = zod_1.z.coerce.number();
 const Store = require("electron-store");
@@ -152,7 +152,7 @@ function createProjectSelectWindow() {
         height: 640,
         webPreferences: {
             nodeIntegration: true,
-            preload: path.join(__dirname, "preload.js"),
+            preload: path.join(__dirname, "preload.ts"),
         },
     });
     projectSelectWindow.loadURL(isDev
@@ -169,7 +169,7 @@ function createMainWindow(projectID) {
         height: 900,
         webPreferences: {
             nodeIntegration: true,
-            preload: path.join(__dirname, "preload.js"),
+            preload: path.join(__dirname, "preload.ts"),
         },
         //titleBarStyle: "hiddenInset",
     });
@@ -442,23 +442,42 @@ ipcMain.on(DELETE_CONNECTION, (event, projectKey, testKey, atomID) => {
     // event.sender.send("deleted-connection", canvasState);
     // mainWindow.webContents.send("canvas-update");
 });
-ipcMain.on(CREATE_CONNECTION, (event, projectKey, testKey, fromAtom, toAtom, fromAtomLabel, toAtomLabel, fromNickname, toNickname, connectionLabel) => {
-    let connectionId = uuidv4();
-    let connection = {
-        from: fromAtom,
-        to: toAtom,
-        fromLabel: fromAtomLabel,
-        toLabel: toAtomLabel,
-        fromNickname: fromNickname,
-        toNickname: toNickname,
-        connectionLabel: connectionLabel,
-    };
-    console.log(connection);
-    // Todo: Get relation label based on sourceAtomKeys?
-    //  Filter relations down based to toLabel compared to relatedLabel
-    store.set(`projects.${projectKey}.tests.${testKey}.canvas.connections.${connectionId}`, connection);
-    mainWindow.webContents.send("canvas-update");
-});
+// ipcMain.on(
+//   CREATE_CONNECTION,
+//   (
+//     event,
+//     projectKey,
+//     testKey,
+//     fromAtom,
+//     toAtom,
+//     fromAtomLabel,
+//     toAtomLabel,
+//     fromNickname,
+//     toNickname,
+//     connectionLabel
+//   ) => {
+//     let connectionId = uuidv4();
+//     let connection = {
+//       from: fromAtom,
+//       to: toAtom,
+//       fromLabel: fromAtomLabel,
+//       toLabel: toAtomLabel,
+//       fromNickname: fromNickname,
+//       toNickname: toNickname,
+//       connectionLabel: connectionLabel,
+//     };
+//     console.log(connection);
+//     // Todo: Get relation label based on sourceAtomKeys?
+//     //  Filter relations down based to toLabel compared to relatedLabel
+//
+//     store.set(
+//       `projects.${projectKey}.tests.${testKey}.canvas.connections.${connectionId}`,
+//       connection
+//     );
+//
+//     mainWindow.webContents.send("canvas-update");
+//   }
+// );
 // TODO: Get rid of any types
 ipcMain.on(GET_ACCEPT_TYPES, (event, projectKey, sourceAtomKey, returnChannel) => {
     const atoms = store.get(`projects.${projectKey}.atoms`);

@@ -6,9 +6,9 @@ import { useMantineTheme, Container } from "@mantine/core";
 import { Atom, Project } from "@prisma/client";
 import { AtomSourceWithRelations } from "../../../public/ipc/atoms";
 import { AtomWithSource } from "../../../public/main";
+import { CONNECTION } from "../../../utils/constants";
 
 const { v4: uuidv4 } = require("uuid");
-const { CONNECTION } = require("../../utils/constants");
 
 function getAtomStyles(
   contentsBeingDragged: boolean,
