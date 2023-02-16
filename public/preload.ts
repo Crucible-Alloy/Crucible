@@ -2,7 +2,7 @@ const { ipcRenderer, contextBridge } = require("electron");
 require("events").EventEmitter.defaultMaxListeners = 0;
 const { v4: uuidv4 } = require("uuid");
 
-const {
+import {
   SAVE_CANVAS_STATE,
   GET_CANVAS,
   UPDATE_PROJECT_FILE,
@@ -34,7 +34,6 @@ const {
   SET_ACTIVE_TAB,
   CLOSE_TAB,
   DELETE_TEST,
-  CREATE_ATOM,
   GET_ATOM,
   GET_PREDICATES,
   SET_PREDICATE_TEST,
@@ -46,14 +45,13 @@ const {
   GET_PROJECT,
   DELETE_PROJECT,
   GET_ATOM_SOURCES,
-  GET_ATOM_SOURCE_RELATIONS_FROM,
   READ_TEST,
   TEST_CAN_ADD_ATOM,
   TEST_ADD_ATOM,
   OPEN_TEST,
   GET_ACTIVE_TAB,
   GET_ATOM_SOURCE,
-} = require("../src/utils/constants");
+} from "./utils/constants";
 
 //const projectSelect = require("../src/components/ProjectSelection/ProjectSelect");
 

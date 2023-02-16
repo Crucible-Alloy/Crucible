@@ -1,4 +1,4 @@
-module.exports = {
+let constants = {
   // API CHANNELS
 
   // ATOMS
@@ -74,3 +74,5 @@ module.exports = {
   ATOM_SOURCE: "AtomSource",
   CONNECTION: "Connection",
 };
+
+export = constants;
