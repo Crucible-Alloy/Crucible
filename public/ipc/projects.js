@@ -13,14 +13,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const electron_1 = require("electron");
-const helpers_1 = require("../../utils/helpers");
+const helpers_1 = require("../../src/utils/helpers");
 const client_1 = require("@prisma/client");
 const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
 const zod_1 = require("zod");
 const axios_1 = __importDefault(require("axios"));
 const formValidation_1 = require("../validation/formValidation");
-const { VALIDATE_NEW_PROJECT_FORM, CREATE_NEW_PROJECT, GET_PROJECT, DELETE_PROJECT, } = require("../../utils/constants");
+const { VALIDATE_NEW_PROJECT_FORM, CREATE_NEW_PROJECT, GET_PROJECT, DELETE_PROJECT, } = require("../../src/utils/constants");
 const prisma = new client_1.PrismaClient();
 /**
  * Validate the form data to ensure no duplicate project names are used and all paths are valid.

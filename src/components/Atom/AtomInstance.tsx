@@ -4,9 +4,8 @@ import { getEmptyImage } from "react-dnd-html5-backend";
 import { AtomContents } from "./AtomContents";
 import { useMantineTheme, Container } from "@mantine/core";
 import { Atom, Project } from "@prisma/client";
-import { AtomSourceWithRelations } from "../../../public/ipc/atoms";
-import { AtomWithSource } from "../../../public/main";
-import { CONNECTION } from "../../../utils/constants";
+import { AtomWithSource, AtomSourceWithRelations } from "../../../public/main";
+import { CONNECTION } from "../../utils/constants";
 
 const { v4: uuidv4 } = require("uuid");
 

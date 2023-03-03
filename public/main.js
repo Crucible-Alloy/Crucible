@@ -8,25 +8,24 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const electron_1 = require("electron");
 const zod_1 = require("zod");
 const formValidation_1 = require("./validation/formValidation");
-const { PrismaClient } = require("@prisma/client");
-const path = require("path");
-const { app, ipcMain, dialog, Menu, session } = require("electron");
-const { v4: uuidv4 } = require("uuid");
-const axios = require("axios");
-const fs = require("fs");
-// Import ipcMain API so that it loads and listeners are created.
-const ipcMainProjects = require("./ipc/projects");
-const ipcMainAtoms = require("./ipc/atoms");
-const ipcMaintests = require("./ipc/tests");
-const prisma = new PrismaClient();
+const client_1 = require("@prisma/client");
+const path_1 = __importDefault(require("path"));
+const electron_2 = require("electron");
+const axios_1 = __importDefault(require("axios"));
+const fs_1 = __importDefault(require("fs"));
+const constants_1 = require("../src/utils/constants");
+const prisma = new client_1.PrismaClient();
 // Global window variable
 let mainWindow, projectSelectWindow;
 // State persistence constants.
-const { FETCH_DATA_FROM_STORAGE, HANDLE_FETCH_DATA, SAVE_CANVAS_STATE, GET_CANVAS, UPDATE_PROJECT_FILE, GET_PROJECT_FILE, GET_ATOMS, GET_PROJECTS, OPEN_PROJECT, GET_TESTS, SELECT_FILE, CREATE_NEW_PROJECT, GET_HOME_DIRECTORY, CREATE_NEW_TEST, GET_ATOM_COLOR, GET_ATOM_LABEL, SET_ATOM_COLOR, CREATE_CONNECTION, DELETE_ATOM, DELETE_CONNECTION, GET_ATOM_MULTIPLICITY, GET_ACCEPT_TYPES, GET_RELATION_MULTIPLICITY, GET_RELATIONS, GET_CONNECTION, GET_CONNECTIONS, RUN_TEST, GET_PROJECT_TABS, SET_PROJECT_TABS, OPEN_AND_SET_ACTIVE, SET_ACTIVE_TAB, CLOSE_TAB, DELETE_TEST, CREATE_ATOM, GET_ATOM, GET_PREDICATES, SET_PREDICATE_TEST, GET_ATOM_SHAPE, SET_ATOM_SHAPE, GET_ATOM_INSTANCE, SET_ATOM_INSTANCE_NICKNAME, OPEN_TEST, TEST_ADD_ATOM, TEST_CAN_ADD_ATOM, READ_TEST, GET_ACTIVE_TAB, } = require("../utils/constants");
+const { FETCH_DATA_FROM_STORAGE, HANDLE_FETCH_DATA, SAVE_CANVAS_STATE, GET_CANVAS, UPDATE_PROJECT_FILE, GET_PROJECT_FILE, GET_ATOMS, GET_PROJECTS, OPEN_PROJECT, GET_TESTS, SELECT_FILE, CREATE_NEW_PROJECT, GET_HOME_DIRECTORY, CREATE_NEW_TEST, GET_ATOM_COLOR, GET_ATOM_LABEL, SET_ATOM_COLOR, CREATE_CONNECTION, DELETE_ATOM, DELETE_CONNECTION, GET_ATOM_MULTIPLICITY, GET_ACCEPT_TYPES, GET_RELATION_MULTIPLICITY, GET_RELATIONS, GET_CONNECTION, GET_CONNECTIONS, RUN_TEST, GET_PROJECT_TABS, SET_PROJECT_TABS, OPEN_AND_SET_ACTIVE, SET_ACTIVE_TAB, CLOSE_TAB, DELETE_TEST, CREATE_ATOM, GET_ATOM, GET_PREDICATES, SET_PREDICATE_TEST, GET_ATOM_SHAPE, SET_ATOM_SHAPE, GET_ATOM_INSTANCE, SET_ATOM_INSTANCE_NICKNAME, OPEN_TEST, TEST_ADD_ATOM, TEST_CAN_ADD_ATOM, READ_TEST, GET_ACTIVE_TAB, } = require("../src/utils/constants");
 let itemsToTrack;
 const number = zod_1.z.coerce.number();
 const Store = require("electron-store");
@@ -44,7 +43,7 @@ function createASketchMenu() {
         ...(isMac
             ? [
                 {
-                    label: app.name,
+                    label: electron_2.app.name,
                     submenu: [
                         { role: "about" },
                         { type: "separator" },
@@ -143,8 +142,8 @@ function createASketchMenu() {
             ],
         },
     ];
-    const menu = Menu.buildFromTemplate(template);
-    Menu.setApplicationMenu(menu);
+    const menu = electron_2.Menu.buildFromTemplate(template);
+    electron_2.Menu.setApplicationMenu(menu);
 }
 function createProjectSelectWindow() {
     projectSelectWindow = new electron_1.BrowserWindow({
@@ -152,12 +151,12 @@ function createProjectSelectWindow() {
         height: 640,
         webPreferences: {
             nodeIntegration: true,
-            preload: path.join(__dirname, "preload.ts"),
+            preload: path_1.default.join(__dirname, "preload.js"),
         },
     });
     projectSelectWindow.loadURL(isDev
         ? "http://localhost:3000/projects"
-        : `${path.join(__dirname, "../build/index.html/projects")}`);
+        : `${path_1.default.join(__dirname, "../build/index.html/projects")}`);
     if (isDev) {
         projectSelectWindow.webContents.openDevTools({ mode: "detach" });
     }
@@ -169,14 +168,14 @@ function createMainWindow(projectID) {
         height: 900,
         webPreferences: {
             nodeIntegration: true,
-            preload: path.join(__dirname, "preload.ts"),
+            preload: path_1.default.join(__dirname, "preload.js"),
         },
         //titleBarStyle: "hiddenInset",
     });
     //Load index.html
     mainWindow.loadURL(isDev
         ? `http://localhost:3000/main/${projectID}`
-        : `${path.join(__dirname, `../build/index.html/main/${projectID}`)}`);
+        : `${path_1.default.join(__dirname, `../build/index.html/main/${projectID}`)}`);
     if (isDev) {
         mainWindow.webContents.openDevTools({ mode: "detach" });
     }
@@ -212,94 +211,105 @@ function getColorArray() {
     ];
 }
 // TODO: Refactor to get rid of any types and make typesafe.
-function initProjectData(filePath, projectID) {
-    let colors = getColorArray();
-    let atomData = {};
-    let predicateData = {};
-    try {
-        // Send file to alloy API and get back metadata
-        const apiRequest = axios.post("http://localhost:8080/files", null, {
-            params: { filePath: filePath },
-        });
-        apiRequest
-            .then((data) => {
-            if (data.data) {
-                console.log(data.data);
-                for (const atom in data.data["atoms"]) {
-                    // If colors array is empty, repopulate it.
-                    if (!colors.length) {
-                        colors = getColorArray();
-                    }
-                    // Pop a random color from the colors array and assign to the atom
-                    data.data["atoms"][atom]["color"] = colors.splice(Math.floor(Math.random() * colors.length), 1)[0];
-                    // Set the shape of the atom.
-                    data.data["atoms"][atom]["shape"] = "rectangle";
-                    atomData[uuidv4()] = data.data["atoms"][atom];
-                }
-                // Post-processing on the relations information for multiplicity enforcement
-                for (const [key, atom] of Object.entries(atomData)) {
-                    // Get the multiplicity and related atom label from the response returned to the API
-                    //@ts-ignore
-                    atom["relations"].forEach(function (item) {
-                        let multiplicity = item["multiplicity"].split(" ")[0];
-                        let relationFromLabel = item["type"].split("->")[0].split("{")[1];
-                        let relationToLabel = item["type"].split("->")[1].split("}")[0];
-                        // Overwrite the multiplicity key and set related_label
-                        item["multiplicity"] = multiplicity;
-                        item["toLabel"] = relationToLabel;
-                        item["fromLabel"] = relationFromLabel;
-                        // Find the related atom key
-                        for (const [key, value] of Object.entries(atomData)) {
-                            //@ts-ignore
-                            if (value["label"] === relationToLabel) {
-                                item["toKey"] = key;
-                                //@ts-ignore
-                            }
-                            else if (value["label"] === relationFromLabel) {
-                                item["fromKey"] = key;
-                            }
-                        }
-                    });
-                }
-                let preds = data.data.functions;
-                // Status can be 'null', 'equals', or 'negate'
-                preds.forEach((predicate) => {
-                    predicateData[predicate["label"].split("/").at(-1)] = {
-                        status: "null",
-                        params: predicate["parameters"],
-                    };
-                });
-                Object.values(predicateData).forEach((predicate) => {
-                    predicate.params.forEach((param) => {
-                        param.atom = "null";
-                    });
-                });
-            }
-        })
-            .then(() => {
-            // Write all atom data to the project
-            store.set(`projects.${projectID}.atoms`, atomData);
-            store.set(`projects.${projectID}.predicates`, predicateData);
-        });
-    }
-    catch (err) {
-        console.log(err);
-    }
-}
+// function initProjectData(filePath: string, projectID: number) {
+//   let colors = getColorArray();
+//   let atomData: any = {};
+//   let predicateData: any = {};
+//
+//   try {
+//     // Send file to alloy API and get back metadata
+//     const apiRequest = axios.post("http://localhost:8080/files", null, {
+//       params: { filePath: filePath },
+//     });
+//     apiRequest
+//       .then((data: AxiosResponse) => {
+//         if (data.data) {
+//           console.log(data.data);
+//           for (const atom in data.data["atoms"]) {
+//             // If colors array is empty, repopulate it.
+//             if (!colors.length) {
+//               colors = getColorArray();
+//             }
+//             // Pop a random color from the colors array and assign to the atom
+//             data.data["atoms"][atom]["color"] = colors.splice(
+//               Math.floor(Math.random() * colors.length),
+//               1
+//             )[0];
+//
+//             // Set the shape of the atom.
+//             data.data["atoms"][atom]["shape"] = "rectangle";
+//
+//             atomData[uuidv4()] = data.data["atoms"][atom];
+//           }
+//
+//           // Post-processing on the relations information for multiplicity enforcement
+//           for (const [key, atom] of Object.entries(atomData)) {
+//             // Get the multiplicity and related atom label from the response returned to the API
+//             //@ts-ignore
+//             atom["relations"].forEach(function (item) {
+//               let multiplicity = item["multiplicity"].split(" ")[0];
+//               let relationFromLabel = item["type"].split("->")[0].split("{")[1];
+//               let relationToLabel = item["type"].split("->")[1].split("}")[0];
+//
+//               // Overwrite the multiplicity key and set related_label
+//               item["multiplicity"] = multiplicity;
+//               item["toLabel"] = relationToLabel;
+//               item["fromLabel"] = relationFromLabel;
+//
+//               // Find the related atom key
+//
+//               for (const [key, value] of Object.entries(atomData)) {
+//                 //@ts-ignore
+//                 if (value["label"] === relationToLabel) {
+//                   item["toKey"] = key;
+//                   //@ts-ignore
+//                 } else if (value["label"] === relationFromLabel) {
+//                   item["fromKey"] = key;
+//                 }
+//               }
+//             });
+//           }
+//
+//           let preds = data.data.functions;
+//
+//           // Status can be 'null', 'equals', or 'negate'
+//           preds.forEach((predicate: any) => {
+//             predicateData[predicate["label"].split("/").at(-1)] = {
+//               status: "null",
+//               params: predicate["parameters"],
+//             };
+//           });
+//
+//           Object.values(predicateData).forEach((predicate: any) => {
+//             predicate.params.forEach((param: any) => {
+//               param.atom = "null";
+//             });
+//           });
+//         }
+//       })
+//       .then(() => {
+//         // Write all atom data to the project
+//         store.set(`projects.${projectID}.atoms`, atomData);
+//         store.set(`projects.${projectID}.predicates`, predicateData);
+//       });
+//   } catch (err) {
+//     console.log(err);
+//   }
+// }
 // Open dev tools on launch in dev mode
 // After initialization, create new browser window.
 // Some APIs only available after this call.
-app.whenReady().then(() => {
+electron_2.app.whenReady().then(() => {
     createASketchMenu();
     createProjectSelectWindow();
     // on macOS
-    const reactDevToolsPath = path.join(os.homedir(), "/Library/Application Support/Google/Chrome/Profile 1/Extensions/fmkadmapgofadopljbjfkapdkoienihi/4.25.0_0");
-    app.whenReady().then(() => __awaiter(void 0, void 0, void 0, function* () {
-        yield session.defaultSession.loadExtension(reactDevToolsPath);
+    const reactDevToolsPath = path_1.default.join(os.homedir(), "/Library/Application Support/Google/Chrome/Profile 1/Extensions/fmkadmapgofadopljbjfkapdkoienihi/4.25.0_0");
+    electron_2.app.whenReady().then(() => __awaiter(void 0, void 0, void 0, function* () {
+        yield electron_2.session.defaultSession.loadExtension(reactDevToolsPath);
     }));
-    const jarPath = `${path.join(__dirname, "../src/JARs/aSketch-API.jar")}`;
+    const jarPath = `${path_1.default.join(__dirname, "../src/JARs/aSketch-API.jar")}`;
     springAPI = require("child_process").spawn("java", ["-jar", jarPath, ""]);
-    app.on("activate", function () {
+    electron_2.app.on("activate", function () {
         // On macOS, it's common to re-create a window in the app when the
         // dock icon is clicked and there are no other windows open.
         //if (BrowserWindow.getAllWindows().length === 0) createMainWindow()
@@ -308,61 +318,63 @@ app.whenReady().then(() => {
     });
 });
 // Close app on exit for linux/windows.
-app.on("window-all-closed", () => {
+electron_2.app.on("window-all-closed", () => {
     if (process.platform !== "darwin") {
-        app.quit();
+        electron_2.app.quit();
         // Shutdown spring-boot api
         const kill = require("tree-kill");
         kill(springAPI.pid);
     }
 });
-ipcMain.on(SAVE_CANVAS_STATE, (event, canvasItems, projectKey, testKey) => {
+electron_2.ipcMain.on(SAVE_CANVAS_STATE, (event, canvasItems, projectKey, testKey) => {
     console.log("Main Received: SAVE_CANVAS_STATE with: ", canvasItems, projectKey, testKey);
     store.set(`projects.${projectKey}.tests.${testKey}.canvas`, canvasItems);
 });
-ipcMain.on(GET_PROJECT_FILE, (event, projectKey) => {
+electron_2.ipcMain.on(GET_PROJECT_FILE, (event, projectKey) => {
     //console.log("MAIN: GET_PROJECT_FILE");
     let projectFile = store.get(`projects.${projectKey}.path`);
     event.sender.send("got-project-file", projectFile ? projectFile : null);
 });
-ipcMain.on(UPDATE_PROJECT_FILE, (event, projectKey) => {
-    //console.log("Main Received: SET_MAIN_PROJECT_FILE")
-    dialog
-        .showOpenDialog({
-        title: "Select Project File",
-        filters: [
-            { name: "Alloy Files", extensions: ["als"] },
-            { name: "Any File", extensions: ["*"] },
-        ],
-        properties: ["openFile"],
-    })
-        .then(function (response) {
-        if (!response.canceled) {
-            console.log(response.filePaths[0]);
-            store.set(`projects.${projectKey}.path`, response.filePaths[0]);
-            initProjectData(response.filePaths[0], projectKey);
-            event.reply("project-file-set", response.filePaths[0]);
-        }
-        else {
-            event.reply("project-file-set", null);
-        }
-    });
-});
-ipcMain.on(GET_ATOM_INSTANCE, (event, projectKey, testKey, atomKey, returnChannel) => {
+// ipcMain.on(UPDATE_PROJECT_FILE, (event, projectKey) => {
+//   //console.log("Main Received: SET_MAIN_PROJECT_FILE")
+//
+//   dialog
+//     .showOpenDialog({
+//       title: "Select Project File",
+//       filters: [
+//         { name: "Alloy Files", extensions: ["als"] },
+//         { name: "Any File", extensions: ["*"] },
+//       ],
+//       properties: ["openFile"],
+//     })
+//     .then(function (response) {
+//       if (!response.canceled) {
+//         console.log(response.filePaths[0]);
+//
+//         store.set(`projects.${projectKey}.path`, response.filePaths[0]);
+//         initProjectData(response.filePaths[0], projectKey);
+//
+//         event.reply("project-file-set", response.filePaths[0]);
+//       } else {
+//         event.reply("project-file-set", null);
+//       }
+//     });
+// });
+electron_2.ipcMain.on(GET_ATOM_INSTANCE, (event, projectKey, testKey, atomKey, returnChannel) => {
     let atom = store.get(`projects.${projectKey}.tests.${testKey}.canvas.atoms.${atomKey}`);
     event.sender.send(returnChannel, atom);
 });
 // Returns all projects in database
-ipcMain.on(GET_PROJECTS, (event) => __awaiter(void 0, void 0, void 0, function* () {
+electron_2.ipcMain.on(GET_PROJECTS, (event) => __awaiter(void 0, void 0, void 0, function* () {
     const projects = yield prisma.project.findMany();
     event.sender.send("get-projects-success", projects ? projects : {});
 }));
-ipcMain.on(OPEN_PROJECT, (event, projectID) => {
+electron_2.ipcMain.on(OPEN_PROJECT, (event, projectID) => {
     openProject(projectID);
 });
-ipcMain.on(SELECT_FILE, (event) => {
+electron_2.ipcMain.on(SELECT_FILE, (event) => {
     //console.log("Main Received: SELECT_FILE")
-    dialog
+    electron_2.dialog
         .showOpenDialog({
         title: "Select Project File",
         filters: [
@@ -381,20 +393,20 @@ ipcMain.on(SELECT_FILE, (event) => {
         }
     });
 });
-ipcMain.on(GET_HOME_DIRECTORY, (event) => {
+electron_2.ipcMain.on(GET_HOME_DIRECTORY, (event) => {
     const homedir = require("os").homedir();
     //console.log(homedir)
     event.sender.send("got-home-directory", homedir);
 });
-ipcMain.on(GET_ATOM_COLOR, (event, projectKey, atomSourceKey, returnChannel) => {
+electron_2.ipcMain.on(GET_ATOM_COLOR, (event, projectKey, atomSourceKey, returnChannel) => {
     let loadedColor = store.get(`projects.${projectKey}.atoms.${atomSourceKey}.color`);
     event.sender.send(returnChannel, loadedColor);
 });
-ipcMain.on(GET_ATOM_LABEL, (event, projectKey, atomKey, returnChannel) => {
+electron_2.ipcMain.on(GET_ATOM_LABEL, (event, projectKey, atomKey, returnChannel) => {
     let atomLabel = store.get(`projects.${projectKey}.atoms.${atomKey}.label`);
     event.sender.send(returnChannel, atomLabel ? atomLabel : "No Label");
 });
-ipcMain.on(GET_ATOM_MULTIPLICITY, (event, projectKey, atomKey, returnChannel) => {
+electron_2.ipcMain.on(GET_ATOM_MULTIPLICITY, (event, projectKey, atomKey, returnChannel) => {
     const keys = ["isLone", "isOne", "isSome"];
     let returnValue = null;
     keys.forEach((key, i) => {
@@ -405,7 +417,7 @@ ipcMain.on(GET_ATOM_MULTIPLICITY, (event, projectKey, atomKey, returnChannel) =>
     });
     event.sender.send(returnChannel, returnValue);
 });
-ipcMain.on(DELETE_ATOM, (event, projectKey, testKey, atomID) => {
+electron_2.ipcMain.on(DELETE_ATOM, (event, projectKey, testKey, atomID) => {
     // store.delete(
     //   `projects.${projectKey}.tests.${testKey}.canvas.atoms.${atomID}`
     // );
@@ -427,7 +439,7 @@ ipcMain.on(DELETE_ATOM, (event, projectKey, testKey, atomID) => {
     // event.sender.send("deleted-atom", canvasState);
     // mainWindow.webContents.send("canvas-update");
 });
-ipcMain.on(DELETE_CONNECTION, (event, projectKey, testKey, atomID) => {
+electron_2.ipcMain.on(DELETE_CONNECTION, (event, projectKey, testKey, atomID) => {
     // let connections = store.get(
     //   `projects.${projectKey}.tests.${testKey}.canvas.connections`
     // );
@@ -479,7 +491,7 @@ ipcMain.on(DELETE_CONNECTION, (event, projectKey, testKey, atomID) => {
 //   }
 // );
 // TODO: Get rid of any types
-ipcMain.on(GET_ACCEPT_TYPES, (event, projectKey, sourceAtomKey, returnChannel) => {
+electron_2.ipcMain.on(GET_ACCEPT_TYPES, (event, projectKey, sourceAtomKey, returnChannel) => {
     const atoms = store.get(`projects.${projectKey}.atoms`);
     let types = [];
     let typesLabels = [];
@@ -508,11 +520,11 @@ ipcMain.on(GET_ACCEPT_TYPES, (event, projectKey, sourceAtomKey, returnChannel) =
     });
     event.sender.send(returnChannel, typesLabels);
 });
-ipcMain.on(GET_RELATIONS, (event, projectKey, sourceAtomKey, returnChannel) => {
+electron_2.ipcMain.on(GET_RELATIONS, (event, projectKey, sourceAtomKey, returnChannel) => {
     const relations = store.get(`projects.${projectKey}.atoms.${sourceAtomKey}.relations`);
     event.sender.send(returnChannel, relations);
 });
-ipcMain.on(GET_CONNECTIONS, (event, projectKey, testKey, atomKey, returnChannel) => {
+electron_2.ipcMain.on(GET_CONNECTIONS, (event, projectKey, testKey, atomKey, returnChannel) => {
     const connections = store.get(`projects.${projectKey}.tests.${testKey}.canvas.connections`);
     //@ts-ignore
     const foundConnections = [];
@@ -525,7 +537,7 @@ ipcMain.on(GET_CONNECTIONS, (event, projectKey, testKey, atomKey, returnChannel)
     //@ts-ignore
     event.sender.send(returnChannel, foundConnections);
 });
-ipcMain.on(RUN_TEST, (event, projectKey, testKey, returnChannel) => {
+electron_2.ipcMain.on(RUN_TEST, (event, projectKey, testKey, returnChannel) => {
     let canvas = store.get(`projects.${projectKey}.tests.${testKey}.canvas`);
     let atoms = store.get(`projects.${projectKey}.atoms`);
     let commandString = "";
@@ -613,7 +625,7 @@ ipcMain.on(RUN_TEST, (event, projectKey, testKey, returnChannel) => {
         path: store.get(`projects.${projectKey}.alloyFile`),
         command: commandString,
     });
-    const apiRequest = axios.post("http://localhost:8080/tests", reqBody, {
+    const apiRequest = axios_1.default.post("http://localhost:8080/tests", reqBody, {
         headers: { "Content-Type": "application/json" },
     });
     apiRequest.then((data) => {
@@ -624,7 +636,7 @@ ipcMain.on(RUN_TEST, (event, projectKey, testKey, returnChannel) => {
         }
     });
 });
-ipcMain.on(GET_ACTIVE_TAB, (event, { projectID, testName }) => __awaiter(void 0, void 0, void 0, function* () {
+electron_2.ipcMain.on(GET_ACTIVE_TAB, (event, { projectID, testName }) => __awaiter(void 0, void 0, void 0, function* () {
     let project = yield prisma.project.findFirst({
         where: { id: projectID },
     });
@@ -632,7 +644,7 @@ ipcMain.on(GET_ACTIVE_TAB, (event, { projectID, testName }) => __awaiter(void 0,
         event.sender.send(`${GET_ACTIVE_TAB}-resp`, project.activeTab);
     }
 }));
-ipcMain.on(SET_ACTIVE_TAB, (event, { projectID, testName }) => __awaiter(void 0, void 0, void 0, function* () {
+electron_2.ipcMain.on(SET_ACTIVE_TAB, (event, { projectID, testName }) => __awaiter(void 0, void 0, void 0, function* () {
     let activeTab = yield prisma.project.update({
         where: { id: projectID },
         data: { activeTab: testName },
@@ -658,7 +670,7 @@ ipcMain.on(SET_ACTIVE_TAB, (event, { projectID, testName }) => __awaiter(void 0,
 //     mainWindow.webContents.send("tabs-update");
 //   }
 // });
-ipcMain.on(CLOSE_TAB, (event, { testID }) => __awaiter(void 0, void 0, void 0, function* () {
+electron_2.ipcMain.on(CLOSE_TAB, (event, { testID }) => __awaiter(void 0, void 0, void 0, function* () {
     let tab = yield prisma.test.update({
         where: { id: testID },
         data: { tabIsOpen: false },
@@ -667,7 +679,7 @@ ipcMain.on(CLOSE_TAB, (event, { testID }) => __awaiter(void 0, void 0, void 0, f
         mainWindow.webContents.send("tabs-update");
     }
 }));
-ipcMain.on(CREATE_ATOM, (event, projectKey, testKey, atomKey, atom) => {
+electron_2.ipcMain.on(CREATE_ATOM, (event, projectKey, testKey, atomKey, atom) => {
     // Count up Atom of atomType and add nickname with count appended to it.
     let canvas = store.get(`projects.${projectKey}.tests.${testKey}.canvas`);
     if (!(atomKey in canvas.atoms)) {
@@ -678,23 +690,23 @@ ipcMain.on(CREATE_ATOM, (event, projectKey, testKey, atomKey, atom) => {
     store.set(`projects.${projectKey}.tests.${testKey}.canvas`, canvas);
     mainWindow.webContents.send("canvas-update");
 });
-ipcMain.on(GET_PREDICATES, (event, projectKey) => {
+electron_2.ipcMain.on(GET_PREDICATES, (event, projectKey) => {
     let predicates = store.get(`projects.${projectKey}.predicates`);
     event.sender.send("got-predicates", predicates);
 });
-ipcMain.on(SET_PREDICATE_TEST, (event, projectKey, predicateName, value) => {
+electron_2.ipcMain.on(SET_PREDICATE_TEST, (event, projectKey, predicateName, value) => {
     store.set(`projects.${projectKey}.predicates.${predicateName}`, value);
     mainWindow.webContents.send("predicates-update");
 });
-ipcMain.on(GET_ATOM_SHAPE, (event, projectKey, sourceAtomKey) => {
+electron_2.ipcMain.on(GET_ATOM_SHAPE, (event, projectKey, sourceAtomKey) => {
     let shape = store.get(`projects.${projectKey}.atoms.${sourceAtomKey}.shape`);
     event.sender.send("got-atom-shape", shape);
 });
-ipcMain.on(SET_ATOM_SHAPE, (event, projectKey, sourceAtomKey, shape) => {
+electron_2.ipcMain.on(SET_ATOM_SHAPE, (event, projectKey, sourceAtomKey, shape) => {
     store.set(`projects.${projectKey}.atoms.${sourceAtomKey}.shape`, shape);
     mainWindow.webContents.send("meta-data-update");
 });
-ipcMain.on(SET_ATOM_INSTANCE_NICKNAME, (event, projectKey, testKey, atomKey, nickname) => {
+electron_2.ipcMain.on(SET_ATOM_INSTANCE_NICKNAME, (event, projectKey, testKey, atomKey, nickname) => {
     store.set(`projects.${projectKey}.tests.${testKey}.canvas.atoms.${atomKey}.nickname`, nickname);
     mainWindow.webContents.send("nickname-update");
 });
@@ -732,9 +744,9 @@ function createNewTest(projectID, testName) {
             where: { id: number.parse(projectID) },
         });
         if (project) {
-            let testFilePath = path.join(project.projectPath, `tests/${testName}.txt`);
+            let testFilePath = path_1.default.join(project.projectPath, `tests/${testName}.txt`);
             // Create temp test file at the given path. If error, return it to the client.
-            fs.writeFile(testFilePath, "Placeholder file...", function (err) {
+            fs_1.default.writeFile(testFilePath, "Placeholder file...", function (err) {
                 if (err)
                     return { success: false, error: err.message };
             });
@@ -756,38 +768,51 @@ function createNewTest(projectID, testName) {
         return { success: false, error: "Could not create test." };
     });
 }
-ipcMain.on(CREATE_NEW_TEST, (event, projectID, testName) => __awaiter(void 0, void 0, void 0, function* () {
+electron_2.ipcMain.on(CREATE_NEW_TEST, (event, projectID, testName) => __awaiter(void 0, void 0, void 0, function* () {
     let result = yield createNewTest(projectID, testName);
     event.sender.send("created-new-test", result);
 }));
-ipcMain.on(READ_TEST, (event, { testID, returnKey }) => __awaiter(void 0, void 0, void 0, function* () {
+electron_2.ipcMain.on(READ_TEST, (event, { testID, returnKey }) => __awaiter(void 0, void 0, void 0, function* () {
     const test = yield prisma.test.findFirst({
         where: { id: number.parse(testID) },
-        include: { atoms: true, connections: true },
+        include: {
+            atoms: {
+                include: {
+                    srcAtom: {
+                        include: {
+                            fromRelations: true,
+                            toRelations: true,
+                            isChildOf: true,
+                        },
+                    },
+                },
+            },
+            connections: true,
+        },
     });
     event.sender.send(returnKey, test ? test : {});
 }));
-ipcMain.on(GET_TESTS, (event, projectID) => __awaiter(void 0, void 0, void 0, function* () {
+electron_2.ipcMain.on(GET_TESTS, (event, projectID) => __awaiter(void 0, void 0, void 0, function* () {
     const tests = yield prisma.test.findMany({
         where: { projectID: number.parse(projectID) },
     });
     event.sender.send("got-tests", tests ? tests : []);
 }));
-ipcMain.on(DELETE_TEST, (event, projectID, testID) => __awaiter(void 0, void 0, void 0, function* () {
+electron_2.ipcMain.on(DELETE_TEST, (event, projectID, testID) => __awaiter(void 0, void 0, void 0, function* () {
     const test = yield prisma.test.delete({
         where: { id: number.parse(testID) },
     });
     // TODO: Alert client to change in tests table.
 }));
 // TODO: This can likely be simplified to a single query
-ipcMain.on(TEST_CAN_ADD_ATOM, (event, { testID, sourceAtomID }) => __awaiter(void 0, void 0, void 0, function* () {
+electron_2.ipcMain.on(TEST_CAN_ADD_ATOM, (event, { testID, sourceAtomID }) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         let test = yield prisma.test.findFirstOrThrow({
-            where: { id: testID },
+            where: { id: number.parse(testID) },
             include: { atoms: true },
         });
         let atomSource = yield prisma.atomSource.findFirstOrThrow({
-            where: { id: sourceAtomID },
+            where: { id: number.parse(sourceAtomID) },
         });
         if (atomSource.isLone || atomSource.isOne) {
             if (test.atoms.filter((atom) => atom.srcID === atomSource.id)) {
@@ -805,7 +830,7 @@ ipcMain.on(TEST_CAN_ADD_ATOM, (event, { testID, sourceAtomID }) => __awaiter(voi
     }
 }));
 // TODO: Build out default nickname
-ipcMain.on(TEST_ADD_ATOM, (event, { testID, sourceAtomID, top, left, }) => __awaiter(void 0, void 0, void 0, function* () {
+electron_2.ipcMain.on(TEST_ADD_ATOM, (event, { testID, sourceAtomID, top, left, }) => __awaiter(void 0, void 0, void 0, function* () {
     let atom = yield prisma.atom.create({
         data: {
             testID: number.parse(testID),
@@ -818,7 +843,7 @@ ipcMain.on(TEST_ADD_ATOM, (event, { testID, sourceAtomID, top, left, }) => __awa
     // Alert the browser to a change in state.
     mainWindow.webContents.send("canvas-update");
 }));
-ipcMain.on(OPEN_TEST, (event, { testID, projectID }) => __awaiter(void 0, void 0, void 0, function* () {
+electron_2.ipcMain.on(OPEN_TEST, (event, { testID, projectID }) => __awaiter(void 0, void 0, void 0, function* () {
     let test = yield prisma.test.update({
         where: { id: number.parse(testID) },
         data: { tabIsOpen: true },
@@ -831,4 +856,263 @@ ipcMain.on(OPEN_TEST, (event, { testID, projectID }) => __awaiter(void 0, void 0
         event.sender.send(`${OPEN_TEST}-resp`, { success: true });
         mainWindow.webContents.send("tabs-update");
     }
+}));
+electron_2.ipcMain.on(CREATE_CONNECTION, (event, { fromAtom, toAtom }) => __awaiter(void 0, void 0, void 0, function* () {
+    // 1. Find relation with fromAtom.atomSrc.fromRelations and toAtom.atomSrc.toRelations
+    // 2. Check relation multiplicity
+    // 3. If relation multiplicity is lone or one and connections > 1, return error, show notification.
+    // 4. Else, add connection.
+    // let relation = await prisma.relation.findFirst({
+    //   where: {
+    //     fromAtom: number.parse(fromAtom.id),
+    //     toAtom: number.parse(toAtom.id),
+    //   },
+    // });
+}));
+electron_2.ipcMain.on(constants_1.GET_ATOM_SOURCES, (event, projectID) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log(`Getting atoms with projectID: ${projectID}`);
+    const atoms = yield prisma.atomSource.findMany({
+        where: { projectID: number.parse(projectID) },
+        include: {
+            fromRelations: true,
+            isChildOf: true,
+        },
+    });
+    event.sender.send("get-atom-sources-resp", atoms ? atoms : {});
+}));
+/**
+ * Validate the form data to ensure no duplicate project names are used and all paths are valid.
+ * @param data Form data to be validated.
+ * @returns boolean
+ */
+function validateNewProject(data) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            yield formValidation_1.NewProjectSchema.parseAsync(data);
+            return { success: true, error: null };
+        }
+        catch (e) {
+            if (e instanceof zod_1.ZodError) {
+                return { success: false, error: e.issues };
+            }
+            else {
+                throw e;
+            }
+        }
+    });
+}
+function initializeAtoms(atoms, projectID) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let colors = getColorArray();
+        // Validate all Atom.
+        atoms.forEach((atom) => {
+            try {
+                formValidation_1.AtomRespSchema.parse(atom);
+            }
+            catch (e) {
+                if (e instanceof zod_1.ZodError) {
+                    return { success: false, error: e.issues };
+                }
+                else {
+                    throw e;
+                }
+            }
+        });
+        for (const atom of atoms) {
+            // Reset colors if needed, then grab a color for assignment.
+            if (colors.length === 0)
+                getColorArray();
+            let selectedColor = colors.splice(Math.floor(Math.random() * colors.length), 1)[0];
+            // Insert AtomSource data into the database (sans parent/child data)
+            const newAtom = yield prisma.atomSource.create({
+                data: {
+                    projectID: projectID,
+                    label: atom.label,
+                    isEnum: atom.isEnum ? true : undefined,
+                    isLone: atom.isLone ? true : undefined,
+                    isOne: atom.isOne ? true : undefined,
+                    isSome: atom.isSome ? true : undefined,
+                    isAbstract: atom.isAbstract ? true : undefined,
+                    color: selectedColor,
+                },
+            });
+            if (newAtom === undefined) {
+                // TODO: Error handling for issue inserting atom.
+            }
+        }
+    });
+}
+function initializeInheritance(atoms, projectID) {
+    return __awaiter(this, void 0, void 0, function* () {
+        for (const atom of atoms) {
+            // Insert parents of atom to atomInheritance table.
+            if (atom.parents) {
+                for (const parent of atom.parents) {
+                    // See if the inheritance is already in the database.
+                    yield prisma.atomInheritance.upsert({
+                        where: {
+                            atomInheritanceID: {
+                                parentLabel: parent,
+                                childLabel: atom.label,
+                                projectID: projectID,
+                            },
+                        },
+                        create: {
+                            parentLabel: parent,
+                            childLabel: atom.label,
+                            projectID: projectID,
+                        },
+                        update: {},
+                    });
+                }
+            }
+            // Insert children of atom to atomChildren table
+            if (atom.children) {
+                for (const child of atom.children) {
+                    yield prisma.atomInheritance.upsert({
+                        where: {
+                            atomInheritanceID: {
+                                parentLabel: atom.label,
+                                childLabel: child,
+                                projectID: projectID,
+                            },
+                        },
+                        create: {
+                            parentLabel: atom.label,
+                            childLabel: child,
+                            projectID: projectID,
+                        },
+                        update: {},
+                    });
+                }
+            }
+        }
+    });
+}
+function initializeRelations(atoms, projectID) {
+    return __awaiter(this, void 0, void 0, function* () {
+        for (const atom of atoms) {
+            // Insert parents of atom to atomInheritance table.
+            if (atom.relations) {
+                for (const relation of atom.relations) {
+                    // Nasty transformation to get the last label in a -> chain e.g. "{this/Book->this/Name->this/Listing}"
+                    const toLabel = relation.type
+                        .split("->")[relation.type.split("->").length - 1].split("}")[0];
+                    // See if the inheritance is already in the database.
+                    yield prisma.relation.upsert({
+                        where: {
+                            relationID: {
+                                projectID: projectID,
+                                label: relation.label,
+                            },
+                        },
+                        create: {
+                            projectID: projectID,
+                            label: relation.label,
+                            multiplicity: relation.multiplicity,
+                            type: relation.type,
+                            fromLabel: atom.label,
+                            toLabel: toLabel,
+                        },
+                        update: {},
+                    });
+                }
+            }
+        }
+    });
+}
+function initializePredicates(predicates, projectID) {
+    return __awaiter(this, void 0, void 0, function* () {
+        for (const pred of predicates) {
+            const newPred = yield prisma.predicate.create({
+                data: {
+                    projectID: projectID,
+                    name: pred.label,
+                },
+            });
+            for (const param of pred.parameters) {
+                yield prisma.predParam.create({
+                    data: {
+                        predID: newPred.id,
+                        label: param.label,
+                        paramType: param.paramType,
+                    },
+                });
+            }
+        }
+    });
+}
+function initProjectData(data, projectID) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            // Send file to alloy API and get back metadata
+            const apiRequest = axios_1.default.post("http://localhost:8080/files", null, {
+                params: { filePath: data.alloyFile },
+            });
+            let resp = yield apiRequest;
+            if (resp.data) {
+                yield initializeAtoms(resp.data.atoms, projectID);
+                yield initializeInheritance(resp.data.atoms, projectID);
+                yield initializeRelations(resp.data.atoms, projectID);
+                yield initializePredicates(resp.data.functions, projectID);
+            }
+        }
+        catch (err) {
+            console.log(err);
+        }
+    });
+}
+/**
+ * Insert new project record into the database and initialize project assets based on SpringBoot response.
+ * @param data
+ */
+function createNewProject(data) {
+    return __awaiter(this, void 0, void 0, function* () {
+        // Validate data. If there is an error, return it to the client.
+        let validationResp = yield validateNewProject(data);
+        if (!validationResp.success)
+            return validationResp;
+        // Create project directories
+        const fullProjectPath = data.projectPath + data.projectName;
+        const projectFolder = fs_1.default.mkdirSync(fullProjectPath, { recursive: true });
+        const testsFolder = fs_1.default.mkdirSync(path_1.default.join(fullProjectPath, "tests"), {
+            recursive: true,
+        });
+        if (projectFolder && testsFolder) {
+            // Insert project data if paths are good.
+            const project = yield prisma.project.create({
+                data: {
+                    name: data.projectName,
+                    projectPath: fullProjectPath,
+                    alloyFile: data.alloyFile,
+                },
+            });
+            if (!project) {
+                return { success: false, error: "Could not create project." };
+            }
+            yield initProjectData(data, project.id);
+            return { success: true, error: null, projectID: project.id };
+        }
+    });
+}
+electron_2.ipcMain.on(constants_1.VALIDATE_NEW_PROJECT_FORM, (event, data) => __awaiter(void 0, void 0, void 0, function* () {
+    const response = yield validateNewProject(data);
+    event.sender.send("project-name-validation", response);
+}));
+electron_2.ipcMain.on(CREATE_NEW_PROJECT, (event, data) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield createNewProject(data);
+    event.sender.send("new-project-resp", result);
+}));
+electron_2.ipcMain.on(constants_1.GET_PROJECT, (event, projectID) => __awaiter(void 0, void 0, void 0, function* () {
+    const project = yield prisma.project.findFirst({ where: { id: projectID } });
+    event.sender.send("get-project-resp", project);
+}));
+electron_2.ipcMain.on(constants_1.DELETE_PROJECT, (event, project) => __awaiter(void 0, void 0, void 0, function* () {
+    yield fs_1.default.rmdir(project.projectPath, { recursive: true }, (err) => {
+        if (err) {
+            return console.log("error occurred in deleting directory", err);
+        }
+    });
+    const delResp = yield prisma.project.delete({ where: { id: project.id } });
+    event.sender.send("delete-project-resp", delResp);
 }));

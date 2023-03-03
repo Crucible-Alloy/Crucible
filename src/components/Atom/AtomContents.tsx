@@ -1,19 +1,17 @@
 import { useEffect, useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import { getEmptyImage } from "react-dnd-html5-backend";
-import { Paper, Text, useMantineTheme } from "@mantine/core";
-import { IconAlertTriangle } from "@tabler/icons";
-import { showNotification } from "@mantine/notifications";
-import { AtomWithSource } from "../../../public/main";
-import { AtomSourceWithRelations } from "../../../public/ipc/atoms";
+import { MantineTheme, Paper, Text, useMantineTheme } from "@mantine/core";
+import { AtomWithSource, AtomSourceWithRelations } from "../../../public/main";
+import React from "react";
 
-const { ATOM, CONNECTION } = require("../../../utils/constants");
+const { ATOM, CONNECTION } = require("../../utils/constants");
 
 interface Props {
   atom: AtomWithSource;
 }
 export function AtomContents({ atom }: Props) {
-  const [atomData, setAtomData] = useState(initializeAtom);
+  const [atomData, setAtomData] = useState(atom);
   const [metaData, setMetaData] = useState<AtomSourceWithRelations>();
   const [acceptTypes, setAcceptTypes] = useState<string[]>([]);
 
@@ -29,7 +27,7 @@ export function AtomContents({ atom }: Props) {
         })
         .then(() => {
           if (metaData) {
-            setAcceptTypes(metaData.toRelations.map((entry) => entry.label));
+            setAcceptTypes(metaData.toRelations.map((entry) => entry.toLabel));
           }
         });
     });
@@ -74,8 +72,8 @@ export function AtomContents({ atom }: Props) {
         const delta = monitor.getDifferenceFromInitialOffset();
         console.log("AttemptedDrop");
         if (item.renderType === CONNECTION) {
-          console.log("Attempted connection");
-          addNewConnection(item.id, atom.id);
+          if (item.atom.srcAtom.toRelations)
+            addNewConnection({ fromAtom: item.atom, toAtom: atom });
         }
 
         return undefined;
@@ -84,133 +82,40 @@ export function AtomContents({ atom }: Props) {
     [createConnection, atomData, metaData]
   );
 
-  function createConnection(fromID: number, toID: number) {
-    window.electronAPI.makeConnection({ fromID, toID });
+  function createConnection(fromID: number, toID: number) {}
+
+  async function addNewConnection({
+    fromAtom,
+    toAtom,
+  }: {
+    fromAtom: AtomWithSource;
+    toAtom: AtomWithSource;
+  }) {
+    window.electronAPI.makeConnection({ fromAtom, toAtom });
+    // 1. Get relation with fromAtom.id and toAtom.id
+    // 2. Check relation multiplicity
+    // 3. If relation multiplicity is lone or one and connections > 1, return error, show notification.
+    // 4. Else, add connection.
   }
 
-  async function addNewConnection({ fromAtom, toAtom }) {
-    let eligibleToAdd = true;
-    let targetLabels = [];
-
-    /* Get atom data and metadata. */
-    function getAtom(atomKey) {
-      return new Promise((resolve) => {
-        window.electronAPI.getAtomInstance(atomKey).then((atomInstance) => {
-          window.electronAPI
-            .getAtom(projectKey, atomInstance["sourceAtomKey"])
-            .then((atomMetaData) => {
-              resolve({ data: atomInstance, metaData: atomMetaData });
-            });
-        });
-      });
-    }
-
-    /* Get the toAtom and fromAtom data. */
-    function getAtoms(fromAtomKey, toAtomKey, callback) {
-      getAtom(toAtomKey).then((atom) => {
-        toAtom = atom;
-        getAtom(fromAtomKey).then((atom) => {
-          fromAtom = atom;
-          callback(fromAtom, toAtom);
-        });
-      });
-    }
-
-    /* Check for multiplicity violations.*/
-    function findMatches(fromAtom, toAtom) {
-      // Get relations of originating atom
-      window.electronAPI
-        .getRelations(projectKey, fromAtom.data.sourceAtomKey)
-        .then((relations) => {
-          // Get connections of the originating atom
-          window.electronAPI
-            .getConnections(projectKey, testKey, fromAtomKey)
-            .then((connections) => {
-              // Get the labels of the receiving atom and it's parents.
-              targetLabels = [
-                toAtom.metaData.label,
-                ...toAtom.metaData.parents,
-              ];
-              // Filter the originating atom's relations by the two Atom' labels.
-              let matchingRelations = relations.filter(
-                (relation) =>
-                  targetLabels.includes(relation.toLabel) &&
-                  relation.fromLabel === fromAtom.metaData.label
-              );
-
-              // Make sure we only have one matching relation signature, or else way might have issues...
-              if (matchingRelations.length > 1) {
-                console.log(
-                  `More than one relation with the signature ${fromAtom.metaData.label}->${toAtom.metaData.label}`
-                );
-                return;
-              }
-
-              // Check that the multiplicity of the matching relation is lone or one (otherwise we don't care).
-              if (["lone", "one"].includes(matchingRelations[0].multiplicity)) {
-                // Get the number of matching connections.
-                console.log(matchingRelations[0].multiplicity);
-                console.log(matchingRelations[0].connectionLabel);
-                let numberOfConnections = connections.filter(
-                  (connection) =>
-                    connection.connectionLabel === matchingRelations[0].label
-                ).length;
-                if (numberOfConnections > 0) {
-                  eligibleToAdd = false;
-                }
-              }
-
-              if (eligibleToAdd) {
-                createConnection(
-                  fromAtomKey,
-                  toAtomKey,
-                  fromAtom.metaData.label,
-                  toAtom.metaData.label,
-                  fromAtom.data.nickname,
-                  toAtom.data.nickname,
-                  matchingRelations[0].label
-                );
-              } else {
-                showNotification({
-                  title: "Cannot add connection",
-                  message: `Adding that connection would exceed it's ${matchingRelations[0].multiplicity} multiplicity.`,
-                  color: "red",
-                  icon: <IconAlertTriangle />,
-                });
-              }
-            });
-        });
-    }
-
-    getAtoms(fromAtomKey, toAtomKey, findMatches);
-  }
-
-  function getAtomStyles(theme, shape, left, top) {
+  function getAtomStyles(
+    theme: MantineTheme,
+    shape: string,
+    left: number,
+    top: number
+  ): React.CSSProperties {
     // const transform = `translate3d(${left}px, ${top}px, 0)`
 
     return {
       position: "relative",
-
       // IE fallback: hide the real node using CSS when dragging
       // because IE will ignore our custom "empty image" drag preview.
+      // @ts-ignore
       opacity: isDragging ? 0 : 1,
+      // @ts-ignore
       backgroundColor: canDrop ? theme.colors.dark[3] : theme.colors.dark[5],
       margin: "auto",
     };
-  }
-
-  function initializeAtom() {
-    window.electronAPI.getAtomInstance(projectKey, testKey, id).then((atom) => {
-      setAtomData(atom);
-    });
-  }
-
-  function deleteAtom(id) {
-    window.electronAPI.deleteAtom(projectKey, testKey, id);
-  }
-
-  function deleteConnections(id) {
-    window.electronAPI.deleteConnections(projectKey, testKey, id);
   }
 
   return metaData && atomData ? (
@@ -219,7 +124,7 @@ export function AtomContents({ atom }: Props) {
       p="md"
       radius={"md"}
       role="DraggableBox"
-      style={getAtomStyles(theme, metaData.shape, left, top)}
+      style={getAtomStyles(theme, metaData.shape, atom.left, atom.top)}
     >
       <Text
         ref={drop}
@@ -239,7 +144,7 @@ export function AtomContents({ atom }: Props) {
       p="md"
       radius={"md"}
       role="DraggableBox"
-      stye={{ opacity: isDragging ? 0 : 1 }}
+      style={{ opacity: isDragging ? 0 : 1 }}
     >
       <Text ref={drop} size={"xl"} weight={800}>
         {" "}

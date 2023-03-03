@@ -1,5 +1,5 @@
 import { ipcMain, BrowserWindow } from "electron";
-import { getColorArray } from "../../utils/helpers";
+import { getColorArray } from "../../src/utils/helpers";
 import { Prisma, PrismaClient } from "@prisma/client";
 import { z, ZodError } from "zod";
 
@@ -8,26 +8,10 @@ const {
   SET_ATOM_COLOR,
   GET_ATOM_SOURCE,
   CREATE_CONNECTION,
-} = require("../../utils/constants");
+} = require("../../src/utils/constants");
 
 const prisma = new PrismaClient();
 const number = z.coerce.number();
-
-export type AtomSourceWithRelations = Prisma.AtomSourceGetPayload<{
-  include: { fromRelations: true; toRelations: true; isChildOf: true };
-}>;
-
-ipcMain.on(GET_ATOM_SOURCES, async (event, projectID: number) => {
-  console.log(`Getting atoms with projectID: ${projectID}`);
-  const atoms = await prisma.atomSource.findMany({
-    where: { projectID: number.parse(projectID) },
-    include: {
-      fromRelations: true,
-      isChildOf: true,
-    },
-  });
-  event.sender.send("get-atom-sources-resp", atoms ? atoms : {});
-});
 
 ipcMain.on(GET_ATOM_SOURCE, async (event, { srcAtomID }) => {
   const atom = await prisma.atomSource.findFirst({

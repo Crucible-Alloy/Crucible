@@ -8,7 +8,7 @@ const react_1 = require("react");
 const AtomSourceItem_1 = require("../AtomSource/AtomSourceItem");
 const react_2 = require("react");
 const react_3 = __importDefault(require("react"));
-const { SIDEBAR_HEIGHT } = require("../../../utils/constants");
+const { SIDEBAR_HEIGHT } = require("../../utils/constants");
 function AtomsSidebarTab({ projectID }) {
     const [atoms, setAtoms] = (0, react_1.useState)([]);
     const [loading, setLoading] = (0, react_1.useState)(true);

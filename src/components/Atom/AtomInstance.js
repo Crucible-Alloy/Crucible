@@ -29,7 +29,7 @@ const react_dnd_1 = require("react-dnd");
 const react_dnd_html5_backend_1 = require("react-dnd-html5-backend");
 const AtomContents_1 = require("./AtomContents");
 const core_1 = require("@mantine/core");
-const constants_1 = require("../../../utils/constants");
+const constants_1 = require("../../utils/constants");
 const { v4: uuidv4 } = require("uuid");
 function getAtomStyles(contentsBeingDragged, theme, shape, isDragging, left, top, color) {
     const transform = `translate3d(${left}px, ${top}px, 0)`;

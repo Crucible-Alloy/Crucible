@@ -1,5 +1,5 @@
 import { useDragLayer } from "react-dnd";
-import { ATOM, ATOM_SOURCE, CONNECTION } from "../../utils/constants";
+import { ATOM, ATOM_SOURCE, CONNECTION } from "../utils/constants";
 import { useMantineTheme } from "@mantine/core";
 import { Arrow } from "react-absolute-svg-arrows";
 import { AtomInstance } from "./Atom/AtomInstance";
@@ -83,18 +83,7 @@ export const CustomDragLayer = ({ mousePos }) => {
         );
 
       case ATOM_SOURCE:
-        return (
-          <AtomInstance
-            contentsBeingDragged={true}
-            id={item.id}
-            left={item.left}
-            atomLabel={item.metaData.label}
-            top={item.top}
-            sourceAtomKey={item.sourceAtomKey}
-            projectKey={item.projectKey}
-            testKey={item.testKey}
-          />
-        );
+        return <AtomSourceItem atomSource={item.atomSource} />;
 
       case CONNECTION:
         return (

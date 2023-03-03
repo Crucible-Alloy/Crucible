@@ -3,8 +3,8 @@ import { useState } from "react";
 import { AtomSourceItem } from "../AtomSource/AtomSourceItem";
 import { useEffect } from "react";
 import React from "react";
-import { AtomSourceWithRelations } from "../../../public/ipc/atoms";
-const { SIDEBAR_HEIGHT } = require("../../../utils/constants");
+import { AtomSourceWithRelations } from "../../../public/main";
+const { SIDEBAR_HEIGHT } = require("../../utils/constants");
 
 interface Props {
   projectID: number;

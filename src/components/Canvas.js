@@ -43,7 +43,7 @@ const icons_1 = require("@tabler/icons");
 const hooks_1 = require("@mantine/hooks");
 const core_1 = require("@mantine/core");
 const AtomInstance_1 = require("./Atom/AtomInstance");
-const { ATOM, ATOM_SOURCE } = require("../../utils/constants");
+const { ATOM, ATOM_SOURCE } = require("../utils/constants");
 function Canvas({ projectID, testID }) {
     const [canvasItems, setCanvas] = (0, react_1.useState)();
     const [atomMenu, setAtomMenu] = (0, react_1.useState)(false);
@@ -77,12 +77,12 @@ function Canvas({ projectID, testID }) {
     // }, [atoms]);
     const ref = (0, hooks_1.useClickOutside)(() => setCoords({ clickX: null, clickY: null }));
     const validCoords = coords.clickX !== null && coords.clickY !== null;
-    const addNewAtom = (left, top, projectID, testID, sourceAtomID, atomLabel) => {
+    const addNewAtom = ({ sourceAtomID, top, left, }) => {
         window.electronAPI
             .testCanAddAtom({ testID, sourceAtomID })
             .then((resp) => {
             if (resp.success) {
-                window.electronAPI.testAddAtom({ testID, sourceAtomID });
+                window.electronAPI.testAddAtom({ testID, sourceAtomID, top, left });
             }
             else {
                 (0, notifications_1.showNotification)({
@@ -120,23 +120,38 @@ function Canvas({ projectID, testID }) {
         //       );
         //     });
     }
+    function isAtomInstance(item) {
+        return item.srcID !== undefined;
+    }
     const [, drop] = (0, react_dnd_1.useDrop)(() => ({
         accept: [ATOM, ATOM_SOURCE],
         drop(item, monitor) {
             const delta = monitor.getDifferenceFromInitialOffset();
             if (delta) {
-                let left = Math.round(item.left + delta.x);
-                let top = Math.round(item.top + delta.y);
-                console.log(top);
-                if (monitor.getItemType() === ATOM) {
-                    console.log("Existing atom dragged.");
-                    console.log(item.id);
-                    updateAtom(item.id, left, top, item.srcID, "atom label", "atom nickname");
+                if (isAtomInstance(item)) {
+                    let left = Math.round(item.left + delta.x);
+                    let top = Math.round(item.top + delta.y);
+                    console.log(top);
+                    if (monitor.getItemType() === ATOM) {
+                        console.log("Existing atom dragged.");
+                        console.log(item.id);
+                        updateAtom(item.id, left, top, item.srcID, "atom label", "atom nickname");
+                    }
                 }
-                if (monitor.getItemType() === ATOM_SOURCE) {
-                    console.log("New atom dragged.");
-                    console.log(testID);
-                    addNewAtom(left, top, projectID, testID, item.srcID, "atomLabel");
+                else {
+                    // TODO: Atom source is dragged on to canvas, handle missing id, top, and left.
+                    if (monitor.getItemType() === ATOM_SOURCE) {
+                        console.log("New atom dragged.");
+                        console.log(testID);
+                        const clickCoords = monitor.getClientOffset();
+                        if (clickCoords) {
+                            addNewAtom({
+                                sourceAtomID: item.id,
+                                top: clickCoords.y,
+                                left: clickCoords.x,
+                            });
+                        }
+                    }
                 }
                 return undefined;
             }

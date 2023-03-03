@@ -12,20 +12,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const electron_1 = require("electron");
 const client_1 = require("@prisma/client");
 const zod_1 = require("zod");
-const { GET_ATOM_SOURCES, SET_ATOM_COLOR, GET_ATOM_SOURCE, CREATE_CONNECTION, } = require("../../utils/constants");
+const { GET_ATOM_SOURCES, SET_ATOM_COLOR, GET_ATOM_SOURCE, CREATE_CONNECTION, } = require("../../src/utils/constants");
 const prisma = new client_1.PrismaClient();
 const number = zod_1.z.coerce.number();
-electron_1.ipcMain.on(GET_ATOM_SOURCES, (event, projectID) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(`Getting atoms with projectID: ${projectID}`);
-    const atoms = yield prisma.atomSource.findMany({
-        where: { projectID: number.parse(projectID) },
-        include: {
-            fromRelations: true,
-            isChildOf: true,
-        },
-    });
-    event.sender.send("get-atom-sources-resp", atoms ? atoms : {});
-}));
 electron_1.ipcMain.on(GET_ATOM_SOURCE, (event, { srcAtomID }) => __awaiter(void 0, void 0, void 0, function* () {
     const atom = yield prisma.atomSource.findFirst({
         where: { id: number.parse(srcAtomID) },

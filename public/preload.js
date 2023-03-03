@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const electron_1 = require("electron");
-const constants_1 = require("../utils/constants");
+const constants_1 = require("../src/utils/constants");
 const { v4: uuidv4 } = require("uuid");
 require("events").EventEmitter.defaultMaxListeners = 0;
 //const projectSelect = require("../src/components/ProjectSelection/ProjectSelect");
@@ -159,30 +159,10 @@ const api = {
     //     );
     //   });
     // },
-    // makeConnection: (
-    //   projectKey,
-    //   testKey,
-    //   fromAtom,
-    //   toAtom,
-    //   fromAtomLabel,
-    //   toAtomLabel,
-    //   fromNickname,
-    //   toNickname,
-    //   connectionLabel
-    // ) => {
-    //   ipcRenderer.send(
-    //     CREATE_CONNECTION,
-    //     projectKey,
-    //     testKey,
-    //     fromAtom,
-    //     toAtom,
-    //     fromAtomLabel,
-    //     toAtomLabel,
-    //     fromNickname,
-    //     toNickname,
-    //     connectionLabel
-    //   );
-    // },
+    /* Given a From and To atom, create a connection between them */
+    makeConnection: ({ fromAtom, toAtom, }) => {
+        electron_1.ipcRenderer.send(constants_1.CREATE_CONNECTION, { fromAtom, toAtom });
+    },
     listenForCanvasChange: (callback) => {
         electron_1.ipcRenderer.on("canvas-update", callback);
     },
@@ -285,8 +265,8 @@ const api = {
     deleteTest: ({ projectID, testID, }) => {
         electron_1.ipcRenderer.send(constants_1.DELETE_TEST, projectID, testID);
     },
-    testAddAtom: ({ testID, sourceAtomID, }) => {
-        electron_1.ipcRenderer.send(constants_1.TEST_ADD_ATOM, { testID, sourceAtomID });
+    testAddAtom: ({ testID, sourceAtomID, top, left, }) => {
+        electron_1.ipcRenderer.send(constants_1.TEST_ADD_ATOM, { testID, sourceAtomID, top, left });
     },
     getPredicates: (projectID) => {
         electron_1.ipcRenderer.send(constants_1.GET_PREDICATES, projectID);
@@ -315,15 +295,12 @@ const api = {
     //     nickname
     //   );
     // },
-    // testCanAddAtom: ({ testID, sourceAtomID }) => {
-    //   ipcRenderer.send(TEST_CAN_ADD_ATOM, { testID, sourceAtomID });
-    //
-    //   return new Promise((resolve) => {
-    //     ipcRenderer.once(`${TEST_CAN_ADD_ATOM}-resp`, (event, resp) =>
-    //       resolve(resp)
-    //     );
-    //   });
-    // },
+    testCanAddAtom: ({ testID, sourceAtomID, }) => {
+        electron_1.ipcRenderer.send(constants_1.TEST_CAN_ADD_ATOM, { testID, sourceAtomID });
+        return new Promise((resolve) => {
+            electron_1.ipcRenderer.once(`${constants_1.TEST_CAN_ADD_ATOM}-resp`, (event, resp) => resolve(resp));
+        });
+    },
     openTest: ({ testID, projectID }) => {
         electron_1.ipcRenderer.send(constants_1.OPEN_TEST, { testID, projectID });
         return new Promise((resolve) => {

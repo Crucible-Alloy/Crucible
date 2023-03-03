@@ -7,10 +7,9 @@ import { useClickOutside } from "@mantine/hooks";
 import { Affix, Popover, Select, Title } from "@mantine/core";
 import { AtomWithSource, TestWithCanvas } from "../../public/main";
 import { AtomInstance } from "./Atom/AtomInstance";
-import { AtomSourceWithRelations } from "../../public/ipc/atoms";
-import { Atom } from "@prisma/client";
+import { Atom, AtomSource } from "@prisma/client";
 
-const { ATOM, ATOM_SOURCE } = require("../../utils/constants");
+const { ATOM, ATOM_SOURCE } = require("../utils/constants");
 
 interface Props {
   projectID: number;
@@ -24,7 +23,7 @@ function Canvas({ projectID, testID }: Props) {
     clickX: number | null;
     clickY: number | null;
   }>({ clickX: null, clickY: null });
-  const [atoms, setAtoms] = useState<Atom[]>([]);
+  const [atoms, setAtoms] = useState<AtomWithSource[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [quickInsertData, setQuickInsertData] = useState([]);
 
@@ -59,19 +58,20 @@ function Canvas({ projectID, testID }: Props) {
 
   const validCoords = coords.clickX !== null && coords.clickY !== null;
 
-  const addNewAtom = (
-    left: number,
-    top: number,
-    projectID: number,
-    testID: number,
-    sourceAtomID: number,
-    atomLabel: string
-  ) => {
+  const addNewAtom = ({
+    sourceAtomID,
+    top,
+    left,
+  }: {
+    sourceAtomID: number;
+    top: number;
+    left: number;
+  }) => {
     window.electronAPI
       .testCanAddAtom({ testID, sourceAtomID })
       .then((resp: { success: boolean; error?: any }) => {
         if (resp.success) {
-          window.electronAPI.testAddAtom({ testID, sourceAtomID });
+          window.electronAPI.testAddAtom({ testID, sourceAtomID, top, left });
         } else {
           showNotification({
             title: "Cannot add Atom",
@@ -118,34 +118,47 @@ function Canvas({ projectID, testID }: Props) {
     //     });
   }
 
+  function isAtomInstance(item: Atom | AtomSource): item is Atom {
+    return (item as Atom).srcID !== undefined;
+  }
+
   const [, drop] = useDrop(
     () => ({
       accept: [ATOM, ATOM_SOURCE],
-      drop(item: Atom, monitor) {
+      drop(item: Atom | AtomSource, monitor) {
         const delta = monitor.getDifferenceFromInitialOffset();
         if (delta) {
-          let left = Math.round(item.left + delta.x);
-          let top = Math.round(item.top + delta.y);
-          console.log(top);
-          if (monitor.getItemType() === ATOM) {
-            console.log("Existing atom dragged.");
-            console.log(item.id);
-            updateAtom(
-              item.id,
-              left,
-              top,
-              item.srcID,
-              "atom label",
-              "atom nickname"
-            );
+          if (isAtomInstance(item)) {
+            let left = Math.round(item.left + delta.x);
+            let top = Math.round(item.top + delta.y);
+            console.log(top);
+            if (monitor.getItemType() === ATOM) {
+              console.log("Existing atom dragged.");
+              console.log(item.id);
+              updateAtom(
+                item.id,
+                left,
+                top,
+                item.srcID,
+                "atom label",
+                "atom nickname"
+              );
+            }
+          } else {
+            // TODO: Atom source is dragged on to canvas, handle missing id, top, and left.
+            if (monitor.getItemType() === ATOM_SOURCE) {
+              console.log("New atom dragged.");
+              console.log(testID);
+              const clickCoords = monitor.getClientOffset();
+              if (clickCoords) {
+                addNewAtom({
+                  sourceAtomID: item.id,
+                  top: clickCoords.y,
+                  left: clickCoords.x,
+                });
+              }
+            }
           }
-
-          if (monitor.getItemType() === ATOM_SOURCE) {
-            console.log("New atom dragged.");
-            console.log(testID);
-            addNewAtom(left, top, projectID, testID, item.srcID, "atomLabel");
-          }
-
           return undefined;
         }
       },

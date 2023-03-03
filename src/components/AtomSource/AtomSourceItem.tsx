@@ -12,9 +12,9 @@ import {
   IconSubtask,
 } from "@tabler/icons";
 import AtomSourceSettingsModal from "./AtomSourceSettingsModal";
-import { AtomSourceWithRelations } from "../../../public/ipc/atoms";
+import { AtomSourceWithRelations } from "../../../public/main";
 
-const { ATOM_SOURCE } = require("../../../utils/constants");
+const { ATOM_SOURCE } = require("../../utils/constants");
 
 function getStyles(left: number, top: number, isDragging: boolean) {
   //const transform = `translate3d(${left}px, ${top}px, 0)`
@@ -42,12 +42,7 @@ export function AtomSourceItem({ atomSource }: Props) {
     () => ({
       type: ATOM_SOURCE,
       item: {
-        id: null,
-        top: 0,
-        left: 0,
-        atomLabel: atomSource.label,
-        sourceAtomKey: atomSource.id,
-        projectKey: atomSource.projectID,
+        atomSource: atomSource,
         renderType,
       },
       collect: (monitor) => ({
@@ -99,7 +94,7 @@ export function AtomSourceItem({ atomSource }: Props) {
         sx={(theme) => ({
           backgroundColor: theme.colors.dark[4],
           border: `solid 6px ${atomSource.color}`,
-          width: "100%",
+          width: "200px",
         })}
       >
         <Group>

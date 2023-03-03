@@ -11,7 +11,7 @@ const react_dnd_html5_backend_1 = require("react-dnd-html5-backend");
 const react_2 = __importDefault(require("react"));
 const icons_1 = require("@tabler/icons");
 const AtomSourceSettingsModal_1 = __importDefault(require("./AtomSourceSettingsModal"));
-const { ATOM_SOURCE } = require("../../../utils/constants");
+const { ATOM_SOURCE } = require("../../utils/constants");
 function getStyles(left, top, isDragging) {
     //const transform = `translate3d(${left}px, ${top}px, 0)`
     return {
@@ -30,12 +30,7 @@ function AtomSourceItem({ atomSource }) {
     const [{ isDragging }, drag, preview] = (0, react_dnd_1.useDrag)(() => ({
         type: ATOM_SOURCE,
         item: {
-            id: null,
-            top: 0,
-            left: 0,
-            atomLabel: atomSource.label,
-            sourceAtomKey: atomSource.id,
-            projectKey: atomSource.projectID,
+            atomSource: atomSource,
             renderType,
         },
         collect: (monitor) => ({
@@ -68,7 +63,7 @@ function AtomSourceItem({ atomSource }) {
         react_2.default.createElement(core_1.Paper, { ref: drag, shadow: "md", p: "md", radius: "lg", role: "DraggableBox", sx: (theme) => ({
                 backgroundColor: theme.colors.dark[4],
                 border: `solid 6px ${atomSource.color}`,
-                width: "100%",
+                width: "200px",
             }) },
             react_2.default.createElement(core_1.Group, null,
                 react_2.default.createElement(core_1.Text, { color: atomSource.color, size: "xl", weight: 800 }, atomSource.label.split("/")[1]),

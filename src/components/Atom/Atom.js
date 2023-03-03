@@ -7,7 +7,7 @@ const react_dnd_html5_backend_1 = require("react-dnd-html5-backend");
 const AtomContents_1 = require("./AtomContents");
 const core_1 = require("@mantine/core");
 const { v4: uuidv4 } = require("uuid");
-const { CONNECTION } = require("../../../utils/constants");
+const { CONNECTION } = require("../../utils/constants");
 function getAtomStyles(
   contentsBeingDragged,
   theme,

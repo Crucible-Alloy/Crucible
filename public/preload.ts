@@ -46,10 +46,10 @@ import {
   OPEN_TEST,
   GET_ACTIVE_TAB,
   GET_ATOM_SOURCE,
-} from "../utils/constants";
+} from "../src/utils/constants";
 import { Project, Relation, Test } from "@prisma/client";
 import { NewProject } from "./validation/formValidation";
-import { TestWithCanvas } from "./main";
+import { AtomWithSource, TestWithCanvas } from "./main";
 
 export interface ElectronAPI {
   getHomeDirectory: () => Promise<string>;
@@ -76,7 +76,7 @@ export interface ElectronAPI {
     sourceAtomID: number;
   }) => Promise<{ success: boolean; error?: any }>;
   closeTab: (data: { projectID: number; testID: number }) => any;
-  makeConnection: (data: { fromID: number; toID: number }) => any;
+  makeConnection: typeof api.makeConnection;
 }
 
 const { v4: uuidv4 } = require("uuid");
@@ -317,30 +317,16 @@ const api = {
   //   });
   // },
 
-  // makeConnection: (
-  //   projectKey,
-  //   testKey,
-  //   fromAtom,
-  //   toAtom,
-  //   fromAtomLabel,
-  //   toAtomLabel,
-  //   fromNickname,
-  //   toNickname,
-  //   connectionLabel
-  // ) => {
-  //   ipcRenderer.send(
-  //     CREATE_CONNECTION,
-  //     projectKey,
-  //     testKey,
-  //     fromAtom,
-  //     toAtom,
-  //     fromAtomLabel,
-  //     toAtomLabel,
-  //     fromNickname,
-  //     toNickname,
-  //     connectionLabel
-  //   );
-  // },
+  /* Given a From and To atom, create a connection between them */
+  makeConnection: ({
+    fromAtom,
+    toAtom,
+  }: {
+    fromAtom: AtomWithSource;
+    toAtom: AtomWithSource;
+  }) => {
+    ipcRenderer.send(CREATE_CONNECTION, { fromAtom, toAtom });
+  },
 
   listenForCanvasChange: (callback: any) => {
     ipcRenderer.on("canvas-update", callback);
@@ -487,11 +473,15 @@ const api = {
   testAddAtom: ({
     testID,
     sourceAtomID,
+    top,
+    left,
   }: {
     testID: number;
     sourceAtomID: number;
+    top: number;
+    left: number;
   }) => {
-    ipcRenderer.send(TEST_ADD_ATOM, { testID, sourceAtomID });
+    ipcRenderer.send(TEST_ADD_ATOM, { testID, sourceAtomID, top, left });
   },
 
   getPredicates: (projectID: number) => {
@@ -540,15 +530,21 @@ const api = {
   //   );
   // },
 
-  // testCanAddAtom: ({ testID, sourceAtomID }) => {
-  //   ipcRenderer.send(TEST_CAN_ADD_ATOM, { testID, sourceAtomID });
-  //
-  //   return new Promise((resolve) => {
-  //     ipcRenderer.once(`${TEST_CAN_ADD_ATOM}-resp`, (event, resp) =>
-  //       resolve(resp)
-  //     );
-  //   });
-  // },
+  testCanAddAtom: ({
+    testID,
+    sourceAtomID,
+  }: {
+    testID: number;
+    sourceAtomID: number;
+  }) => {
+    ipcRenderer.send(TEST_CAN_ADD_ATOM, { testID, sourceAtomID });
+
+    return new Promise((resolve) => {
+      ipcRenderer.once(`${TEST_CAN_ADD_ATOM}-resp`, (event, resp) =>
+        resolve(resp)
+      );
+    });
+  },
 
   openTest: ({ testID, projectID }: { testID: number; projectID: number }) => {
     ipcRenderer.send(OPEN_TEST, { testID, projectID });

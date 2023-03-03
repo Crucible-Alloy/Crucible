@@ -9,7 +9,7 @@ const react_2 = require("react");
 const react_3 = __importDefault(require("react"));
 const NewTestModal_1 = __importDefault(require("./NewTestModal"));
 const TestListItem_1 = __importDefault(require("./TestListItem"));
-const { SIDEBAR_WIDTH } = require("../../../../utils/constants");
+const { SIDEBAR_WIDTH } = require("../../../utils/constants");
 function TestsSidebarTab({ projectID }) {
     const [tests, setTests] = (0, react_1.useState)([]);
     const [modalOpened, setModalOpened] = (0, react_1.useState)(false);

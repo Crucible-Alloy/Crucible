@@ -8,7 +8,7 @@ import {
   SegmentedControl,
   Title,
 } from "@mantine/core";
-import { getColorArray } from "../../../utils/helpers";
+import { getColorArray } from "../../utils/helpers";
 import { IconCircle, IconRectangle, IconTriangle } from "@tabler/icons";
 import { AtomSource } from "@prisma/client";
 
