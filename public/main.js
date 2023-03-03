@@ -296,25 +296,32 @@ function getColorArray() {
 //     console.log(err);
 //   }
 // }
+/* Deploy Alloy Analyzer SpringBoot API on port 8080*/
+function deployAlloyAPI() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const jarPath = `${path_1.default.join(__dirname, "../src/JARs/aSketch-API.jar")}`;
+        springAPI = require("child_process").spawn("java", ["-jar", jarPath, ""]);
+    });
+}
 // Open dev tools on launch in dev mode
 // After initialization, create new browser window.
 // Some APIs only available after this call.
 electron_2.app.whenReady().then(() => {
-    createASketchMenu();
-    createProjectSelectWindow();
-    // on macOS
-    const reactDevToolsPath = path_1.default.join(os.homedir(), "/Library/Application Support/Google/Chrome/Profile 1/Extensions/fmkadmapgofadopljbjfkapdkoienihi/4.25.0_0");
-    electron_2.app.whenReady().then(() => __awaiter(void 0, void 0, void 0, function* () {
-        yield electron_2.session.defaultSession.loadExtension(reactDevToolsPath);
-    }));
-    const jarPath = `${path_1.default.join(__dirname, "../src/JARs/aSketch-API.jar")}`;
-    springAPI = require("child_process").spawn("java", ["-jar", jarPath, ""]);
-    electron_2.app.on("activate", function () {
-        // On macOS, it's common to re-create a window in the app when the
-        // dock icon is clicked and there are no other windows open.
-        //if (BrowserWindow.getAllWindows().length === 0) createMainWindow()
-        if (electron_1.BrowserWindow.getAllWindows().length === 0)
-            createProjectSelectWindow();
+    deployAlloyAPI().then(() => {
+        createASketchMenu();
+        createProjectSelectWindow();
+        // on macOS
+        const reactDevToolsPath = path_1.default.join(os.homedir(), "/Library/Application Support/Google/Chrome/Profile 1/Extensions/fmkadmapgofadopljbjfkapdkoienihi/4.25.0_0");
+        electron_2.app.whenReady().then(() => __awaiter(void 0, void 0, void 0, function* () {
+            yield electron_2.session.defaultSession.loadExtension(reactDevToolsPath);
+        }));
+        electron_2.app.on("activate", function () {
+            // On macOS, it's common to re-create a window in the app when the
+            // dock icon is clicked and there are no other windows open.
+            //if (BrowserWindow.getAllWindows().length === 0) createMainWindow()
+            if (electron_1.BrowserWindow.getAllWindows().length === 0)
+                createProjectSelectWindow();
+        });
     });
 });
 // Close app on exit for linux/windows.
@@ -1045,10 +1052,18 @@ function initializePredicates(predicates, projectID) {
 function initProjectData(data, projectID) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
+            // Convert file path into array based on current platform.  Prevents json serialization issues with '\' characters.
             // Send file to alloy API and get back metadata
-            const apiRequest = axios_1.default.post("http://localhost:8080/files", null, {
-                params: { filePath: data.alloyFile },
-            });
+            const options = {
+                method: "POST",
+                url: "http://localhost:8080/files",
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                data: { filePath: (process.platform === 'win32') ? data.alloyFile.split('\\') : data.alloyFile.split('/'),
+                    operatingSystem: process.platform }
+            };
+            const apiRequest = axios_1.default.request(options);
             let resp = yield apiRequest;
             if (resp.data) {
                 yield initializeAtoms(resp.data.atoms, projectID);

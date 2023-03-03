@@ -14,7 +14,7 @@ import {
 } from "./validation/formValidation";
 
 // Import ipcMain API so that it loads and listeners are created.
-import * as ipcMainProjects from "./ipc/projects";
+// import * as ipcMainProjects from "./ipc/projects";
 import * as ipcMainAtoms from "./ipc/atoms";
 import * as ipcMaintests from "./ipc/tests";
 
@@ -378,33 +378,38 @@ function getColorArray() {
 //   }
 // }
 
+/* Deploy Alloy Analyzer SpringBoot API on port 8080*/
+async function deployAlloyAPI() {
+  const jarPath = `${path.join(__dirname, "../src/JARs/aSketch-API.jar")}`;
+  springAPI = require("child_process").spawn("java", ["-jar", jarPath, ""]);
+}
+
 // Open dev tools on launch in dev mode
 
 // After initialization, create new browser window.
 // Some APIs only available after this call.
 app.whenReady().then(() => {
-  createASketchMenu();
-  createProjectSelectWindow();
+  deployAlloyAPI().then(() => {
+    createASketchMenu();
+    createProjectSelectWindow();
 
-  // on macOS
-  const reactDevToolsPath = path.join(
-    os.homedir(),
-    "/Library/Application Support/Google/Chrome/Profile 1/Extensions/fmkadmapgofadopljbjfkapdkoienihi/4.25.0_0"
-  );
+    // on macOS
+    const reactDevToolsPath = path.join(
+      os.homedir(),
+      "/Library/Application Support/Google/Chrome/Profile 1/Extensions/fmkadmapgofadopljbjfkapdkoienihi/4.25.0_0"
+    );
 
-  app.whenReady().then(async () => {
-    await session.defaultSession.loadExtension(reactDevToolsPath);
-  });
+    app.whenReady().then(async () => {
+      await session.defaultSession.loadExtension(reactDevToolsPath);
+    });
 
-  const jarPath = `${path.join(__dirname, "../src/JARs/aSketch-API.jar")}`;
-  springAPI = require("child_process").spawn("java", ["-jar", jarPath, ""]);
-
-  app.on("activate", function () {
-    // On macOS, it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
-    //if (BrowserWindow.getAllWindows().length === 0) createMainWindow()
-    if (BrowserWindow.getAllWindows().length === 0) createProjectSelectWindow();
-  });
+    app.on("activate", function () {
+      // On macOS, it's common to re-create a window in the app when the
+      // dock icon is clicked and there are no other windows open.
+      //if (BrowserWindow.getAllWindows().length === 0) createMainWindow()
+      if (BrowserWindow.getAllWindows().length === 0) createProjectSelectWindow();
+    });
+  })
 });
 
 // Close app on exit for linux/windows.
@@ -1332,14 +1337,26 @@ async function initializePredicates(
 
 async function initProjectData(data: NewProject, projectID: number) {
   try {
+    // Convert file path into array based on current platform.  Prevents json serialization issues with '\' characters.
     // Send file to alloy API and get back metadata
-    const apiRequest = axios.post("http://localhost:8080/files", null, {
-      params: { filePath: data.alloyFile },
-    });
+    const options = {
+      method: "POST",
+      url: "http://localhost:8080/files",
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      data:
+        {filePath: ( process.platform === 'win32') ? data.alloyFile.split('\\') : data.alloyFile.split('/'),
+        operatingSystem: process.platform }
+    }
+
+    const apiRequest = axios.request(options);
+
     let resp: AxiosResponse<{
       atoms: ValidAtomResp[];
       functions: ValidPredResp[];
     }> = await apiRequest;
+
     if (resp.data) {
       await initializeAtoms(resp.data.atoms, projectID);
       await initializeInheritance(resp.data.atoms, projectID);
