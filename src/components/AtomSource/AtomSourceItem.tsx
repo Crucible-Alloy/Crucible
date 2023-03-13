@@ -42,7 +42,7 @@ export function AtomSourceItem({ atomSource }: Props) {
     () => ({
       type: ATOM_SOURCE,
       item: {
-        atomSource: atomSource,
+        data: atomSource,
         renderType,
       },
       collect: (monitor) => ({

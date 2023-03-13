@@ -45,10 +45,9 @@ function getAtomStyles(
 interface Props {
   atom: AtomWithSource;
   contentsBeingDragged: boolean;
-  projectID: number;
 }
 
-export function AtomInstance({ contentsBeingDragged, atom, projectID }: Props) {
+export function AtomInstance({ contentsBeingDragged, atom }: Props) {
   const renderType = CONNECTION;
   const theme = useMantineTheme();
   const [metaData, setMetaData] = useState<AtomSourceWithRelations>(
@@ -61,13 +60,13 @@ export function AtomInstance({ contentsBeingDragged, atom, projectID }: Props) {
   }, []);
 
   useEffect(() => {
-    window.electronAPI.listenForMetadataChange((_event: any, value: any) => {
-      window.electronAPI
-        .getAtomSource(atom.srcID)
-        .then((srcAtom: AtomSourceWithRelations) => {
-          setMetaData(srcAtom);
-        });
-    });
+    // window.electronAPI.listenForMetadataChange((_event: any, value: any) => {
+    //   window.electronAPI
+    //     .getAtomSource(atom.srcID)
+    //     .then((srcAtom: AtomSourceWithRelations) => {
+    //       setMetaData(srcAtom);
+    //     });
+    // });
   }, []);
 
   const [{ isDragging }, drag, preview] = useDrag(
@@ -75,7 +74,7 @@ export function AtomInstance({ contentsBeingDragged, atom, projectID }: Props) {
       type: atom.srcAtom.label,
       item: {
         renderType,
-        atom,
+        data: atom,
         metaData,
       },
       collect: (monitor) => ({

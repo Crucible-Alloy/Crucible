@@ -44,7 +44,7 @@ function SidebarWrapper({ projectID }) {
             setDrawerOpen(!drawerOpen);
         }
     }
-    const items = data.map((item, index) => (react_2.default.createElement(core_1.Center, { sx: (theme) => ({ width: "100%" }) },
+    const items = data.map((item, index) => (react_2.default.createElement(core_1.Center, { key: item.label, sx: (theme) => ({ width: "100%" }) },
         react_2.default.createElement(core_1.ActionIcon, { key: item.label, size: "xl", radius: "lg", variant: index === active ? "light" : "subtle", color: index === active ? "blue" : "gray", sx: (theme) => ({
                 "&:hover": {
                     backgroundColor: theme.colors.blue[0],

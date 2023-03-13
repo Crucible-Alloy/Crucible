@@ -1,11 +1,12 @@
 import { useDragLayer } from "react-dnd";
+import React, { CSSProperties } from "react";
 import { ATOM, ATOM_SOURCE, CONNECTION } from "../utils/constants";
 import { useMantineTheme } from "@mantine/core";
 import { Arrow } from "react-absolute-svg-arrows";
 import { AtomInstance } from "./Atom/AtomInstance";
 import { AtomSourceItem } from "./AtomSource/AtomSourceItem";
 
-const layerStyles = {
+const layerStyles: CSSProperties = {
   position: "absolute",
   pointerEvents: "none",
   zIndex: 100,
@@ -16,13 +17,13 @@ const layerStyles = {
 };
 
 function getItemStyles(
-  item,
-  initialSourceOffset,
-  initialOffset,
-  currentSourceOffset,
-  currentOffset,
-  delta,
-  mousePos
+  item: any,
+  initialSourceOffset: any,
+  initialOffset: any,
+  currentSourceOffset: any,
+  currentOffset: any,
+  delta: any,
+  mousePos: any
 ) {
   let { x, y } = currentSourceOffset;
   if (item.renderType === ATOM_SOURCE) {
@@ -43,11 +44,10 @@ function getItemStyles(
   }
 }
 
-export const CustomDragLayer = ({ mousePos }) => {
+export const CustomDragLayer = ({ mousePos }: any) => {
   const theme = useMantineTheme();
 
   const {
-    itemType,
     isDragging,
     item,
     initialOffset,
@@ -69,28 +69,19 @@ export const CustomDragLayer = ({ mousePos }) => {
   const renderItem = () => {
     switch (item.renderType) {
       case ATOM:
-        return (
-          <AtomInstance
-            contentsBeingDragged={true}
-            id={item.id}
-            left={item.left}
-            atomLabel={item.metaData.label}
-            top={item.top}
-            sourceAtomKey={item.sourceAtomKey}
-            projectKey={item.projectKey}
-            testKey={item.testKey}
-          />
-        );
+        return <AtomInstance contentsBeingDragged={true} atom={item.data} />;
 
       case ATOM_SOURCE:
-        return <AtomSourceItem atomSource={item.atomSource} />;
+        return <AtomSourceItem atomSource={item.data} />;
 
       case CONNECTION:
         return (
           <Arrow
             startPoint={{ x: mousePos.x, y: mousePos.y }}
             endPoint={{
+              //@ts-ignore
               x: mousePos.x + delta.x + 16,
+              //@ts-ignore
               y: mousePos.y + delta.y + 16,
             }}
             config={{ arrowColor: theme.colors.blue[5], strokeWidth: 5 }}

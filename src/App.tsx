@@ -10,8 +10,8 @@ import { useParams } from "react-router-dom";
 import { NotificationsProvider } from "@mantine/notifications";
 import React, { useEffect, useState } from "react";
 import { NewProject } from "../public/validation/formValidation";
-import { Project, Relation, Test } from "@prisma/client";
-import { TestWithCanvas } from "../public/main";
+import { Atom, AtomSource, Project, Relation, Test } from "@prisma/client";
+import { AtomSourceWithRelations, TestWithCanvas } from "../public/main";
 import { ElectronAPI } from "../public/preload";
 const { CustomDragLayer } = require("./components/CustomDragLayer");
 
@@ -26,6 +26,11 @@ declare global {
     sourceAtomID: number;
     color: string;
   }
+  type AtomDraggable = {
+    renderType: string;
+    data: Atom | AtomSourceWithRelations;
+    metadata?: any;
+  };
 }
 
 function App() {

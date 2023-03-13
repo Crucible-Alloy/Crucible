@@ -51,7 +51,7 @@ function SidebarWrapper({ projectID }: Props) {
   }
 
   const items = data.map((item, index) => (
-    <Center sx={(theme) => ({ width: "100%" })}>
+    <Center key={item.label} sx={(theme) => ({ width: "100%" })}>
       <ActionIcon
         key={item.label}
         size={"xl"}

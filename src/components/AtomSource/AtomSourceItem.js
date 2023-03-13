@@ -30,7 +30,7 @@ function AtomSourceItem({ atomSource }) {
     const [{ isDragging }, drag, preview] = (0, react_dnd_1.useDrag)(() => ({
         type: ATOM_SOURCE,
         item: {
-            atomSource: atomSource,
+            data: atomSource,
             renderType,
         },
         collect: (monitor) => ({

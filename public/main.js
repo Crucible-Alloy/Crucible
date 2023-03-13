@@ -21,6 +21,7 @@ const electron_2 = require("electron");
 const axios_1 = __importDefault(require("axios"));
 const fs_1 = __importDefault(require("fs"));
 const constants_1 = require("../src/utils/constants");
+const runtime_1 = require("@prisma/client/runtime");
 const prisma = new client_1.PrismaClient();
 // Global window variable
 let mainWindow, projectSelectWindow;
@@ -779,9 +780,10 @@ electron_2.ipcMain.on(CREATE_NEW_TEST, (event, projectID, testName) => __awaiter
     let result = yield createNewTest(projectID, testName);
     event.sender.send("created-new-test", result);
 }));
-electron_2.ipcMain.on(READ_TEST, (event, { testID, returnKey }) => __awaiter(void 0, void 0, void 0, function* () {
+electron_2.ipcMain.on(READ_TEST, (event, data) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log("MAIN Reading tests from ID: ", data.testID);
     const test = yield prisma.test.findFirst({
-        where: { id: number.parse(testID) },
+        where: { id: number.parse(data.testID) },
         include: {
             atoms: {
                 include: {
@@ -797,7 +799,7 @@ electron_2.ipcMain.on(READ_TEST, (event, { testID, returnKey }) => __awaiter(voi
             connections: true,
         },
     });
-    event.sender.send(returnKey, test ? test : {});
+    event.sender.send(data.returnKey, test ? test : {});
 }));
 electron_2.ipcMain.on(GET_TESTS, (event, projectID) => __awaiter(void 0, void 0, void 0, function* () {
     const tests = yield prisma.test.findMany({
@@ -813,16 +815,20 @@ electron_2.ipcMain.on(DELETE_TEST, (event, projectID, testID) => __awaiter(void 
 }));
 // TODO: This can likely be simplified to a single query
 electron_2.ipcMain.on(TEST_CAN_ADD_ATOM, (event, { testID, sourceAtomID }) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log(sourceAtomID);
     try {
         let test = yield prisma.test.findFirstOrThrow({
             where: { id: number.parse(testID) },
             include: { atoms: true },
         });
+        console.log("Found Test: ", test);
         let atomSource = yield prisma.atomSource.findFirstOrThrow({
             where: { id: number.parse(sourceAtomID) },
         });
+        console.log("Found Source: ", atomSource);
         if (atomSource.isLone || atomSource.isOne) {
-            if (test.atoms.filter((atom) => atom.srcID === atomSource.id)) {
+            if (test.atoms.filter((atom) => atom.srcID === atomSource.id)
+                .length > 0) {
                 console.log("Found an atom");
                 event.sender.send(`${TEST_CAN_ADD_ATOM}-resp`, { success: false }); // already an atom with a matching source
             }
@@ -830,23 +836,39 @@ electron_2.ipcMain.on(TEST_CAN_ADD_ATOM, (event, { testID, sourceAtomID }) => __
         event.sender.send(`${TEST_CAN_ADD_ATOM}-resp`, { success: true }); // No multiplicity issues, eligible atom
     }
     catch (e) {
+        if (e instanceof runtime_1.PrismaClientKnownRequestError) {
+            console.log(e.message);
+        }
         event.sender.send(`${TEST_CAN_ADD_ATOM}-resp`, {
             success: false,
-            error: e,
+            // @ts-ignore
+            error: e.message,
         });
     }
 }));
 // TODO: Build out default nickname
 electron_2.ipcMain.on(TEST_ADD_ATOM, (event, { testID, sourceAtomID, top, left, }) => __awaiter(void 0, void 0, void 0, function* () {
-    let atom = yield prisma.atom.create({
-        data: {
-            testID: number.parse(testID),
-            srcID: number.parse(sourceAtomID),
-            top: number.parse(top),
-            left: number.parse(left),
-            nickname: "Test",
-        },
+    let test = yield prisma.test.findFirst({
+        where: { id: number.parse(testID) },
     });
+    let sourceAtom = yield prisma.test.findFirst({
+        where: { id: number.parse(sourceAtomID) },
+    });
+    if (test && sourceAtom) {
+        let atom = yield prisma.atom.create({
+            data: {
+                testID: number.parse(testID),
+                srcID: number.parse(sourceAtomID),
+                top: number.parse(top),
+                left: number.parse(left),
+                nickname: `${sourceAtom.name} ${test.atomCount}`,
+            },
+        });
+        let updateTest = yield prisma.test.update({
+            where: { id: number.parse(testID) },
+            data: { atomCount: { increment: 1 } },
+        });
+    }
     // Alert the browser to a change in state.
     mainWindow.webContents.send("canvas-update");
 }));

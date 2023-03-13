@@ -87,6 +87,8 @@ const api = {
   /* Given the id of a test object, returns said Test object. */
   readTest: (testID: number): Promise<TestWithCanvas> => {
     let returnKey = uuidv4();
+    console.log("TEST ID: ", testID);
+    console.log("Preload loading tests.");
     ipcRenderer.send(READ_TEST, { testID, returnKey });
     return new Promise((resolve) => {
       ipcRenderer.once(returnKey, (event, canvasState: TestWithCanvas) =>

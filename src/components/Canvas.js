@@ -45,6 +45,7 @@ const core_1 = require("@mantine/core");
 const AtomInstance_1 = require("./Atom/AtomInstance");
 const { ATOM, ATOM_SOURCE } = require("../utils/constants");
 function Canvas({ projectID, testID }) {
+    console.log("CANVAS TEST ID: ", testID);
     const [canvasItems, setCanvas] = (0, react_1.useState)();
     const [atomMenu, setAtomMenu] = (0, react_1.useState)(false);
     const [coords, setCoords] = (0, react_1.useState)({ clickX: null, clickY: null });
@@ -54,15 +55,16 @@ function Canvas({ projectID, testID }) {
     (0, react_1.useEffect)(() => {
         window.electronAPI.listenForCanvasChange((_event, value) => {
             console.log("got canvas update");
-            window.electronAPI.readTest({ testID }).then((data) => {
+            window.electronAPI.readTest(testID).then((data) => {
                 setCanvas(data);
             });
         });
     }, []);
     (0, react_1.useEffect)(() => {
         const loadCanvas = () => __awaiter(this, void 0, void 0, function* () {
-            window.electronAPI.readTest({ testID }).then((data) => {
+            window.electronAPI.readTest(testID).then((data) => {
                 setCanvas(data);
+                console.log("ATOMS: ", data);
             });
         });
         loadCanvas().then(() => setLoading(false));
@@ -85,6 +87,8 @@ function Canvas({ projectID, testID }) {
                 window.electronAPI.testAddAtom({ testID, sourceAtomID, top, left });
             }
             else {
+                if (resp.error)
+                    console.log(resp.error);
                 (0, notifications_1.showNotification)({
                     title: "Cannot add Atom",
                     message: `Adding that atom would exceed it's multiplicity.`,
@@ -126,16 +130,17 @@ function Canvas({ projectID, testID }) {
     const [, drop] = (0, react_dnd_1.useDrop)(() => ({
         accept: [ATOM, ATOM_SOURCE],
         drop(item, monitor) {
+            console.log(item);
             const delta = monitor.getDifferenceFromInitialOffset();
             if (delta) {
-                if (isAtomInstance(item)) {
-                    let left = Math.round(item.left + delta.x);
-                    let top = Math.round(item.top + delta.y);
+                if (isAtomInstance(item.data)) {
+                    let left = Math.round(item.data.left + delta.x);
+                    let top = Math.round(item.data.top + delta.y);
                     console.log(top);
                     if (monitor.getItemType() === ATOM) {
                         console.log("Existing atom dragged.");
-                        console.log(item.id);
-                        updateAtom(item.id, left, top, item.srcID, "atom label", "atom nickname");
+                        console.log(item.data.id);
+                        updateAtom(item.data.id, left, top, item.data.srcID, "atom label", "atom nickname");
                     }
                 }
                 else {
@@ -145,8 +150,9 @@ function Canvas({ projectID, testID }) {
                         console.log(testID);
                         const clickCoords = monitor.getClientOffset();
                         if (clickCoords) {
+                            console.log("Item ", item);
                             addNewAtom({
-                                sourceAtomID: item.id,
+                                sourceAtomID: item.data.id,
                                 top: clickCoords.y,
                                 left: clickCoords.x,
                             });
@@ -175,7 +181,7 @@ function Canvas({ projectID, testID }) {
                         react_1.default.createElement(core_1.Popover.Dropdown, null,
                             react_1.default.createElement(core_1.Title, { size: "xs", color: "dimmed" }, "Quick Insert"),
                             react_1.default.createElement(core_1.Select, { data: quickInsertData, label: "Atoms", placeholder: "Pick one", searchable: true, "data-auto-focus": true, nothingFound: "No options", onChange: (selected) => quickInsert(null, coords) }))))),
-            canvasItems.atoms.map((atom) => (react_1.default.createElement(AtomInstance_1.AtomInstance, { contentsBeingDragged: false, atom: atom, projectID: projectID }))),
+            canvasItems.atoms.map((atom) => (react_1.default.createElement(AtomInstance_1.AtomInstance, { key: atom.id, contentsBeingDragged: false, atom: atom }))),
             canvasItems.connections.map((connection) => (react_1.default.createElement(react_xarrows_1.default, { start: JSON.stringify(connection.fromID), end: JSON.stringify(connection.toID) })))));
     }
     else {

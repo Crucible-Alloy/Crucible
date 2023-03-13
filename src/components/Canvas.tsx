@@ -5,7 +5,11 @@ import { showNotification } from "@mantine/notifications";
 import { IconAlertTriangle } from "@tabler/icons";
 import { useClickOutside } from "@mantine/hooks";
 import { Affix, Popover, Select, Title } from "@mantine/core";
-import { AtomWithSource, TestWithCanvas } from "../../public/main";
+import {
+  AtomSourceWithRelations,
+  AtomWithSource,
+  TestWithCanvas,
+} from "../../public/main";
 import { AtomInstance } from "./Atom/AtomInstance";
 import { Atom, AtomSource } from "@prisma/client";
 
@@ -17,6 +21,7 @@ interface Props {
 }
 
 function Canvas({ projectID, testID }: Props) {
+  console.log("CANVAS TEST ID: ", testID);
   const [canvasItems, setCanvas] = useState<TestWithCanvas>();
   const [atomMenu, setAtomMenu] = useState(false);
   const [coords, setCoords] = useState<{
@@ -30,7 +35,7 @@ function Canvas({ projectID, testID }: Props) {
   useEffect(() => {
     window.electronAPI.listenForCanvasChange((_event: any, value: any) => {
       console.log("got canvas update");
-      window.electronAPI.readTest({ testID }).then((data: TestWithCanvas) => {
+      window.electronAPI.readTest(testID).then((data: TestWithCanvas) => {
         setCanvas(data);
       });
     });
@@ -38,8 +43,9 @@ function Canvas({ projectID, testID }: Props) {
 
   useEffect(() => {
     const loadCanvas = async () => {
-      window.electronAPI.readTest({ testID }).then((data: TestWithCanvas) => {
+      window.electronAPI.readTest(testID).then((data: TestWithCanvas) => {
         setCanvas(data);
+        console.log("ATOMS: ", data);
       });
     };
     loadCanvas().then(() => setLoading(false));
@@ -73,6 +79,8 @@ function Canvas({ projectID, testID }: Props) {
         if (resp.success) {
           window.electronAPI.testAddAtom({ testID, sourceAtomID, top, left });
         } else {
+          if (resp.error) console.log(resp.error);
+
           showNotification({
             title: "Cannot add Atom",
             message: `Adding that atom would exceed it's multiplicity.`,
@@ -125,21 +133,22 @@ function Canvas({ projectID, testID }: Props) {
   const [, drop] = useDrop(
     () => ({
       accept: [ATOM, ATOM_SOURCE],
-      drop(item: Atom | AtomSource, monitor) {
+      drop(item: AtomDraggable, monitor) {
+        console.log(item);
         const delta = monitor.getDifferenceFromInitialOffset();
         if (delta) {
-          if (isAtomInstance(item)) {
-            let left = Math.round(item.left + delta.x);
-            let top = Math.round(item.top + delta.y);
+          if (isAtomInstance(item.data)) {
+            let left = Math.round(item.data.left + delta.x);
+            let top = Math.round(item.data.top + delta.y);
             console.log(top);
             if (monitor.getItemType() === ATOM) {
               console.log("Existing atom dragged.");
-              console.log(item.id);
+              console.log(item.data.id);
               updateAtom(
-                item.id,
+                item.data.id,
                 left,
                 top,
-                item.srcID,
+                item.data.srcID,
                 "atom label",
                 "atom nickname"
               );
@@ -151,8 +160,9 @@ function Canvas({ projectID, testID }: Props) {
               console.log(testID);
               const clickCoords = monitor.getClientOffset();
               if (clickCoords) {
+                console.log("Item ", item);
                 addNewAtom({
-                  sourceAtomID: item.id,
+                  sourceAtomID: item.data.id,
                   top: clickCoords.y,
                   left: clickCoords.x,
                 });
@@ -220,9 +230,9 @@ function Canvas({ projectID, testID }: Props) {
         </Affix>
         {canvasItems.atoms.map((atom: AtomWithSource) => (
           <AtomInstance
+            key={atom.id}
             contentsBeingDragged={false}
             atom={atom}
-            projectID={projectID}
           />
         ))}
         {canvasItems.connections.map((connection) => (

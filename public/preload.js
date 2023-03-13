@@ -9,6 +9,8 @@ const api = {
     /* Given the id of a test object, returns said Test object. */
     readTest: (testID) => {
         let returnKey = uuidv4();
+        console.log("TEST ID: ", testID);
+        console.log("Preload loading tests.");
         electron_1.ipcRenderer.send(constants_1.READ_TEST, { testID, returnKey });
         return new Promise((resolve) => {
             electron_1.ipcRenderer.once(returnKey, (event, canvasState) => resolve(canvasState));

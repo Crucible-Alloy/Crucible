@@ -53,7 +53,7 @@ function getAtomStyles(contentsBeingDragged, theme, shape, isDragging, left, top
         };
     }
 }
-function AtomInstance({ contentsBeingDragged, atom, projectID }) {
+function AtomInstance({ contentsBeingDragged, atom }) {
     const renderType = constants_1.CONNECTION;
     const theme = (0, core_1.useMantineTheme)();
     const [metaData, setMetaData] = (0, react_1.useState)(atom.srcAtom);
@@ -62,19 +62,19 @@ function AtomInstance({ contentsBeingDragged, atom, projectID }) {
         preview((0, react_dnd_html5_backend_1.getEmptyImage)(), { captureDraggingState: true });
     }, []);
     (0, react_1.useEffect)(() => {
-        window.electronAPI.listenForMetadataChange((_event, value) => {
-            window.electronAPI
-                .getAtomSource(atom.srcID)
-                .then((srcAtom) => {
-                setMetaData(srcAtom);
-            });
-        });
+        // window.electronAPI.listenForMetadataChange((_event: any, value: any) => {
+        //   window.electronAPI
+        //     .getAtomSource(atom.srcID)
+        //     .then((srcAtom: AtomSourceWithRelations) => {
+        //       setMetaData(srcAtom);
+        //     });
+        // });
     }, []);
     const [{ isDragging }, drag, preview] = (0, react_dnd_1.useDrag)(() => ({
         type: atom.srcAtom.label,
         item: {
             renderType,
-            atom,
+            data: atom,
             metaData,
         },
         collect: (monitor) => ({

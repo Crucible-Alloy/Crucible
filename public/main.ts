@@ -31,6 +31,8 @@ import {
   GET_PROJECT,
   VALIDATE_NEW_PROJECT_FORM,
 } from "../src/utils/constants";
+import NotFoundError = Prisma.NotFoundError;
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime";
 
 const prisma = new PrismaClient();
 
@@ -1016,12 +1018,10 @@ ipcMain.on(
 
 ipcMain.on(
   READ_TEST,
-  async (
-    event,
-    { testID, returnKey }: { testID: number; returnKey: string }
-  ) => {
+  async (event, data: { testID: number; returnKey: string }) => {
+    console.log("MAIN Reading tests from ID: ", data.testID);
     const test = await prisma.test.findFirst({
-      where: { id: number.parse(testID) },
+      where: { id: number.parse(data.testID) },
       include: {
         atoms: {
           include: {
@@ -1037,7 +1037,7 @@ ipcMain.on(
         connections: true,
       },
     });
-    event.sender.send(returnKey, test ? test : {});
+    event.sender.send(data.returnKey, test ? test : {});
   }
 );
 
@@ -1062,25 +1062,39 @@ ipcMain.on(
     event,
     { testID, sourceAtomID }: { testID: number; sourceAtomID: number }
   ) => {
+    console.log(sourceAtomID);
     try {
       let test = await prisma.test.findFirstOrThrow({
         where: { id: number.parse(testID) },
         include: { atoms: true },
       });
+      console.log("Found Test: ", test);
+
       let atomSource = await prisma.atomSource.findFirstOrThrow({
         where: { id: number.parse(sourceAtomID) },
       });
+      console.log("Found Source: ", atomSource);
+
       if (atomSource.isLone || atomSource.isOne) {
-        if (test.atoms.filter((atom: Atom) => atom.srcID === atomSource.id)) {
+        if (
+          test.atoms.filter((atom: Atom) => atom.srcID === atomSource.id)
+            .length > 0
+        ) {
           console.log("Found an atom");
           event.sender.send(`${TEST_CAN_ADD_ATOM}-resp`, { success: false }); // already an atom with a matching source
         }
       }
+
       event.sender.send(`${TEST_CAN_ADD_ATOM}-resp`, { success: true }); // No multiplicity issues, eligible atom
     } catch (e) {
+      if (e instanceof PrismaClientKnownRequestError) {
+        console.log(e.message);
+      }
+
       event.sender.send(`${TEST_CAN_ADD_ATOM}-resp`, {
         success: false,
-        error: e,
+        // @ts-ignore
+        error: e.message,
       });
     }
   }
@@ -1098,15 +1112,30 @@ ipcMain.on(
       left,
     }: { testID: number; sourceAtomID: number; top: number; left: number }
   ) => {
-    let atom = await prisma.atom.create({
-      data: {
-        testID: number.parse(testID),
-        srcID: number.parse(sourceAtomID),
-        top: number.parse(top),
-        left: number.parse(left),
-        nickname: "Test",
-      },
+    let test = await prisma.test.findFirst({
+      where: { id: number.parse(testID) },
     });
+
+    let sourceAtom = await prisma.test.findFirst({
+      where: { id: number.parse(sourceAtomID) },
+    });
+
+    if (test && sourceAtom) {
+      let atom = await prisma.atom.create({
+        data: {
+          testID: number.parse(testID),
+          srcID: number.parse(sourceAtomID),
+          top: number.parse(top),
+          left: number.parse(left),
+          nickname: `${sourceAtom.name} ${test.atomCount}`,
+        },
+      });
+
+      let updateTest = await prisma.test.update({
+        where: { id: number.parse(testID) },
+        data: { atomCount: { increment: 1 } },
+      });
+    }
 
     // Alert the browser to a change in state.
     mainWindow.webContents.send("canvas-update");
