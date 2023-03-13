@@ -60,18 +60,5 @@ function TestListItem({ test, handleRowClick }) {
     /* TODO: Test Settings Modal
               - Rename test
               - Delete test */
-    /*<TestSettingsModal />*/
 }
-// return (
-//   <Group onClick={() => handleRowClick(testID, test)} position={"apart"}>
-//     <Group>
-//       <Text weight={700}>{test["name"]}</Text>
-//     </Group>
-//     <div>
-//       <ActionIcon variant={"filled"}>
-//         <IconPlayerPlay />
-//       </ActionIcon>
-//     </div>
-//   </Group>
-// );
 exports.default = TestListItem;

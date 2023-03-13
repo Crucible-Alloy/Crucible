@@ -52,10 +52,10 @@ let constants = {
     TEST_CAN_ADD_ATOM: "test-can-add-atom",
     TEST_ADD_ATOM: "test-add-atom",
     OPEN_TEST: "open-test",
+    CLOSE_TEST: "close-test",
+    DELETE_TEST: "delete-test",
     // CANVAS
     SAVE_CANVAS_STATE: "save-canvas-state",
-    CLOSE_TAB: "close-tab",
-    DELETE_TEST: "delete-test",
     // UI VARIABLES
     SIDEBAR_WIDTH: 350,
     SIDEBAR_HEIGHT: 700,

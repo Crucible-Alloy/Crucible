@@ -864,6 +864,25 @@ electron_2.ipcMain.on(OPEN_TEST, (event, { testID, projectID }) => __awaiter(voi
         mainWindow.webContents.send("tabs-update");
     }
 }));
+electron_2.ipcMain.on(constants_1.CLOSE_TEST, (event, { testID, projectID }) => __awaiter(void 0, void 0, void 0, function* () {
+    // Close the test.
+    let test = yield prisma.test.update({
+        where: { id: number.parse(testID) },
+        data: { tabIsOpen: false },
+    });
+    let openTest = yield prisma.test.findFirst({
+        where: { tabIsOpen: true },
+    });
+    // Set active tab to a different test if closed test is active tab.
+    if (test) {
+        yield prisma.project.update({
+            where: { id: number.parse(projectID) },
+            data: { activeTab: openTest ? openTest.name : "" },
+        });
+        event.sender.send(`${constants_1.CLOSE_TEST}-resp`, { success: true });
+        mainWindow.webContents.send("tabs-update");
+    }
+}));
 electron_2.ipcMain.on(CREATE_CONNECTION, (event, { fromAtom, toAtom }) => __awaiter(void 0, void 0, void 0, function* () {
     // 1. Find relation with fromAtom.atomSrc.fromRelations and toAtom.atomSrc.toRelations
     // 2. Check relation multiplicity
@@ -1058,10 +1077,14 @@ function initProjectData(data, projectID) {
                 method: "POST",
                 url: "http://localhost:8080/files",
                 headers: {
-                    'Content-Type': 'application/json'
+                    "Content-Type": "application/json",
                 },
-                data: { filePath: (process.platform === 'win32') ? data.alloyFile.split('\\') : data.alloyFile.split('/'),
-                    operatingSystem: process.platform }
+                data: {
+                    filePath: process.platform === "win32"
+                        ? data.alloyFile.split("\\")
+                        : data.alloyFile.split("/"),
+                    operatingSystem: process.platform,
+                },
             };
             const apiRequest = axios_1.default.request(options);
             let resp = yield apiRequest;
@@ -1122,6 +1145,7 @@ electron_2.ipcMain.on(constants_1.GET_PROJECT, (event, projectID) => __awaiter(v
     const project = yield prisma.project.findFirst({ where: { id: projectID } });
     event.sender.send("get-project-resp", project);
 }));
+electron_2.ipcMain.on(CLOSE_TAB, (event, { projectID, testID }) => __awaiter(void 0, void 0, void 0, function* () { }));
 electron_2.ipcMain.on(constants_1.DELETE_PROJECT, (event, project) => __awaiter(void 0, void 0, void 0, function* () {
     yield fs_1.default.rmdir(project.projectPath, { recursive: true }, (err) => {
         if (err) {

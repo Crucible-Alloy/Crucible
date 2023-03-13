@@ -25,6 +25,7 @@ import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
 import fs from "fs";
 import {
+  CLOSE_TEST,
   DELETE_PROJECT,
   GET_ATOM_SOURCES,
   GET_PROJECT,
@@ -407,9 +408,10 @@ app.whenReady().then(() => {
       // On macOS, it's common to re-create a window in the app when the
       // dock icon is clicked and there are no other windows open.
       //if (BrowserWindow.getAllWindows().length === 0) createMainWindow()
-      if (BrowserWindow.getAllWindows().length === 0) createProjectSelectWindow();
+      if (BrowserWindow.getAllWindows().length === 0)
+        createProjectSelectWindow();
     });
-  })
+  });
 });
 
 // Close app on exit for linux/windows.
@@ -1133,6 +1135,35 @@ ipcMain.on(
 );
 
 ipcMain.on(
+  CLOSE_TEST,
+  async (
+    event,
+    { testID, projectID }: { testID: number; projectID: number }
+  ) => {
+    // Close the test.
+    let test = await prisma.test.update({
+      where: { id: number.parse(testID) },
+      data: { tabIsOpen: false },
+    });
+
+    let openTest = await prisma.test.findFirst({
+      where: { tabIsOpen: true },
+    });
+
+    // Set active tab to a different test if closed test is active tab.
+    if (test) {
+      await prisma.project.update({
+        where: { id: number.parse(projectID) },
+        data: { activeTab: openTest ? openTest.name : "" },
+      });
+
+      event.sender.send(`${CLOSE_TEST}-resp`, { success: true });
+      mainWindow.webContents.send("tabs-update");
+    }
+  }
+);
+
+ipcMain.on(
   CREATE_CONNECTION,
   async (
     event,
@@ -1343,12 +1374,16 @@ async function initProjectData(data: NewProject, projectID: number) {
       method: "POST",
       url: "http://localhost:8080/files",
       headers: {
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json",
       },
-      data:
-        {filePath: ( process.platform === 'win32') ? data.alloyFile.split('\\') : data.alloyFile.split('/'),
-        operatingSystem: process.platform }
-    }
+      data: {
+        filePath:
+          process.platform === "win32"
+            ? data.alloyFile.split("\\")
+            : data.alloyFile.split("/"),
+        operatingSystem: process.platform,
+      },
+    };
 
     const apiRequest = axios.request(options);
 
@@ -1420,6 +1455,14 @@ ipcMain.on(GET_PROJECT, async (event, projectID: number) => {
   const project = await prisma.project.findFirst({ where: { id: projectID } });
   event.sender.send("get-project-resp", project);
 });
+
+ipcMain.on(
+  CLOSE_TAB,
+  async (
+    event,
+    { projectID, testID }: { projectID: number; testID: number }
+  ) => {}
+);
 
 ipcMain.on(DELETE_PROJECT, async (event, project: Project) => {
   await fs.rmdir(project.projectPath, { recursive: true }, (err) => {

@@ -26,7 +26,6 @@ import {
   SET_PROJECT_TABS,
   OPEN_AND_SET_ACTIVE,
   SET_ACTIVE_TAB,
-  CLOSE_TAB,
   DELETE_TEST,
   GET_ATOM,
   GET_ATOMS,
@@ -46,6 +45,7 @@ import {
   OPEN_TEST,
   GET_ACTIVE_TAB,
   GET_ATOM_SOURCE,
+  CLOSE_TEST,
 } from "../src/utils/constants";
 import { Project, Relation, Test } from "@prisma/client";
 import { NewProject } from "./validation/formValidation";
@@ -75,7 +75,7 @@ export interface ElectronAPI {
     testID: number;
     sourceAtomID: number;
   }) => Promise<{ success: boolean; error?: any }>;
-  closeTab: (data: { projectID: number; testID: number }) => any;
+  closeTest: (data: { projectID: number; testID: number }) => any;
   makeConnection: typeof api.makeConnection;
 }
 
@@ -452,13 +452,13 @@ const api = {
     });
   },
 
-  // openTab: (projectKey, tab) => {
-  //   ipcRenderer.send(OPEN_AND_SET_ACTIVE, projectKey, tab);
-  // },
-  //
-  // closeTab: ({ projectID, testID }) => {
-  //   ipcRenderer.send(CLOSE_TAB, { projectID, testID });
-  // },
+  closeTest: ({ projectID, testID }: { projectID: number; testID: number }) => {
+    ipcRenderer.send(CLOSE_TEST, { projectID, testID });
+
+    return new Promise((resolve) => {
+      ipcRenderer.once(`${CLOSE_TEST}-resp`, (event, resp) => resolve(resp));
+    });
+  },
 
   deleteTest: ({
     projectID,

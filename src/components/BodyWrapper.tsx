@@ -51,7 +51,7 @@ function BodyWrapper({ projectID, mousePos }: Props) {
   }
 
   function closeTab(testID: number) {
-    window.electronAPI.closeTab({ projectID, testID });
+    window.electronAPI.closeTest({ projectID, testID });
   }
 
   if (tabs) {

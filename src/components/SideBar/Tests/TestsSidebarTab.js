@@ -26,17 +26,16 @@ function TestsSidebarTab({ projectID }) {
     }
     return (react_3.default.createElement(core_1.Container, { style: { height: "100vh" } },
         tests.length > 0 ? (react_3.default.createElement(core_1.Stack, { sx: { height: "100vh" } },
-            react_3.default.createElement(core_1.ScrollArea, { offsetScrollbars: true }, Object.entries(tests).map(([key, value]) => (react_3.default.createElement(react_3.default.Fragment, null,
-                react_3.default.createElement(core_1.Container, { p: "xs", styles: (theme) => ({
-                        root: {
-                            borderRadius: 8,
-                            width: SIDEBAR_WIDTH - 50,
-                            "&:hover": {
-                                backgroundColor: theme.colors.gray[1],
-                            },
+            react_3.default.createElement(core_1.ScrollArea, { offsetScrollbars: true }, Object.entries(tests).map(([key, value]) => (react_3.default.createElement(core_1.Container, { key: value.id, p: "xs", styles: (theme) => ({
+                    root: {
+                        borderRadius: 8,
+                        width: SIDEBAR_WIDTH - 50,
+                        "&:hover": {
+                            backgroundColor: theme.colors.gray[1],
                         },
-                    }) },
-                    react_3.default.createElement(TestListItem_1.default, { test: value, handleRowClick: () => handleRowClick(value.id, projectID) })))))),
+                    },
+                }) },
+                react_3.default.createElement(TestListItem_1.default, { test: value, handleRowClick: () => handleRowClick(value.id, projectID) }))))),
             react_3.default.createElement(core_1.Button, { sx: { position: "absolute", bottom: 16 }, onClick: () => setModalOpened((o) => !o) }, "New Test"))) : (react_3.default.createElement(core_1.Center, { sx: { height: "60vh" } },
             react_3.default.createElement(core_1.Stack, null,
                 react_3.default.createElement(core_1.Title, { order: 4, color: "dimmed", align: "center" }, "You don't have any tests!")),

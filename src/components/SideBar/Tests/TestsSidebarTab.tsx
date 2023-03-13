@@ -43,26 +43,25 @@ function TestsSidebarTab({ projectID }: Props) {
         <Stack sx={{ height: "100vh" }}>
           <ScrollArea offsetScrollbars>
             {Object.entries(tests).map(([key, value]) => (
-              <>
-                <Container
-                  p={"xs"}
-                  styles={(theme) => ({
-                    root: {
-                      borderRadius: 8,
-                      width: SIDEBAR_WIDTH - 50,
+              <Container
+                key={value.id}
+                p={"xs"}
+                styles={(theme) => ({
+                  root: {
+                    borderRadius: 8,
+                    width: SIDEBAR_WIDTH - 50,
 
-                      "&:hover": {
-                        backgroundColor: theme.colors.gray[1],
-                      },
+                    "&:hover": {
+                      backgroundColor: theme.colors.gray[1],
                     },
-                  })}
-                >
-                  <TestListItem
-                    test={value}
-                    handleRowClick={() => handleRowClick(value.id, projectID)}
-                  />
-                </Container>
-              </>
+                  },
+                })}
+              >
+                <TestListItem
+                  test={value}
+                  handleRowClick={() => handleRowClick(value.id, projectID)}
+                />
+              </Container>
             ))}
           </ScrollArea>
           <Button

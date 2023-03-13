@@ -255,13 +255,12 @@ const api = {
             electron_1.ipcRenderer.once(`${constants_1.GET_ACTIVE_TAB}-resp`, (event, activeTab) => resolve(activeTab));
         });
     },
-    // openTab: (projectKey, tab) => {
-    //   ipcRenderer.send(OPEN_AND_SET_ACTIVE, projectKey, tab);
-    // },
-    //
-    // closeTab: ({ projectID, testID }) => {
-    //   ipcRenderer.send(CLOSE_TAB, { projectID, testID });
-    // },
+    closeTest: ({ projectID, testID }) => {
+        electron_1.ipcRenderer.send(constants_1.CLOSE_TEST, { projectID, testID });
+        return new Promise((resolve) => {
+            electron_1.ipcRenderer.once(`${constants_1.CLOSE_TEST}-resp`, (event, resp) => resolve(resp));
+        });
+    },
     deleteTest: ({ projectID, testID, }) => {
         electron_1.ipcRenderer.send(constants_1.DELETE_TEST, projectID, testID);
     },

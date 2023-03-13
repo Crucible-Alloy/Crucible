@@ -73,7 +73,7 @@ function BodyWrapper({ projectID, mousePos }) {
         window.electronAPI.setActiveTab({ projectID, testName });
     }
     function closeTab(testID) {
-        window.electronAPI.closeTab({ projectID, testID });
+        window.electronAPI.closeTest({ projectID, testID });
     }
     if (tabs) {
         return (react_1.default.createElement(react_1.default.Fragment, null,
