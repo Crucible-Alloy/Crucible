@@ -91,21 +91,8 @@ function Canvas({ projectID, testID }: Props) {
       });
   };
 
-  const updateAtom = (
-    id: number,
-    left: number,
-    top: number,
-    sourceAtomID: number,
-    atomLabel: string,
-    nickname: string
-  ) => {
-    window.electronAPI.createAtom(projectID, testID, id, {
-      top: top,
-      left: left,
-      sourceAtomKey: sourceAtomID,
-      atomLabel: atomLabel,
-      nickname: nickname,
-    });
+  const updateAtom = (atomID: number, left: number, top: number) => {
+    window.electronAPI.updateAtom({ atomID, left, top });
   };
 
   function quickInsert(selectedAtom: Atom | null, coords: any) {
@@ -144,14 +131,7 @@ function Canvas({ projectID, testID }: Props) {
             if (monitor.getItemType() === ATOM) {
               console.log("Existing atom dragged.");
               console.log(item.data.id);
-              updateAtom(
-                item.data.id,
-                left,
-                top,
-                item.data.srcID,
-                "atom label",
-                "atom nickname"
-              );
+              updateAtom(item.data.id, left, top);
             }
           } else {
             // TODO: Atom source is dragged on to canvas, handle missing id, top, and left.

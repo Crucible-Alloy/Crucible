@@ -62,13 +62,13 @@ function AtomInstance({ contentsBeingDragged, atom }) {
         preview((0, react_dnd_html5_backend_1.getEmptyImage)(), { captureDraggingState: true });
     }, []);
     (0, react_1.useEffect)(() => {
-        // window.electronAPI.listenForMetadataChange((_event: any, value: any) => {
-        //   window.electronAPI
-        //     .getAtomSource(atom.srcID)
-        //     .then((srcAtom: AtomSourceWithRelations) => {
-        //       setMetaData(srcAtom);
-        //     });
-        // });
+        window.electronAPI.listenForMetaDataChange((_event, value) => {
+            window.electronAPI
+                .getAtomSource(atom.srcID)
+                .then((srcAtom) => {
+                setMetaData(srcAtom);
+            });
+        });
     }, []);
     const [{ isDragging }, drag, preview] = (0, react_dnd_1.useDrag)(() => ({
         type: atom.srcAtom.label,
@@ -82,7 +82,7 @@ function AtomInstance({ contentsBeingDragged, atom }) {
         }),
     }), [atom, metaData]);
     return isDragging ? (react_1.default.createElement(core_1.Container, { ref: drag, id: atom.id.toString(), style: getAtomStyles(contentsBeingDragged, theme, metaData.shape, isDragging, atom.left, atom.top, metaData.color) },
-        react_1.default.createElement(AtomContents_1.AtomContents, { atom: atom }))) : (react_1.default.createElement(core_1.Container, { ref: drag, id: atom.id.toString(), style: getAtomStyles(contentsBeingDragged, theme, metaData.shape, isDragging, atom.left, atom.top, metaData.shape) },
+        react_1.default.createElement(AtomContents_1.AtomContents, { atom: atom }))) : (react_1.default.createElement(core_1.Container, { ref: drag, id: atom.id.toString(), style: getAtomStyles(contentsBeingDragged, theme, metaData.shape, isDragging, atom.left, atom.top, metaData.color) },
         react_1.default.createElement(AtomContents_1.AtomContents, { atom: atom })));
 }
 exports.AtomInstance = AtomInstance;

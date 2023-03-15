@@ -1177,3 +1177,13 @@ electron_2.ipcMain.on(constants_1.DELETE_PROJECT, (event, project) => __awaiter(
     const delResp = yield prisma.project.delete({ where: { id: project.id } });
     event.sender.send("delete-project-resp", delResp);
 }));
+electron_2.ipcMain.on(constants_1.UPDATE_ATOM, (event, { atomID, left, top }) => __awaiter(void 0, void 0, void 0, function* () {
+    const updatedAtom = yield prisma.atom.update({
+        where: { id: number.parse(atomID) },
+        data: { left: number.parse(left), top: number.parse(top) },
+    });
+    if (updatedAtom) {
+        console.log("Updated Atom");
+        mainWindow.webContents.send("canvas-update");
+    }
+}));

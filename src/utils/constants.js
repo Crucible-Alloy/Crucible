@@ -21,6 +21,7 @@ let constants = {
     SET_ATOM_INSTANCE_NICKNAME: "set-atom-instance-nickname",
     CREATE_ATOM: "create-atom",
     CREATE_CONNECTION: "make-connection",
+    UPDATE_ATOM: "update-atom",
     DELETE_ATOM: "delete-atom",
     DELETE_CONNECTION: "delete-connection",
     // PROJECT

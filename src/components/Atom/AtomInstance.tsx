@@ -60,13 +60,13 @@ export function AtomInstance({ contentsBeingDragged, atom }: Props) {
   }, []);
 
   useEffect(() => {
-    // window.electronAPI.listenForMetadataChange((_event: any, value: any) => {
-    //   window.electronAPI
-    //     .getAtomSource(atom.srcID)
-    //     .then((srcAtom: AtomSourceWithRelations) => {
-    //       setMetaData(srcAtom);
-    //     });
-    // });
+    window.electronAPI.listenForMetaDataChange((_event: any, value: any) => {
+      window.electronAPI
+        .getAtomSource(atom.srcID)
+        .then((srcAtom: AtomSourceWithRelations) => {
+          setMetaData(srcAtom);
+        });
+    });
   }, []);
 
   const [{ isDragging }, drag, preview] = useDrag(
@@ -112,7 +112,7 @@ export function AtomInstance({ contentsBeingDragged, atom }: Props) {
         isDragging,
         atom.left,
         atom.top,
-        metaData.shape
+        metaData.color
       )}
       // role="ConnectionArrow"
     >

@@ -29,6 +29,7 @@ import {
   DELETE_PROJECT,
   GET_ATOM_SOURCES,
   GET_PROJECT,
+  UPDATE_ATOM,
   VALIDATE_NEW_PROJECT_FORM,
 } from "../src/utils/constants";
 import NotFoundError = Prisma.NotFoundError;
@@ -1502,4 +1503,16 @@ ipcMain.on(DELETE_PROJECT, async (event, project: Project) => {
 
   const delResp = await prisma.project.delete({ where: { id: project.id } });
   event.sender.send("delete-project-resp", delResp);
+});
+
+ipcMain.on(UPDATE_ATOM, async (event, { atomID, left, top }) => {
+  const updatedAtom = await prisma.atom.update({
+    where: { id: number.parse(atomID) },
+    data: { left: number.parse(left), top: number.parse(top) },
+  });
+
+  if (updatedAtom) {
+    console.log("Updated Atom");
+    mainWindow.webContents.send("canvas-update");
+  }
 });

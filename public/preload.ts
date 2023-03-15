@@ -46,6 +46,7 @@ import {
   GET_ACTIVE_TAB,
   GET_ATOM_SOURCE,
   CLOSE_TEST,
+  UPDATE_ATOM,
 } from "../src/utils/constants";
 import { Project, Relation, Test } from "@prisma/client";
 import { NewProject } from "./validation/formValidation";
@@ -554,6 +555,18 @@ const api = {
     return new Promise((resolve) => {
       ipcRenderer.once(`${OPEN_TEST}-resp`, (event, resp) => resolve(resp));
     });
+  },
+
+  updateAtom: ({
+    atomID,
+    left,
+    top,
+  }: {
+    atomID: number;
+    left: number;
+    top: number;
+  }) => {
+    ipcRenderer.send(UPDATE_ATOM, { atomID, left, top });
   },
 };
 

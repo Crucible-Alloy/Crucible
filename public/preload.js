@@ -308,5 +308,8 @@ const api = {
             electron_1.ipcRenderer.once(`${constants_1.OPEN_TEST}-resp`, (event, resp) => resolve(resp));
         });
     },
+    updateAtom: ({ atomID, left, top, }) => {
+        electron_1.ipcRenderer.send(constants_1.UPDATE_ATOM, { atomID, left, top });
+    },
 };
 electron_1.contextBridge.exposeInMainWorld("electronAPI", api);

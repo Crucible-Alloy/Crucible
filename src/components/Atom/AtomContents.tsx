@@ -11,37 +11,37 @@ interface Props {
   atom: AtomWithSource;
 }
 export function AtomContents({ atom }: Props) {
-  const [atomData, setAtomData] = useState(atom);
-  const [metaData, setMetaData] = useState<AtomSourceWithRelations>();
+  const [metaData, setMetaData] = useState<AtomSourceWithRelations>(
+    atom.srcAtom
+  );
   const [acceptTypes, setAcceptTypes] = useState<string[]>([]);
 
   const renderType = ATOM;
   const theme = useMantineTheme();
 
   useEffect(() => {
-    window.electronAPI.listenForMetaDataChange((_event: any) => {
-      window.electronAPI
-        .getAtomSource(atom.id)
-        .then((atom: AtomSourceWithRelations) => {
-          setMetaData(atom);
-        })
-        .then(() => {
-          if (metaData) {
-            setAcceptTypes(metaData.toRelations.map((entry) => entry.toLabel));
-          }
-        });
-    });
-
-    window.electronAPI
-      .getAtomSource(atom.id)
-      .then((atom: AtomSourceWithRelations) => {
-        setMetaData(atom);
-      })
-      .then(() => {
-        if (metaData) {
-          setAcceptTypes(metaData.toRelations.map((entry) => entry.label));
-        }
-      });
+    //   window.electronAPI.listenForMetaDataChange((_event: any) => {
+    //     window.electronAPI
+    //       .getAtomSource(atom.id)
+    //       .then((atom: AtomSourceWithRelations) => {
+    //         setMetaData(atom);
+    //       })
+    //       .then(() => {
+    //         if (metaData) {
+    //           setAcceptTypes(metaData.toRelations.map((entry) => entry.toLabel));
+    //         }
+    //       });
+    //   });
+    // window.electronAPI
+    //   .getAtomSource(atom.id)
+    //   .then((atom: AtomSourceWithRelations) => {
+    //     setMetaData(atom);
+    //   })
+    //   .then(() => {
+    //     if (metaData) {
+    //       setAcceptTypes(metaData.toRelations.map((entry) => entry.label));
+    //     }
+    //   });
 
     preview(getEmptyImage(), { captureDraggingState: true });
   }, []);
@@ -51,7 +51,7 @@ export function AtomContents({ atom }: Props) {
       type: ATOM,
       item: {
         renderType,
-        atom,
+        data: atom,
         metaData,
       },
       collect: (monitor) => ({
@@ -73,13 +73,13 @@ export function AtomContents({ atom }: Props) {
         console.log("AttemptedDrop");
         if (item.renderType === CONNECTION) {
           if (item.atom.srcAtom.toRelations)
-            addNewConnection({ fromAtom: item.atom, toAtom: atom });
+            addNewConnection({ fromAtom: item.data.id, toAtom: atom });
         }
 
         return undefined;
       },
     }),
-    [createConnection, atomData, metaData]
+    [createConnection, atom, metaData]
   );
 
   function createConnection(fromID: number, toID: number) {}
@@ -118,7 +118,7 @@ export function AtomContents({ atom }: Props) {
     };
   }
 
-  return metaData && atomData ? (
+  return metaData && atom ? (
     <Paper
       ref={drag}
       p="md"
@@ -134,8 +134,7 @@ export function AtomContents({ atom }: Props) {
         weight={800}
         align={"center"}
       >
-        {" "}
-        {atomData.nickname}{" "}
+        {` ${atom.nickname} `}
       </Text>
     </Paper>
   ) : (

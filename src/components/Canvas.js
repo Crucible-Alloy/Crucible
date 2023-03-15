@@ -98,14 +98,8 @@ function Canvas({ projectID, testID }) {
             }
         });
     };
-    const updateAtom = (id, left, top, sourceAtomID, atomLabel, nickname) => {
-        window.electronAPI.createAtom(projectID, testID, id, {
-            top: top,
-            left: left,
-            sourceAtomKey: sourceAtomID,
-            atomLabel: atomLabel,
-            nickname: nickname,
-        });
+    const updateAtom = (atomID, left, top) => {
+        window.electronAPI.updateAtom({ atomID, left, top });
     };
     function quickInsert(selectedAtom, coords) {
         //   window.electronAPI
@@ -140,7 +134,7 @@ function Canvas({ projectID, testID }) {
                     if (monitor.getItemType() === ATOM) {
                         console.log("Existing atom dragged.");
                         console.log(item.data.id);
-                        updateAtom(item.data.id, left, top, item.data.srcID, "atom label", "atom nickname");
+                        updateAtom(item.data.id, left, top);
                     }
                 }
                 else {

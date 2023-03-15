@@ -24,6 +24,8 @@ let constants = {
   CREATE_ATOM: "create-atom",
   CREATE_CONNECTION: "make-connection",
 
+  UPDATE_ATOM: "update-atom",
+
   DELETE_ATOM: "delete-atom",
   DELETE_CONNECTION: "delete-connection",
 

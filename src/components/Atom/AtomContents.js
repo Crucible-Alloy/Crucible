@@ -20,41 +20,40 @@ const core_1 = require("@mantine/core");
 const react_2 = __importDefault(require("react"));
 const { ATOM, CONNECTION } = require("../../utils/constants");
 function AtomContents({ atom }) {
-    const [atomData, setAtomData] = (0, react_1.useState)(atom);
-    const [metaData, setMetaData] = (0, react_1.useState)();
+    const [metaData, setMetaData] = (0, react_1.useState)(atom.srcAtom);
     const [acceptTypes, setAcceptTypes] = (0, react_1.useState)([]);
     const renderType = ATOM;
     const theme = (0, core_1.useMantineTheme)();
     (0, react_1.useEffect)(() => {
-        window.electronAPI.listenForMetaDataChange((_event) => {
-            window.electronAPI
-                .getAtomSource(atom.id)
-                .then((atom) => {
-                setMetaData(atom);
-            })
-                .then(() => {
-                if (metaData) {
-                    setAcceptTypes(metaData.toRelations.map((entry) => entry.toLabel));
-                }
-            });
-        });
-        window.electronAPI
-            .getAtomSource(atom.id)
-            .then((atom) => {
-            setMetaData(atom);
-        })
-            .then(() => {
-            if (metaData) {
-                setAcceptTypes(metaData.toRelations.map((entry) => entry.label));
-            }
-        });
+        //   window.electronAPI.listenForMetaDataChange((_event: any) => {
+        //     window.electronAPI
+        //       .getAtomSource(atom.id)
+        //       .then((atom: AtomSourceWithRelations) => {
+        //         setMetaData(atom);
+        //       })
+        //       .then(() => {
+        //         if (metaData) {
+        //           setAcceptTypes(metaData.toRelations.map((entry) => entry.toLabel));
+        //         }
+        //       });
+        //   });
+        // window.electronAPI
+        //   .getAtomSource(atom.id)
+        //   .then((atom: AtomSourceWithRelations) => {
+        //     setMetaData(atom);
+        //   })
+        //   .then(() => {
+        //     if (metaData) {
+        //       setAcceptTypes(metaData.toRelations.map((entry) => entry.label));
+        //     }
+        //   });
         preview((0, react_dnd_html5_backend_1.getEmptyImage)(), { captureDraggingState: true });
     }, []);
     const [{ isDragging }, drag, preview] = (0, react_dnd_1.useDrag)(() => ({
         type: ATOM,
         item: {
             renderType,
-            atom,
+            data: atom,
             metaData,
         },
         collect: (monitor) => ({
@@ -72,11 +71,11 @@ function AtomContents({ atom }) {
             console.log("AttemptedDrop");
             if (item.renderType === CONNECTION) {
                 if (item.atom.srcAtom.toRelations)
-                    addNewConnection({ fromAtom: item.atom, toAtom: atom });
+                    addNewConnection({ fromAtom: item.data.id, toAtom: atom });
             }
             return undefined;
         },
-    }), [createConnection, atomData, metaData]);
+    }), [createConnection, atom, metaData]);
     function createConnection(fromID, toID) { }
     function addNewConnection({ fromAtom, toAtom, }) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -100,11 +99,8 @@ function AtomContents({ atom }) {
             margin: "auto",
         };
     }
-    return metaData && atomData ? (react_2.default.createElement(core_1.Paper, { ref: drag, p: "md", radius: "md", role: "DraggableBox", style: getAtomStyles(theme, metaData.shape, atom.left, atom.top) },
-        react_2.default.createElement(core_1.Text, { ref: drop, p: "xl", size: "xl", color: metaData.color, weight: 800, align: "center" },
-            " ",
-            atomData.nickname,
-            " "))) : (react_2.default.createElement(core_1.Paper, { ref: drag, p: "md", radius: "md", role: "DraggableBox", style: { opacity: isDragging ? 0 : 1 } },
+    return metaData && atom ? (react_2.default.createElement(core_1.Paper, { ref: drag, p: "md", radius: "md", role: "DraggableBox", style: getAtomStyles(theme, metaData.shape, atom.left, atom.top) },
+        react_2.default.createElement(core_1.Text, { ref: drop, p: "xl", size: "xl", color: metaData.color, weight: 800, align: "center" }, ` ${atom.nickname} `))) : (react_2.default.createElement(core_1.Paper, { ref: drag, p: "md", radius: "md", role: "DraggableBox", style: { opacity: isDragging ? 0 : 1 } },
         react_2.default.createElement(core_1.Text, { ref: drop, size: "xl", weight: 800 },
             " ",
             " ")));
