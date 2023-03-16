@@ -77,7 +77,10 @@ export interface ElectronAPI {
     sourceAtomID: number;
   }) => Promise<{ success: boolean; error?: any }>;
   closeTest: (data: { projectID: number; testID: number }) => any;
-  makeConnection: typeof api.makeConnection;
+  createConnection: (data: {
+    fromAtom: AtomWithSource;
+    toAtom: AtomWithSource;
+  }) => any;
 }
 
 const { v4: uuidv4 } = require("uuid");
@@ -321,14 +324,23 @@ const api = {
   // },
 
   /* Given a From and To atom, create a connection between them */
-  makeConnection: ({
+  createConnection: ({
+    projectID,
+    testID,
     fromAtom,
     toAtom,
   }: {
+    projectID: number;
+    testID: number;
     fromAtom: AtomWithSource;
     toAtom: AtomWithSource;
   }) => {
-    ipcRenderer.send(CREATE_CONNECTION, { fromAtom, toAtom });
+    ipcRenderer.send(CREATE_CONNECTION, {
+      projectID,
+      testID,
+      fromAtom,
+      toAtom,
+    });
   },
 
   listenForCanvasChange: (callback: any) => {
@@ -540,6 +552,7 @@ const api = {
     testID: number;
     sourceAtomID: number;
   }) => {
+    console.log("preload: Test Can Add");
     ipcRenderer.send(TEST_CAN_ADD_ATOM, { testID, sourceAtomID });
 
     return new Promise((resolve) => {

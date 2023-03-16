@@ -162,8 +162,13 @@ const api = {
     //   });
     // },
     /* Given a From and To atom, create a connection between them */
-    makeConnection: ({ fromAtom, toAtom, }) => {
-        electron_1.ipcRenderer.send(constants_1.CREATE_CONNECTION, { fromAtom, toAtom });
+    createConnection: ({ projectID, testID, fromAtom, toAtom, }) => {
+        electron_1.ipcRenderer.send(constants_1.CREATE_CONNECTION, {
+            projectID,
+            testID,
+            fromAtom,
+            toAtom,
+        });
     },
     listenForCanvasChange: (callback) => {
         electron_1.ipcRenderer.on("canvas-update", callback);
@@ -297,6 +302,7 @@ const api = {
     //   );
     // },
     testCanAddAtom: ({ testID, sourceAtomID, }) => {
+        console.log("preload: Test Can Add");
         electron_1.ipcRenderer.send(constants_1.TEST_CAN_ADD_ATOM, { testID, sourceAtomID });
         return new Promise((resolve) => {
             electron_1.ipcRenderer.once(`${constants_1.TEST_CAN_ADD_ATOM}-resp`, (event, resp) => resolve(resp));

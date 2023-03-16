@@ -21,7 +21,6 @@ interface Props {
 }
 
 function Canvas({ projectID, testID }: Props) {
-  console.log("CANVAS TEST ID: ", testID);
   const [canvasItems, setCanvas] = useState<TestWithCanvas>();
   const [atomMenu, setAtomMenu] = useState(false);
   const [coords, setCoords] = useState<{
@@ -45,7 +44,6 @@ function Canvas({ projectID, testID }: Props) {
     const loadCanvas = async () => {
       window.electronAPI.readTest(testID).then((data: TestWithCanvas) => {
         setCanvas(data);
-        console.log("ATOMS: ", data);
       });
     };
     loadCanvas().then(() => setLoading(false));
@@ -121,23 +119,19 @@ function Canvas({ projectID, testID }: Props) {
     () => ({
       accept: [ATOM, ATOM_SOURCE],
       drop(item: AtomDraggable, monitor) {
-        console.log(item);
         const delta = monitor.getDifferenceFromInitialOffset();
         if (delta) {
           if (isAtomInstance(item.data)) {
             let left = Math.round(item.data.left + delta.x);
             let top = Math.round(item.data.top + delta.y);
-            console.log(top);
             if (monitor.getItemType() === ATOM) {
               console.log("Existing atom dragged.");
-              console.log(item.data.id);
               updateAtom(item.data.id, left, top);
             }
           } else {
             // TODO: Atom source is dragged on to canvas, handle missing id, top, and left.
             if (monitor.getItemType() === ATOM_SOURCE) {
               console.log("New atom dragged.");
-              console.log(testID);
               const clickCoords = monitor.getClientOffset();
               if (clickCoords) {
                 console.log("Item ", item);
@@ -164,8 +158,8 @@ function Canvas({ projectID, testID }: Props) {
         onContextMenu={(e) => {
           e.preventDefault();
           const clickCoords = { clickX: e.pageX, clickY: e.pageY };
-          console.log(clickCoords);
-          console.log(quickInsertData);
+          // console.log(clickCoords);
+          // console.log(quickInsertData);
           setCoords(clickCoords);
         }}
       >

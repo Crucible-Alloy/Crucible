@@ -47,8 +47,12 @@ function AtomContents({ atom }) {
         //       setAcceptTypes(metaData.toRelations.map((entry) => entry.label));
         //     }
         //   });
+        setAcceptTypes(metaData.toRelations.map((relation) => relation.fromLabel));
         preview((0, react_dnd_html5_backend_1.getEmptyImage)(), { captureDraggingState: true });
     }, []);
+    (0, react_1.useEffect)(() => {
+        console.log("Accept Types: ", acceptTypes, atom.nickname);
+    }, [acceptTypes]);
     const [{ isDragging }, drag, preview] = (0, react_dnd_1.useDrag)(() => ({
         type: ATOM,
         item: {
@@ -67,23 +71,27 @@ function AtomContents({ atom }) {
             canDrop: monitor.canDrop(),
         }),
         drop(item, monitor) {
-            const delta = monitor.getDifferenceFromInitialOffset();
             console.log("AttemptedDrop");
             if (item.renderType === CONNECTION) {
-                if (item.atom.srcAtom.toRelations)
-                    addNewConnection({ fromAtom: item.data.id, toAtom: atom });
+                if (item.data.srcAtom)
+                    addNewConnection({
+                        projectID: item.data.srcAtom.projectID,
+                        testID: item.data.testID,
+                        fromAtom: item.data,
+                        toAtom: atom,
+                    });
             }
             return undefined;
         },
-    }), [createConnection, atom, metaData]);
-    function createConnection(fromID, toID) { }
-    function addNewConnection({ fromAtom, toAtom, }) {
+    }), [atom, metaData]);
+    function addNewConnection({ projectID, testID, fromAtom, toAtom, }) {
         return __awaiter(this, void 0, void 0, function* () {
-            window.electronAPI.makeConnection({ fromAtom, toAtom });
-            // 1. Get relation with fromAtom.id and toAtom.id
-            // 2. Check relation multiplicity
-            // 3. If relation multiplicity is lone or one and connections > 1, return error, show notification.
-            // 4. Else, add connection.
+            window.electronAPI.createConnection({
+                projectID,
+                testID,
+                fromAtom,
+                toAtom,
+            });
         });
     }
     function getAtomStyles(theme, shape, left, top) {

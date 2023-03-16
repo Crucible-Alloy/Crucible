@@ -42,9 +42,13 @@ export function AtomContents({ atom }: Props) {
     //       setAcceptTypes(metaData.toRelations.map((entry) => entry.label));
     //     }
     //   });
-
+    setAcceptTypes(metaData.toRelations.map((relation) => relation.fromLabel));
     preview(getEmptyImage(), { captureDraggingState: true });
   }, []);
+
+  useEffect(() => {
+    console.log("Accept Types: ", acceptTypes, atom.nickname);
+  }, [acceptTypes]);
 
   const [{ isDragging }, drag, preview] = useDrag(
     () => ({
@@ -69,33 +73,40 @@ export function AtomContents({ atom }: Props) {
         canDrop: monitor.canDrop(),
       }),
       drop(item: any, monitor) {
-        const delta = monitor.getDifferenceFromInitialOffset();
         console.log("AttemptedDrop");
         if (item.renderType === CONNECTION) {
-          if (item.atom.srcAtom.toRelations)
-            addNewConnection({ fromAtom: item.data.id, toAtom: atom });
+          if (item.data.srcAtom)
+            addNewConnection({
+              projectID: item.data.srcAtom.projectID,
+              testID: item.data.testID,
+              fromAtom: item.data,
+              toAtom: atom,
+            });
         }
 
         return undefined;
       },
     }),
-    [createConnection, atom, metaData]
+    [atom, metaData]
   );
 
-  function createConnection(fromID: number, toID: number) {}
-
   async function addNewConnection({
+    projectID,
+    testID,
     fromAtom,
     toAtom,
   }: {
+    projectID: number;
+    testID: number;
     fromAtom: AtomWithSource;
     toAtom: AtomWithSource;
   }) {
-    window.electronAPI.makeConnection({ fromAtom, toAtom });
-    // 1. Get relation with fromAtom.id and toAtom.id
-    // 2. Check relation multiplicity
-    // 3. If relation multiplicity is lone or one and connections > 1, return error, show notification.
-    // 4. Else, add connection.
+    window.electronAPI.createConnection({
+      projectID,
+      testID,
+      fromAtom,
+      toAtom,
+    });
   }
 
   function getAtomStyles(

@@ -45,7 +45,6 @@ const core_1 = require("@mantine/core");
 const AtomInstance_1 = require("./Atom/AtomInstance");
 const { ATOM, ATOM_SOURCE } = require("../utils/constants");
 function Canvas({ projectID, testID }) {
-    console.log("CANVAS TEST ID: ", testID);
     const [canvasItems, setCanvas] = (0, react_1.useState)();
     const [atomMenu, setAtomMenu] = (0, react_1.useState)(false);
     const [coords, setCoords] = (0, react_1.useState)({ clickX: null, clickY: null });
@@ -64,7 +63,6 @@ function Canvas({ projectID, testID }) {
         const loadCanvas = () => __awaiter(this, void 0, void 0, function* () {
             window.electronAPI.readTest(testID).then((data) => {
                 setCanvas(data);
-                console.log("ATOMS: ", data);
             });
         });
         loadCanvas().then(() => setLoading(false));
@@ -124,16 +122,13 @@ function Canvas({ projectID, testID }) {
     const [, drop] = (0, react_dnd_1.useDrop)(() => ({
         accept: [ATOM, ATOM_SOURCE],
         drop(item, monitor) {
-            console.log(item);
             const delta = monitor.getDifferenceFromInitialOffset();
             if (delta) {
                 if (isAtomInstance(item.data)) {
                     let left = Math.round(item.data.left + delta.x);
                     let top = Math.round(item.data.top + delta.y);
-                    console.log(top);
                     if (monitor.getItemType() === ATOM) {
                         console.log("Existing atom dragged.");
-                        console.log(item.data.id);
                         updateAtom(item.data.id, left, top);
                     }
                 }
@@ -141,7 +136,6 @@ function Canvas({ projectID, testID }) {
                     // TODO: Atom source is dragged on to canvas, handle missing id, top, and left.
                     if (monitor.getItemType() === ATOM_SOURCE) {
                         console.log("New atom dragged.");
-                        console.log(testID);
                         const clickCoords = monitor.getClientOffset();
                         if (clickCoords) {
                             console.log("Item ", item);
@@ -161,8 +155,8 @@ function Canvas({ projectID, testID }) {
         return (react_1.default.createElement("div", { ref: drop, className: "canvas", onContextMenu: (e) => {
                 e.preventDefault();
                 const clickCoords = { clickX: e.pageX, clickY: e.pageY };
-                console.log(clickCoords);
-                console.log(quickInsertData);
+                // console.log(clickCoords);
+                // console.log(quickInsertData);
                 setCoords(clickCoords);
             } },
             react_1.default.createElement(core_1.Affix, { sx: { display: validCoords ? "initial" : "none" }, position: coords.clickX !== null && coords.clickY !== null

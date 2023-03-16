@@ -37,6 +37,35 @@ import { PrismaClientKnownRequestError } from "@prisma/client/runtime";
 
 const prisma = new PrismaClient();
 
+export type AtomSourceWithRelations = Prisma.AtomSourceGetPayload<{
+  include: { fromRelations: true; toRelations: true; isChildOf: true };
+}>;
+
+export type TestWithCanvas = Prisma.TestGetPayload<{
+  include: {
+    atoms: {
+      include: {
+        srcAtom: {
+          include: {
+            fromRelations: true;
+            isChildOf: true;
+            toRelations: true;
+          };
+        };
+      };
+    };
+    connections: true;
+  };
+}>;
+
+export type AtomWithSource = Prisma.AtomGetPayload<{
+  include: {
+    srcAtom: {
+      include: { fromRelations: true; isChildOf: true; toRelations: true };
+    };
+  };
+}>;
+
 // Global window variable
 let mainWindow: BrowserWindow, projectSelectWindow: BrowserWindow;
 
@@ -873,80 +902,55 @@ ipcMain.on(CLOSE_TAB, async (event, { testID }) => {
   }
 });
 
-ipcMain.on(CREATE_ATOM, (event, projectKey, testKey, atomKey, atom) => {
-  // Count up Atom of atomType and add nickname with count appended to it.
-  let canvas = store.get(`projects.${projectKey}.tests.${testKey}.canvas`);
-
-  if (!(atomKey in canvas.atoms)) {
-    atom["nickname"] = `${atom.atomLabel}${canvas.atomCount}`;
-    canvas.atomCount++;
-  }
-
-  canvas.atoms[atomKey] = atom;
-
-  store.set(`projects.${projectKey}.tests.${testKey}.canvas`, canvas);
-  mainWindow.webContents.send("canvas-update");
-});
-
-ipcMain.on(GET_PREDICATES, (event, projectKey) => {
-  let predicates = store.get(`projects.${projectKey}.predicates`);
-  event.sender.send("got-predicates", predicates);
-});
-
-ipcMain.on(SET_PREDICATE_TEST, (event, projectKey, predicateName, value) => {
-  store.set(`projects.${projectKey}.predicates.${predicateName}`, value);
-  mainWindow.webContents.send("predicates-update");
-});
-
-ipcMain.on(GET_ATOM_SHAPE, (event, projectKey, sourceAtomKey) => {
-  let shape = store.get(`projects.${projectKey}.atoms.${sourceAtomKey}.shape`);
-  event.sender.send("got-atom-shape", shape);
-});
-
-ipcMain.on(SET_ATOM_SHAPE, (event, projectKey, sourceAtomKey, shape) => {
-  store.set(`projects.${projectKey}.atoms.${sourceAtomKey}.shape`, shape);
-  mainWindow.webContents.send("meta-data-update");
-});
-
-ipcMain.on(
-  SET_ATOM_INSTANCE_NICKNAME,
-  (event, projectKey, testKey, atomKey, nickname) => {
-    store.set(
-      `projects.${projectKey}.tests.${testKey}.canvas.atoms.${atomKey}.nickname`,
-      nickname
-    );
-    mainWindow.webContents.send("nickname-update");
-  }
-);
+// ipcMain.on(CREATE_ATOM, (event, projectKey, testKey, atomKey, atom) => {
+//   // Count up Atom of atomType and add nickname with count appended to it.
+//   let canvas = store.get(`projects.${projectKey}.tests.${testKey}.canvas`);
+//
+//   if (!(atomKey in canvas.atoms)) {
+//     atom["nickname"] = `${atom.atomLabel}${canvas.atomCount}`;
+//     canvas.atomCount++;
+//   }
+//
+//   canvas.atoms[atomKey] = atom;
+//
+//   store.set(`projects.${projectKey}.tests.${testKey}.canvas`, canvas);
+//   mainWindow.webContents.send("canvas-update");
+// });
+//
+// ipcMain.on(GET_PREDICATES, (event, projectKey) => {
+//   let predicates = store.get(`projects.${projectKey}.predicates`);
+//   event.sender.send("got-predicates", predicates);
+// });
+//
+// ipcMain.on(SET_PREDICATE_TEST, (event, projectKey, predicateName, value) => {
+//   store.set(`projects.${projectKey}.predicates.${predicateName}`, value);
+//   mainWindow.webContents.send("predicates-update");
+// });
+//
+// ipcMain.on(GET_ATOM_SHAPE, (event, projectKey, sourceAtomKey) => {
+//   let shape = store.get(`projects.${projectKey}.atoms.${sourceAtomKey}.shape`);
+//   event.sender.send("got-atom-shape", shape);
+// });
+//
+// ipcMain.on(SET_ATOM_SHAPE, (event, projectKey, sourceAtomKey, shape) => {
+//   store.set(`projects.${projectKey}.atoms.${sourceAtomKey}.shape`, shape);
+//   mainWindow.webContents.send("meta-data-update");
+// });
+//
+// ipcMain.on(
+//   SET_ATOM_INSTANCE_NICKNAME,
+//   (event, projectKey, testKey, atomKey, nickname) => {
+//     store.set(
+//       `projects.${projectKey}.tests.${testKey}.canvas.atoms.${atomKey}.nickname`,
+//       nickname
+//     );
+//     mainWindow.webContents.send("nickname-update");
+//   }
+// );
 
 /*
  * NEW TYPESAFE ipcMain Functions
  */
-
-export type TestWithCanvas = Prisma.TestGetPayload<{
-  include: {
-    atoms: {
-      include: {
-        srcAtom: {
-          include: {
-            fromRelations: true;
-            isChildOf: true;
-            toRelations: true;
-          };
-        };
-      };
-    };
-    connections: true;
-  };
-}>;
-
-export type AtomWithSource = Prisma.AtomGetPayload<{
-  include: {
-    srcAtom: {
-      include: { fromRelations: true; isChildOf: true; toRelations: true };
-    };
-  };
-}>;
 
 /**
  * Validate the form data to ensure no duplicate test names are used and all paths are valid.
@@ -1113,11 +1117,14 @@ ipcMain.on(
       left,
     }: { testID: number; sourceAtomID: number; top: number; left: number }
   ) => {
+    console.log("MAIN: TEST ADDING ATOM");
+    console.log(testID);
+    console.log(sourceAtomID);
     let test = await prisma.test.findFirst({
       where: { id: number.parse(testID) },
     });
 
-    let sourceAtom = await prisma.test.findFirst({
+    let sourceAtom = await prisma.atomSource.findFirst({
       where: { id: number.parse(sourceAtomID) },
     });
 
@@ -1128,10 +1135,10 @@ ipcMain.on(
           srcID: number.parse(sourceAtomID),
           top: number.parse(top),
           left: number.parse(left),
-          nickname: `${sourceAtom.name} ${test.atomCount}`,
+          nickname: `${sourceAtom.label} ${test.atomCount}`,
         },
       });
-
+      console.log("ATOM CREATED");
       let updateTest = await prisma.test.update({
         where: { id: number.parse(testID) },
         data: { atomCount: { increment: 1 } },
@@ -1197,24 +1204,77 @@ ipcMain.on(
   CREATE_CONNECTION,
   async (
     event,
-    { fromAtom, toAtom }: { fromAtom: AtomWithSource; toAtom: AtomWithSource }
+    {
+      projectID,
+      testID,
+      fromAtom,
+      toAtom,
+    }: {
+      projectID: number;
+      testID: number;
+      fromAtom: AtomWithSource;
+      toAtom: AtomWithSource;
+    }
   ) => {
-    // 1. Find relation with fromAtom.atomSrc.fromRelations and toAtom.atomSrc.toRelations
+    console.log("WORKING ON CONNECTION");
+    console.log("pID: ", projectID);
+    console.log("from: ", fromAtom);
+    console.log("to: ", toAtom);
+    // Find relation with fromAtom.atomSrc.label and toAtom.atomSrc.label
+    const relation = await prisma.relation.findFirst({
+      where: {
+        projectID: number.parse(projectID),
+        fromLabel: fromAtom.srcAtom.label,
+        toLabel: toAtom.srcAtom.label,
+      },
+    });
+
     // 2. Check relation multiplicity
-    // 3. If relation multiplicity is lone or one and connections > 1, return error, show notification.
-    // 4. Else, add connection.
-    // let relation = await prisma.relation.findFirst({
-    //   where: {
-    //     fromAtom: number.parse(fromAtom.id),
-    //     toAtom: number.parse(toAtom.id),
-    //   },
-    // });
+    if (relation) {
+      console.log(relation.multiplicity);
+      if (
+        relation.multiplicity.split(" ")[0] === "lone" ||
+        relation.multiplicity.split(" ")[0] === "one"
+      ) {
+        // 3. Find out if there are preexisting connections of that kind.
+        const existingRels = await prisma.test.findFirst({
+          where: { id: number.parse(testID) },
+          select: {
+            connections: {
+              where: {
+                fromLabel: relation.fromLabel,
+                toLabel: relation.toLabel,
+              },
+            },
+          },
+        });
+
+        if (existingRels && existingRels.connections.length) {
+          console.log("exisitingRels: ", existingRels);
+          // TODO: Return error and show notification
+          return;
+        }
+      }
+      // 4. Else, add connection.
+      const connection = await prisma.connection.create({
+        data: {
+          fromID: number.parse(fromAtom.id),
+          toID: number.parse(toAtom.id),
+          fromLabel: fromAtom.srcAtom.label,
+          toLabel: toAtom.srcAtom.label,
+          testID: number.parse(fromAtom.testID),
+        },
+      });
+      console.log("Connection created");
+
+      // Alert GUI to successful connection creation and refresh test.
+      if (connection) {
+        event.sender.send(`${CREATE_CONNECTION}-resp`, { success: true });
+        mainWindow.webContents.send("test-update");
+      }
+    }
   }
 );
-
-export type AtomSourceWithRelations = Prisma.AtomSourceGetPayload<{
-  include: { fromRelations: true; toRelations: true; isChildOf: true };
-}>;
 
 ipcMain.on(GET_ATOM_SOURCES, async (event, projectID: number) => {
   console.log(`Getting atoms with projectID: ${projectID}`);
