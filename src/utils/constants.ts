@@ -39,8 +39,6 @@ let constants = {
   DELETE_PROJECT: "delete-project",
 
   SET_PROJECT_TABS: "set-project-tabs",
-  SET_ACTIVE_TAB: "set-active-tab",
-  GET_ACTIVE_TAB: "get-active-tab",
 
   OPEN_AND_SET_ACTIVE: "open-and-set-active",
   SELECT_FILE: "select-file",
@@ -61,6 +59,8 @@ let constants = {
   TEST_CAN_ADD_ATOM: "test-can-add-atom", // is atom at multiplicity constraint? true / false
   TEST_ADD_ATOM: "test-add-atom",
   OPEN_TEST: "open-test",
+  SET_ACTIVE_TEST: "set-active-tab",
+  GET_ACTIVE_TEST: "get-active-tab",
   CLOSE_TEST: "close-test",
   DELETE_TEST: "delete-test",
 

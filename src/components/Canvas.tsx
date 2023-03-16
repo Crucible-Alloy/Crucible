@@ -111,6 +111,8 @@ function Canvas({ projectID, testID }: Props) {
     //     });
   }
 
+  /* Helper function to assist in differentiating between AtomSource drops
+  and existing Atom instance drops on the canvas. */
   function isAtomInstance(item: Atom | AtomSource): item is Atom {
     return (item as Atom).srcID !== undefined;
   }
@@ -129,7 +131,6 @@ function Canvas({ projectID, testID }: Props) {
               updateAtom(item.data.id, left, top);
             }
           } else {
-            // TODO: Atom source is dragged on to canvas, handle missing id, top, and left.
             if (monitor.getItemType() === ATOM_SOURCE) {
               console.log("New atom dragged.");
               const clickCoords = monitor.getClientOffset();

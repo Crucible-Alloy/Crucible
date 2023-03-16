@@ -37,7 +37,7 @@ function BodyWrapper({ projectID, mousePos }: Props) {
   };
 
   const loadActiveTab = async () => {
-    window.electronAPI.getActiveTab(projectID).then((activeTab: TabsValue) => {
+    window.electronAPI.getActiveTest(projectID).then((activeTab: TabsValue) => {
       if (activeTab) {
         setActiveTab(activeTab);
       } else {
@@ -47,7 +47,7 @@ function BodyWrapper({ projectID, mousePos }: Props) {
   };
 
   function updateActiveTab(testName: TabsValue) {
-    window.electronAPI.setActiveTab({ projectID, testName });
+    if (testName) window.electronAPI.setActiveTest({ projectID, testName });
   }
 
   function closeTab(testID: number) {

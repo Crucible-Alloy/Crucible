@@ -46,13 +46,6 @@ const api = {
             electron_1.ipcRenderer.once("project-file-set", (event, filePath) => resolve(filePath));
         });
     },
-    /* TODO: Is this needed? */
-    validateProjectName: (projectName) => {
-        electron_1.ipcRenderer.send(constants_1.VALIDATE_NEW_PROJECT_FORM, projectName);
-        return new Promise((resolve) => {
-            electron_1.ipcRenderer.once("project-name-validation", (event, valid) => resolve(valid));
-        });
-    },
     /* Given a projectID, delete the project from the database. */
     /* TODO: Check implementation on main */
     deleteProject: (projectID) => {
@@ -73,31 +66,10 @@ const api = {
             electron_1.ipcRenderer.once("get-atom-sources-resp", (event, atoms) => resolve(atoms));
         });
     },
-    // getAtoms: (projectID: number) => {
-    //   ipcRenderer.send(GET_ATOMS, projectID);
-    //
-    //   return new Promise((resolve) => {
-    //     console.log("BRIDGE RECEIVED: GOT_ATOMS FROM MAIN");
-    //     ipcRenderer.once("got-Atom", (event, atoms) => resolve(atoms));
-    //   });
-    // },
-    getAtom: ({ projectID, atomID }) => {
-        electron_1.ipcRenderer.send(constants_1.GET_ATOM, projectID, atomID);
-        return new Promise((resolve) => {
-            electron_1.ipcRenderer.once("got-atom", (event, atom) => resolve(atom));
-        });
-    },
-    getAtomInstance: ({ projectID, testID, atomID, }) => {
-        let returnChannel = uuidv4();
-        electron_1.ipcRenderer.send(constants_1.GET_ATOM_INSTANCE, projectID, testID, atomID, returnChannel);
-        return new Promise((resolve) => {
-            electron_1.ipcRenderer.once(returnChannel, (event, atom) => resolve(atom));
-        });
-    },
     getTests: (projectID) => {
         electron_1.ipcRenderer.send(constants_1.GET_TESTS, projectID);
         return new Promise((resolve) => {
-            electron_1.ipcRenderer.once("got-tests", (event, tests) => resolve(tests));
+            electron_1.ipcRenderer.once(`${constants_1.GET_TESTS}-resp`, (event, tests) => resolve(tests));
         });
     },
     selectFile: () => {
@@ -149,18 +121,6 @@ const api = {
     //   ipcRenderer.send(SET_ATOM_LABEL, projectKey, atomKey, atomLabel);
     // },
     //
-    // deleteAtom: (projectKey, testKey, atomID) => {
-    //   ipcRenderer.send(DELETE_ATOM, projectKey, testKey, atomID);
-    // },
-    //
-    // deleteConnections: (projectKey, testKey, atomId) => {
-    //   ipcRenderer.send(DELETE_CONNECTION, projectKey, testKey, atomId);
-    //   return new Promise((resolve) => {
-    //     ipcRenderer.once("deleted-connection", (event, canvasState) =>
-    //       resolve(canvasState)
-    //     );
-    //   });
-    // },
     /* Given a From and To atom, create a connection between them */
     createConnection: ({ projectID, testID, fromAtom, toAtom, }) => {
         electron_1.ipcRenderer.send(constants_1.CREATE_CONNECTION, {
@@ -169,6 +129,9 @@ const api = {
             fromAtom,
             toAtom,
         });
+    },
+    deleteConnection: (connID) => {
+        electron_1.ipcRenderer.send(constants_1.DELETE_CONNECTION, connID);
     },
     listenForCanvasChange: (callback) => {
         electron_1.ipcRenderer.on("canvas-update", callback);
@@ -189,52 +152,9 @@ const api = {
     //   ipcRenderer.on("shape-update", callback);
     // },
     //
-    // listenForProjectsChange: (callback) => {
-    //   ipcRenderer.on("project-update", callback);
-    // },
-    // getAtomMultiplicity: (projectKey, atomKey) => {
-    //   let returnChannel = uuidv4();
-    //   ipcRenderer.send(GET_ATOM_MULTIPLICITY, projectKey, atomKey, returnChannel);
-    //   return new Promise((resolve) => {
-    //     ipcRenderer.once(returnChannel, (event, multiplicity) =>
-    //       resolve(multiplicity)
-    //     );
-    //   });
-    // },
-    // getAcceptTypes: (projectKey, sourceAtomKey) => {
-    //   let returnChannel = uuidv4();
-    //   ipcRenderer.send(
-    //     GET_ACCEPT_TYPES,
-    //     projectKey,
-    //     sourceAtomKey,
-    //     returnChannel
-    //   );
-    //   return new Promise((resolve) => {
-    //     ipcRenderer.once(returnChannel, (event, types) => resolve(types));
-    //   });
-    // },
-    getRelations: ({ projectID, sourceAtomID, }) => {
-        let returnChannel = uuidv4();
-        electron_1.ipcRenderer.send(constants_1.GET_RELATIONS, projectID, sourceAtomID, returnChannel);
-        return new Promise((resolve) => {
-            electron_1.ipcRenderer.once(returnChannel, (event, relations) => resolve(relations));
-        });
+    listenForProjectsChange: (callback) => {
+        electron_1.ipcRenderer.on("projects-update", callback);
     },
-    // getConnections: (projectKey, testKey, atomKey) => {
-    //   let returnChannel = uuidv4();
-    //   ipcRenderer.send(
-    //     GET_CONNECTIONS,
-    //     projectKey,
-    //     testKey,
-    //     atomKey,
-    //     returnChannel
-    //   );
-    //   return new Promise((resolve) => {
-    //     ipcRenderer.once(returnChannel, (event, connections) =>
-    //       resolve(connections)
-    //     );
-    //   });
-    // },
     runTest: ({ projectID, testID }) => {
         let returnChannel = uuidv4();
         electron_1.ipcRenderer.send(constants_1.RUN_TEST, projectID, testID, returnChannel);
@@ -242,24 +162,13 @@ const api = {
             electron_1.ipcRenderer.once(returnChannel, (event, testResponse) => resolve(testResponse));
         });
     },
-    // getProjectTabs: (projectKey) => {
-    //   ipcRenderer.send(GET_PROJECT_TABS, projectKey);
-    //   return new Promise((resolve) => {
-    //     ipcRenderer.once("got-tabs", (event, tabs, activeTab) =>
-    //       resolve([tabs, activeTab])
-    //     );
-    //   });
-    // },
-    // setProjectTabs: (projectKey, tabs, activeTab) => {
-    //   ipcRenderer.send(SET_PROJECT_TABS, projectKey, tabs, activeTab);
-    // },
-    setActiveTab: ({ projectID, testName, }) => {
-        electron_1.ipcRenderer.send(constants_1.SET_ACTIVE_TAB, { projectID, testName });
+    setActiveTest: ({ projectID, testName, }) => {
+        electron_1.ipcRenderer.send(constants_1.SET_ACTIVE_TEST, { projectID, testName });
     },
-    getActiveTab: (projectID) => {
-        electron_1.ipcRenderer.send(constants_1.GET_ACTIVE_TAB, projectID);
+    getActiveTest: (projectID) => {
+        electron_1.ipcRenderer.send(constants_1.GET_ACTIVE_TEST, projectID);
         return new Promise((resolve) => {
-            electron_1.ipcRenderer.once(`${constants_1.GET_ACTIVE_TAB}-resp`, (event, activeTab) => resolve(activeTab));
+            electron_1.ipcRenderer.once(`${constants_1.GET_ACTIVE_TEST}-resp`, (event, activeTab) => resolve(activeTab));
         });
     },
     closeTest: ({ projectID, testID }) => {
@@ -273,6 +182,9 @@ const api = {
     },
     testAddAtom: ({ testID, sourceAtomID, top, left, }) => {
         electron_1.ipcRenderer.send(constants_1.TEST_ADD_ATOM, { testID, sourceAtomID, top, left });
+    },
+    deleteAtom: (atomID) => {
+        electron_1.ipcRenderer.send(constants_1.DELETE_ATOM, atomID);
     },
     getPredicates: (projectID) => {
         electron_1.ipcRenderer.send(constants_1.GET_PREDICATES, projectID);

@@ -60,7 +60,7 @@ function BodyWrapper({ projectID, mousePos }) {
         });
     });
     const loadActiveTab = () => __awaiter(this, void 0, void 0, function* () {
-        window.electronAPI.getActiveTab(projectID).then((activeTab) => {
+        window.electronAPI.getActiveTest(projectID).then((activeTab) => {
             if (activeTab) {
                 setActiveTab(activeTab);
             }
@@ -70,7 +70,8 @@ function BodyWrapper({ projectID, mousePos }) {
         });
     });
     function updateActiveTab(testName) {
-        window.electronAPI.setActiveTab({ projectID, testName });
+        if (testName)
+            window.electronAPI.setActiveTest({ projectID, testName });
     }
     function closeTab(testID) {
         window.electronAPI.closeTest({ projectID, testID });

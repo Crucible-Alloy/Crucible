@@ -48,13 +48,19 @@ const ProjectSelect = () => {
     const [projects, setProjects] = (0, react_1.useState)([]);
     const [modalOpened, setModalOpened] = (0, react_1.useState)(false);
     // Load projects from sqlite db
+    const loadProjects = () => __awaiter(void 0, void 0, void 0, function* () {
+        window.electronAPI.getAllProjects().then((projects) => {
+            setProjects(projects);
+        });
+    });
     // TODO: Dynamically reload after project deletion
     (0, react_1.useEffect)(() => {
-        const loadProjects = () => __awaiter(void 0, void 0, void 0, function* () {
-            window.electronAPI.getAllProjects().then((projects) => {
-                setProjects(projects);
-            });
+        window.electronAPI.listenForProjectsChange((_event, value) => {
+            console.log("got projects update");
+            loadProjects().then(() => setLoading(false));
         });
+    }, []);
+    (0, react_1.useEffect)(() => {
         loadProjects().then(() => setLoading(false));
     }, []);
     if (loading) {
