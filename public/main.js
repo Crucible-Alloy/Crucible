@@ -952,6 +952,8 @@ electron_2.ipcMain.on(CREATE_CONNECTION, (event, { projectID, testID, fromAtom, 
                         where: {
                             fromLabel: relation.fromLabel,
                             toLabel: relation.toLabel,
+                            fromID: number.parse(fromAtom.id),
+                            toID: number.parse(toAtom.id),
                         },
                     },
                 },
@@ -976,7 +978,7 @@ electron_2.ipcMain.on(CREATE_CONNECTION, (event, { projectID, testID, fromAtom, 
         // Alert GUI to successful connection creation and refresh test.
         if (connection) {
             event.sender.send(`${CREATE_CONNECTION}-resp`, { success: true });
-            mainWindow.webContents.send("test-update");
+            mainWindow.webContents.send("canvas-update");
         }
     }
 }));
