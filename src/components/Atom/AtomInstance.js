@@ -57,6 +57,7 @@ function AtomInstance({ contentsBeingDragged, atom }) {
     const renderType = constants_1.CONNECTION;
     const theme = (0, core_1.useMantineTheme)();
     const [metaData, setMetaData] = (0, react_1.useState)(atom.srcAtom);
+    const [atomTypes, setAtomTypes] = (0, react_1.useState)([atom.srcAtom.label]);
     // TODO: Check if any accept types are not at their multiplicity, set canDrag accordingly.
     (0, react_1.useEffect)(() => {
         preview((0, react_dnd_html5_backend_1.getEmptyImage)(), { captureDraggingState: true });
@@ -69,6 +70,8 @@ function AtomInstance({ contentsBeingDragged, atom }) {
                 setMetaData(srcAtom);
             });
         });
+        let parentAtoms = atom.srcAtom.isChildOf.map((parent) => parent.parentLabel);
+        setAtomTypes([...atomTypes, ...parentAtoms]);
     }, []);
     const [{ isDragging }, drag, preview] = (0, react_dnd_1.useDrag)(() => ({
         type: atom.srcAtom.label,
@@ -76,6 +79,7 @@ function AtomInstance({ contentsBeingDragged, atom }) {
             renderType,
             data: atom,
             metaData,
+            types: atomTypes,
         },
         collect: (monitor) => ({
             isDragging: monitor.isDragging(),

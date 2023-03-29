@@ -13,8 +13,13 @@ let constants = {
   GET_ATOM_SHAPE: "get-atom-shape",
   GET_ATOM_MULTIPLICITY: "get-atom-multiplicity",
   GET_PREDICATES: "get-predicates",
+  UPDATE_PRED_STATE: "update-predicate-state",
+  UPDATE_PRED_PARAM: "update-predicate-param",
   GET_ACCEPT_TYPES: "get-accept-types",
+  GET_PARENTS: "get-atom-parents",
+  GET_CHILDREN: "get-atom-children",
   GET_RELATIONS: "get-relations",
+  GET_TO_RELATIONS: "get-to-relations",
 
   SET_ATOM_COLOR: "set-atom-color",
   SET_ATOM_LABEL: "set-atom-label",
@@ -55,7 +60,6 @@ let constants = {
   RUN_TEST: "convert-to-command-string",
   CREATE_NEW_TEST: "create-new-test",
   READ_TEST: "read-test",
-  SET_PREDICATE_TEST: "set-predicate-test",
   TEST_CAN_ADD_ATOM: "test-can-add-atom", // is atom at multiplicity constraint? true / false
   TEST_ADD_ATOM: "test-add-atom",
   OPEN_TEST: "open-test",

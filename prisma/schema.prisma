@@ -22,6 +22,7 @@ model Project {
   atoms        AtomSource[] @relation("projectAtoms")  // Array of Atom defined in the alloy file
   tabs         Tab[] @relation("projectTabs")  // Array of opened tabs by user.
   inheritances AtomInheritance[] @relation("projectInheritance")
+  connections  Connection[] @relation("project-connections")
   relations    Relation[] @relation("projectRelations")
 }
 
@@ -36,6 +37,7 @@ model Test {
   tabIsOpen    Boolean @default(false)
   atomCount    Int @default(0) // Used in autogenerating nicknames. Increments on atom being added. Does not decrement.
   atoms        Atom[] @relation("testAtoms") // Array of atom instances
+  predicates   PredInstance[] @relation("testPredicate") // Array of atom instances
   connections  Connection[]  @relation("testConnections") // Array of connection instances
 }
 
@@ -79,6 +81,7 @@ model AtomSource {
   instances    Atom[]
 
   @@unique([projectID, label])
+  @@unique([projectID, label, id])
 }
 
 model AtomInheritance {
@@ -95,13 +98,15 @@ model AtomInheritance {
 // Instance of a connection between two Atom on a canvas
 model Connection {
   id           Int @id @default(autoincrement())
+  projectID    Int
   testID       Int
   toID         Int
   fromID       Int
   toLabel      String
   fromLabel    String
-  connLabel    Relation @relation(name: "connLabel", fields: [toLabel, fromLabel], references: [toLabel, fromLabel])
+  connLabel    Relation @relation(name: "connLabel", fields: [toLabel, fromLabel, projectID], references: [toLabel, fromLabel, projectID])
   test         Test @relation(name: "testConnections", fields: [testID], references: [id], onDelete: Cascade)
+  project      Project @relation(name: "project-connections", fields: [projectID], references: [id], onDelete: Cascade)
   from         Atom @relation(name: "connectionFrom", fields: [fromID], references: [id], onDelete: Cascade)
   to           Atom @relation(name: "connectionTo", fields: [fromID], references: [id], onDelete: Cascade)
 }
@@ -124,11 +129,12 @@ model Atom {
 // Predicate Data -- As defined in alloy file
 model Predicate {
   id           Int @id @default(autoincrement())
-  project      Project @relation(name: "projectPreds", fields: [projectID], references: [id], onDelete: Cascade)
   projectID    Int
   name         String  // Name of the predicate as defined in the project
-  status       String? // User defined test condition -- equals, not equals, or null (no test)
+  status       Boolean? // User defined test condition -- equals, not equals, or null (no test)
   params       PredParam[]
+  project      Project @relation(name: "projectPreds", fields: [projectID], references: [id], onDelete: Cascade)
+  instances    PredInstance[] @relation("predStates")
 }
 
 // Predicate Parameters
@@ -138,7 +144,27 @@ model PredParam {
   predID       Int
   label        String  // Name of predicate parameter as defined in alloy file
   paramType    String  // Type of atom valid for parameter (as a label) "this/List"
-  atom         Int?  // TODO: ID of the selected Atom for testing. Should check to make sure exists in schema
+  instances    PredInstanceParams[] @relation("paramInstance")
+}
+
+// The instance of a predicate associated with a test.
+model PredInstance {
+  id           Int @id @default(autoincrement())
+  predID       Int
+  testID       Int
+  state        Boolean?
+  test         Test @relation(name: "testPredicate", fields: [testID], references: [id], onDelete: Cascade )
+  predicate    Predicate @relation(name: "predStates", fields: [predID], references: [id], onDelete: Cascade)
+  params       PredInstanceParams[] @relation("predInstance")
+}
+
+model PredInstanceParams {
+  id           Int @id @default(autoincrement())
+  predParamID  Int
+  predInstID   Int
+  atom         Int?
+  param        PredParam @relation(name: "paramInstance", fields: [predParamID], references: [id], onDelete: Cascade )
+  predInst    PredInstance @relation(name: "predInstance", fields: [predInstID], references: [id])
 }
 
 // AtomData Relations -- As defined in alloy file
@@ -155,5 +181,5 @@ model Relation {
   toAtom       AtomSource @relation(name: "relationTo", fields: [projectID, toLabel], references: [projectID, label])
   connections  Connection[] @relation("connLabel")
   @@unique( fields: [projectID, label], name: "relationID")
-  @@unique( fields: [fromLabel, toLabel], name: "relationSignature")
+  @@unique( fields: [fromLabel, toLabel, projectID], name: "relationSignature")
 }

@@ -26,7 +26,6 @@ import {
   GET_ATOM,
   GET_ATOMS,
   GET_PREDICATES,
-  SET_PREDICATE_TEST,
   GET_ATOM_SHAPE,
   SET_ATOM_SHAPE,
   GET_ATOM_INSTANCE,
@@ -43,10 +42,15 @@ import {
   GET_ATOM_SOURCE,
   CLOSE_TEST,
   UPDATE_ATOM,
+  UPDATE_PRED_STATE,
+  UPDATE_PRED_PARAM,
+  GET_PARENTS,
+  GET_CHILDREN,
+  GET_TO_RELATIONS,
 } from "../src/utils/constants";
 import { Project, Relation, Test } from "@prisma/client";
 import { NewProject } from "./validation/formValidation";
-import { AtomWithSource, TestWithCanvas } from "./main";
+import { AtomWithSource, PredInstanceWithParams, TestWithCanvas } from "./main";
 
 export interface ElectronAPI {
   getHomeDirectory: () => Promise<string>;
@@ -281,6 +285,12 @@ const api = {
       fromAtom,
       toAtom,
     });
+
+    return new Promise((resolve) => {
+      ipcRenderer.once(`${CREATE_CONNECTION}-resp`, (event, resp) =>
+        resolve(resp)
+      );
+    });
   },
 
   deleteConnection: (connID: number) => {
@@ -381,25 +391,34 @@ const api = {
     ipcRenderer.send(DELETE_ATOM, atomID);
   },
 
-  getPredicates: (projectID: number) => {
-    ipcRenderer.send(GET_PREDICATES, projectID);
+  getPredicates: (testID: number) => {
+    ipcRenderer.send(GET_PREDICATES, testID);
     return new Promise((resolve) => {
-      ipcRenderer.once("got-predicates", (event, predicates) =>
-        resolve(predicates)
+      ipcRenderer.once(
+        `${GET_PREDICATES}-resp`,
+        (event, predicates: PredInstanceWithParams[]) => resolve(predicates)
       );
     });
   },
 
-  setPredicate: ({
-    projectID,
-    predicateName,
-    value,
+  updatePredicateState: ({
+    predicateID,
+    state,
   }: {
-    projectID: number;
-    predicateName: string;
-    value: boolean | null;
+    predicateID: number;
+    state: boolean | null;
   }) => {
-    ipcRenderer.send(SET_PREDICATE_TEST, projectID, predicateName, value);
+    ipcRenderer.send(UPDATE_PRED_STATE, { predicateID, state });
+  },
+
+  updatePredParam: ({
+    predParamID,
+    atomID,
+  }: {
+    predParamID: number;
+    atomID: number | null;
+  }) => {
+    ipcRenderer.send(UPDATE_PRED_PARAM, { predParamID, atomID });
   },
 
   // getAtomShape: (projectKey, sourceAtomKey) => {
@@ -462,6 +481,43 @@ const api = {
     top: number;
   }) => {
     ipcRenderer.send(UPDATE_ATOM, { atomID, left, top });
+  },
+
+  getAtomParents: (srcAtomID: number): Promise<string[]> => {
+    ipcRenderer.send(GET_PARENTS, srcAtomID);
+    return new Promise((resolve) => {
+      ipcRenderer.once(`${GET_PARENTS}-${srcAtomID}-resp`, (event, resp) =>
+        resolve(resp)
+      );
+    });
+  },
+  getAtomChildren: ({
+    label,
+    projectID,
+  }: {
+    label: string;
+    projectID: number;
+  }): Promise<string[]> => {
+    ipcRenderer.send(GET_CHILDREN, { label, projectID });
+    return new Promise((resolve) => {
+      ipcRenderer.once(`${GET_CHILDREN}-${label}-resp`, (event, resp) =>
+        resolve(resp)
+      );
+    });
+  },
+  getRelationsToAtom({
+    projectID,
+    label,
+  }: {
+    projectID: number;
+    label: string;
+  }): Promise<Relation[]> {
+    ipcRenderer.send(GET_TO_RELATIONS, { label, projectID });
+    return new Promise((resolve) => {
+      ipcRenderer.once(`${GET_TO_RELATIONS}-${label}-resp`, (event, resp) =>
+        resolve(resp)
+      );
+    });
   },
 };
 

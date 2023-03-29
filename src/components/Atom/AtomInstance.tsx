@@ -53,6 +53,7 @@ export function AtomInstance({ contentsBeingDragged, atom }: Props) {
   const [metaData, setMetaData] = useState<AtomSourceWithRelations>(
     atom.srcAtom
   );
+  const [atomTypes, setAtomTypes] = useState([atom.srcAtom.label]);
 
   // TODO: Check if any accept types are not at their multiplicity, set canDrag accordingly.
   useEffect(() => {
@@ -67,6 +68,10 @@ export function AtomInstance({ contentsBeingDragged, atom }: Props) {
           setMetaData(srcAtom);
         });
     });
+    let parentAtoms = atom.srcAtom.isChildOf.map(
+      (parent) => parent.parentLabel
+    );
+    setAtomTypes([...atomTypes, ...parentAtoms]);
   }, []);
 
   const [{ isDragging }, drag, preview] = useDrag(
@@ -76,6 +81,7 @@ export function AtomInstance({ contentsBeingDragged, atom }: Props) {
         renderType,
         data: atom,
         metaData,
+        types: atomTypes,
       },
       collect: (monitor) => ({
         isDragging: monitor.isDragging(),

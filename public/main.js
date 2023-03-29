@@ -26,8 +26,9 @@ const runtime_1 = require("@prisma/client/runtime");
 const prisma = new client_1.PrismaClient();
 // Global window variable
 let mainWindow, projectSelectWindow;
-// Number coercion helper because ipc encodes numbers as strings.
+// Number/Boolean coercion helper because ipc encodes numbers as strings.
 const number = zod_1.z.coerce.number();
+const bool = zod_1.z.coerce.boolean();
 const isDev = true;
 let springAPI;
 let isMac = true;
@@ -61,11 +62,57 @@ function createNewTest(projectID, testName) {
             if (!newTest) {
                 return { success: false, error: "Could not create test." };
             }
-            else {
+            const testPredicates = yield buildTestPredicates(projectID, newTest.id);
+            if (testPredicates.success) {
                 return { success: true, error: null, test: newTest };
+            }
+            else {
+                return { success: false, error: "Could not init test predicates" };
             }
         }
         return { success: false, error: "Could not create test." };
+    });
+}
+function buildTestPredicates(projectID, newTestID) {
+    return __awaiter(this, void 0, void 0, function* () {
+        // Fetch the project predicates and their params.
+        const predicates = yield prisma.predicate.findMany({
+            where: { projectID: projectID },
+            include: { params: true },
+        });
+        const newPredParamInstance = (param, newPred) => __awaiter(this, void 0, void 0, function* () {
+            console.log("Creating new param: ", param);
+            yield prisma.predInstanceParams.create({
+                data: { predInstID: newPred.id, predParamID: param.id },
+            });
+        });
+        const newPredInstance = (predicate) => __awaiter(this, void 0, void 0, function* () {
+            console.log("Creating new predicate: ", predicate.name);
+            const predInstance = yield prisma.predInstance.create({
+                data: { predID: predicate.id, testID: newTestID, state: null },
+            });
+            if (predInstance) {
+                predicate.params.forEach((param) => {
+                    newPredParamInstance(param, predInstance);
+                });
+            }
+        });
+        if (predicates) {
+            console.log(predicates);
+            try {
+                // For each project predicate, create an instance of it associated to the test
+                predicates.forEach((predicate) => {
+                    newPredInstance(predicate);
+                });
+            }
+            catch (e) {
+                if (e instanceof runtime_1.PrismaClientKnownRequestError) {
+                    console.log(e.message);
+                    return { success: false, error: e.message };
+                }
+            }
+        }
+        return { success: true, error: null };
     });
 }
 /**
@@ -487,7 +534,6 @@ function deployAlloyAPI() {
         springAPI = require("child_process").spawn("java", ["-jar", jarPath, ""]);
     });
 }
-// Open dev tools on launch in dev mode
 // After initialization, create new browser window.
 // Some APIs only available after this call.
 electron_2.app.whenReady().then(() => {
@@ -741,7 +787,9 @@ electron_2.ipcMain.on(constants_1.READ_TEST, (event, data) => __awaiter(void 0, 
                 include: {
                     srcAtom: {
                         include: {
-                            fromRelations: true,
+                            fromRelations: {
+                                include: { fromAtom: { include: { isChildOf: true } } },
+                            },
                             toRelations: true,
                             isChildOf: true,
                         },
@@ -754,6 +802,7 @@ electron_2.ipcMain.on(constants_1.READ_TEST, (event, data) => __awaiter(void 0, 
     event.sender.send(data.returnKey, test ? test : {});
 }));
 electron_2.ipcMain.on(constants_1.GET_TESTS, (event, projectID) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log("MAIN GETTING TESTS");
     const tests = yield prisma.test.findMany({
         where: { projectID: number.parse(projectID) },
     });
@@ -866,35 +915,40 @@ electron_2.ipcMain.on(constants_1.CREATE_CONNECTION, (event, { projectID, testID
     console.log("from: ", fromAtom);
     console.log("to: ", toAtom);
     // Find relation with fromAtom.atomSrc.label and toAtom.atomSrc.label
-    const relation = yield prisma.relation.findFirst({
+    const relations = yield prisma.relation.findMany({
         where: {
             projectID: number.parse(projectID),
             fromLabel: fromAtom.srcAtom.label,
-            toLabel: toAtom.srcAtom.label,
+            toLabel: {
+                in: [
+                    toAtom.srcAtom.label,
+                    ...toAtom.srcAtom.isChildOf.map((rel) => rel.parentLabel),
+                ],
+            },
         },
     });
+    console.log(relations);
     // 2. Check relation multiplicity
-    if (relation) {
-        console.log(relation.multiplicity);
-        if (relation.multiplicity.split(" ")[0] === "lone" ||
-            relation.multiplicity.split(" ")[0] === "one") {
+    if (relations.length === 1) {
+        console.log(relations[0].multiplicity);
+        if (relations[0].multiplicity.split(" ")[0] === "lone" ||
+            relations[0].multiplicity.split(" ")[0] === "one") {
             // 3. Find out if there are preexisting connections of that kind.
             const existingRels = yield prisma.test.findFirst({
                 where: { id: number.parse(testID) },
                 select: {
                     connections: {
                         where: {
-                            fromLabel: relation.fromLabel,
-                            toLabel: relation.toLabel,
+                            fromLabel: relations[0].fromLabel,
+                            toLabel: relations[0].toLabel,
                             fromID: number.parse(fromAtom.id),
-                            toID: number.parse(toAtom.id),
                         },
                     },
                 },
             });
             if (existingRels && existingRels.connections.length) {
                 console.log("exisitingRels: ", existingRels);
-                // TODO: Return error and show notification
+                event.sender.send(`${constants_1.CREATE_CONNECTION}-resp`, { success: false });
                 return;
             }
         }
@@ -903,8 +957,9 @@ electron_2.ipcMain.on(constants_1.CREATE_CONNECTION, (event, { projectID, testID
             data: {
                 fromID: number.parse(fromAtom.id),
                 toID: number.parse(toAtom.id),
-                fromLabel: fromAtom.srcAtom.label,
-                toLabel: toAtom.srcAtom.label,
+                fromLabel: relations[0].fromLabel,
+                toLabel: relations[0].toLabel,
+                projectID: number.parse(projectID),
                 testID: number.parse(fromAtom.testID),
             },
         });
@@ -914,6 +969,10 @@ electron_2.ipcMain.on(constants_1.CREATE_CONNECTION, (event, { projectID, testID
             event.sender.send(`${constants_1.CREATE_CONNECTION}-resp`, { success: true });
             mainWindow.webContents.send("canvas-update");
         }
+    }
+    if (relations.length > 1) {
+        console.log("CONNECTION ERROR: More than one viable connection.");
+        event.sender.send(`${constants_1.CREATE_CONNECTION}-resp`, { success: false });
     }
 }));
 electron_2.ipcMain.on(constants_1.GET_ATOM_SOURCES, (event, projectID) => __awaiter(void 0, void 0, void 0, function* () {
@@ -968,12 +1027,75 @@ electron_2.ipcMain.on(constants_1.GET_ATOM_SOURCE, (event, { srcAtomID }) => __a
     event.sender.send(`${constants_1.GET_ATOM_SOURCE}-resp`, atom ? atom : {});
 }));
 electron_2.ipcMain.on(constants_1.SET_ATOM_COLOR, (event, { sourceAtomID, color }) => __awaiter(void 0, void 0, void 0, function* () {
-    const number = zod_1.z.coerce.number();
     const update = yield prisma.atomSource.update({
         where: { id: number.parse(sourceAtomID) },
         data: { color: color },
     });
     if (update) {
-        mainWindow.webContents.send("meta-data-update");
+        mainWindow.webContents.send("canvas-update");
+    }
+}));
+electron_2.ipcMain.on(constants_1.GET_PREDICATES, (event, testID) => __awaiter(void 0, void 0, void 0, function* () {
+    const predicates = yield prisma.predInstance.findMany({
+        where: { testID: number.parse(testID) },
+        include: {
+            params: {
+                include: {
+                    param: true,
+                },
+            },
+            predicate: true,
+        },
+    });
+    event.sender.send(`${constants_1.GET_PREDICATES}-resp`, predicates ? predicates : []);
+}));
+electron_2.ipcMain.on(constants_1.UPDATE_PRED_STATE, (event, { predicateID, state }) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log("MAIN: Updating predicate State");
+    console.log(state);
+    const update = yield prisma.predInstance.update({
+        where: { id: number.parse(predicateID) },
+        data: { state: state },
+        include: {
+            params: true,
+        },
+    });
+    if (update) {
+        mainWindow.webContents.send("predicates-update");
+    }
+}));
+electron_2.ipcMain.on(constants_1.UPDATE_PRED_PARAM, (event, { predParamID, atomID }) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log("MAIN: Updating predicate parameter");
+    const update = yield prisma.predInstanceParams.update({
+        where: { id: number.parse(predParamID) },
+        data: { atom: number.parse(atomID) },
+    });
+    if (update) {
+        mainWindow.webContents.send("predicates-update");
+    }
+}));
+electron_2.ipcMain.on(constants_1.GET_PARENTS, (event, srcAtomID) => __awaiter(void 0, void 0, void 0, function* () {
+    const srcAtom = yield prisma.atomSource.findFirst({
+        where: { id: srcAtomID },
+        include: { isChildOf: true },
+    });
+    if (srcAtom && srcAtom.isChildOf.length > 0) {
+        event.sender.send(`${constants_1.GET_PARENTS}-${srcAtomID}-resp`, srcAtom.isChildOf.map((parent) => parent.childLabel));
+    }
+}));
+electron_2.ipcMain.on(constants_1.GET_CHILDREN, (event, { label, projectID }) => __awaiter(void 0, void 0, void 0, function* () {
+    const srcAtom = yield prisma.atomSource.findFirst({
+        where: { label: label, projectID: number.parse(projectID) },
+        include: { isParentOf: true },
+    });
+    if (srcAtom && srcAtom.isParentOf.length > 0) {
+        event.sender.send(`${constants_1.GET_PARENTS}-${label}-resp`, srcAtom.isParentOf.map((child) => child.childLabel));
+    }
+}));
+electron_2.ipcMain.on(constants_1.GET_TO_RELATIONS, (event, { label, projectID }) => __awaiter(void 0, void 0, void 0, function* () {
+    const relations = yield prisma.relation.findMany({
+        where: { toLabel: label, projectID: number.parse(projectID) },
+    });
+    if (relations) {
+        event.sender.send(`${constants_1.GET_TO_RELATIONS}-${label}-resp`, relations);
     }
 }));

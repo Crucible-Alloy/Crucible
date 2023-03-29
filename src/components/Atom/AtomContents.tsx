@@ -4,6 +4,9 @@ import { getEmptyImage } from "react-dnd-html5-backend";
 import { MantineTheme, Paper, Text, useMantineTheme } from "@mantine/core";
 import { AtomWithSource, AtomSourceWithRelations } from "../../../public/main";
 import React from "react";
+import { Atom, AtomInheritance, AtomSource, Relation } from "@prisma/client";
+import { showNotification } from "@mantine/notifications";
+import { IconAlertTriangle } from "@tabler/icons";
 
 const { ATOM, CONNECTION } = require("../../utils/constants");
 
@@ -11,38 +14,42 @@ interface Props {
   atom: AtomWithSource;
 }
 export function AtomContents({ atom }: Props) {
-  const [metaData, setMetaData] = useState<AtomSourceWithRelations>(
-    atom.srcAtom
-  );
+  const [srcData, setSrcData] = useState<AtomSourceWithRelations>(atom.srcAtom);
   const [acceptTypes, setAcceptTypes] = useState<string[]>([]);
 
   const renderType = ATOM;
   const theme = useMantineTheme();
 
   useEffect(() => {
-    //   window.electronAPI.listenForMetaDataChange((_event: any) => {
-    //     window.electronAPI
-    //       .getAtomSource(atom.id)
-    //       .then((atom: AtomSourceWithRelations) => {
-    //         setMetaData(atom);
-    //       })
-    //       .then(() => {
-    //         if (metaData) {
-    //           setAcceptTypes(metaData.toRelations.map((entry) => entry.toLabel));
-    //         }
-    //       });
-    //   });
-    // window.electronAPI
-    //   .getAtomSource(atom.id)
-    //   .then((atom: AtomSourceWithRelations) => {
-    //     setMetaData(atom);
-    //   })
-    //   .then(() => {
-    //     if (metaData) {
-    //       setAcceptTypes(metaData.toRelations.map((entry) => entry.label));
-    //     }
-    //   });
-    setAcceptTypes(metaData.toRelations.map((relation) => relation.fromLabel));
+    let acceptTypesSet = new Set<string>();
+    window.electronAPI
+      .getRelationsToAtom({
+        label: srcData.label,
+        projectID: srcData.projectID,
+      })
+      .then((resp: Relation[]) => {
+        console.log(resp);
+        resp.forEach((relation) => acceptTypesSet.add(relation.fromLabel));
+        if (srcData.isChildOf.length > 0) {
+          srcData.isChildOf.forEach((parent) => {
+            window.electronAPI
+              .getRelationsToAtom({
+                label: parent.parentLabel,
+                projectID: srcData.projectID,
+              })
+              .then((resp: Relation[]) => {
+                console.log(resp);
+                resp.forEach((relation) =>
+                  acceptTypesSet.add(relation.fromLabel)
+                );
+                setAcceptTypes([...acceptTypesSet]);
+              });
+          });
+        } else {
+          setAcceptTypes([...acceptTypesSet]);
+        }
+      });
+
     preview(getEmptyImage(), { captureDraggingState: true });
   }, []);
 
@@ -56,13 +63,13 @@ export function AtomContents({ atom }: Props) {
       item: {
         renderType,
         data: atom,
-        metaData,
+        metaData: srcData,
       },
       collect: (monitor) => ({
         isDragging: monitor.isDragging(),
       }),
     }),
-    [renderType, atom, metaData]
+    [renderType, atom, srcData]
   );
 
   const [{ isOver, canDrop }, drop] = useDrop(
@@ -87,7 +94,7 @@ export function AtomContents({ atom }: Props) {
         return undefined;
       },
     }),
-    [atom, metaData]
+    [atom, srcData]
   );
 
   async function addNewConnection({
@@ -101,12 +108,23 @@ export function AtomContents({ atom }: Props) {
     fromAtom: AtomWithSource;
     toAtom: AtomWithSource;
   }) {
-    window.electronAPI.createConnection({
-      projectID,
-      testID,
-      fromAtom,
-      toAtom,
-    });
+    window.electronAPI
+      .createConnection({
+        projectID,
+        testID,
+        fromAtom,
+        toAtom,
+      })
+      .then((resp: { success: boolean }) => {
+        if (!resp.success) {
+          showNotification({
+            title: "Cannot add connection",
+            message: `Adding that connection would exceed it's multiplicity.`,
+            color: "red",
+            icon: <IconAlertTriangle />,
+          });
+        }
+      });
   }
 
   function getAtomStyles(
@@ -129,19 +147,19 @@ export function AtomContents({ atom }: Props) {
     };
   }
 
-  return metaData && atom ? (
+  return srcData && atom ? (
     <Paper
       ref={drag}
       p="md"
       radius={"md"}
       role="DraggableBox"
-      style={getAtomStyles(theme, metaData.shape, atom.left, atom.top)}
+      style={getAtomStyles(theme, srcData.shape, atom.left, atom.top)}
     >
       <Text
         ref={drop}
         p={"xl"}
         size={"xl"}
-        color={metaData.color}
+        color={srcData.color}
         weight={800}
         align={"center"}
       >

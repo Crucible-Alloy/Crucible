@@ -1,178 +1,77 @@
-import {
-  IconEqual,
-  IconEqualNot,
-  IconEyeOff,
-  IconZoomCode,
-} from "@tabler/icons";
-import {
-  Modal,
-  Title,
-  Text,
-  SegmentedControl,
-  Center,
-  Box,
-  Input,
-  Tooltip,
-  ActionIcon,
-  Select,
-} from "@mantine/core";
-import React, { useEffect, useState } from "react";
-
-export function TestPredicatesBtn({ projectID, testID }) {
-  const [opened, setOpened] = useState(false);
-  const [predicates, setPredicates] = useState({});
-  const [canvasAtoms, setCanvasAtoms] = useState(loadCanvasAtoms);
-
-  useEffect(() => {
-    return () => {
-      window.electronAPI.getPredicates(projectID).then((predicates) => {
-        setPredicates(predicates);
-      });
-    };
-  }, []);
-
-  useEffect(() => {
-    window.electronAPI.listenForPredicatesChange((_event, value) => {
-      window.electronAPI.getPredicates(projectID).then((predicates) => {
-        console.log(predicates);
-        setPredicates(predicates);
-      });
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
-  }, []);
-
-  useEffect(() => {
-    window.electronAPI.listenForCanvasChange((_event, value) => {
-      loadCanvasAtoms();
-    });
-  }, []);
-
-  function loadCanvasAtoms() {
-    window.electronAPI.loadCanvasState(projectID, testID).then((data) => {
-      setCanvasAtoms(data.atoms);
-    });
-  }
-
-  function updatePredicate(predicateName, predicate) {
-    window.electronAPI.setPredicate(projectID, predicateName, predicate);
-  }
-
-  function setPredicateMode(value, predicateName) {
-    let predicate = Object.fromEntries(
-      Object.entries(predicates).filter(([key, value]) => key === predicateName)
-    );
-    predicate[predicateName].status = value;
-    window.electronAPI.setPredicate(
-      projectID,
-      predicateName,
-      predicate[predicateName]
-    );
-  }
-
-  function setPredicateParams(predicateName, paramlabel, selectValue) {
-    let predicate = Object.fromEntries(
-      Object.entries(predicates).filter(([key, value]) => key === predicateName)
-    );
-    console.log(paramlabel);
-    console.log(selectValue);
-    console.log(predicate[predicateName]);
-    predicate[predicateName].params.forEach((param) => {
-      if (param.label === paramlabel) {
-        console.log("Found the right param");
-        param.atom = selectValue;
-      }
-    });
-    console.log(predicate[predicateName]);
-    window.electronAPI.setPredicate(
-      projectID,
-      predicateName,
-      predicate[predicateName]
-    );
-  }
-
-  return (
-    <>
-      <Modal
-        opened={opened}
-        onClose={() => setOpened(false)}
-        title={<Title size={"md"}>Predicates</Title>}
-      >
-        <Text size={"xs"} color={"dimmed"}>
-          Select a mode for the predicates you'd like to test.
-        </Text>
-        <br />
-        {Object.entries(predicates).map(([key, value]) => (
-          <Input.Wrapper label={key} description={"Test Mode"} mt={"xs"}>
-            <SegmentedControl
-              size={"xs"}
-              mt={"xs"}
-              mb={"sm"}
-              value={value["status"]}
-              onChange={(value) => setPredicateMode(value, key)}
-              data={[
-                {
-                  label: (
-                    <Center>
-                      <IconEyeOff size={16} />
-                      <Box ml={10}>Don't Test</Box>
-                    </Center>
-                  ),
-                  value: "null",
-                },
-                {
-                  label: (
-                    <Center>
-                      <IconEqual size={16} />
-                      <Box ml={10}>Equals</Box>
-                    </Center>
-                  ),
-                  value: "equals",
-                },
-                {
-                  label: (
-                    <Center>
-                      <IconEqualNot size={16} />
-                      <Box ml={10}>Not Equals</Box>
-                    </Center>
-                  ),
-                  value: "negate",
-                },
-              ]}
-            />
-            {value["params"].map((param) => (
-              <Select
-                description={`Parameter: ${param.label}`}
-                placeholder="Pick one"
-                value={param.atom}
-                onChange={(value) =>
-                  setPredicateParams(key, param.label, value)
-                }
-                data={
-                  // Get the Atom from the canvas that match the type of the parameter
-                  Object.entries(canvasAtoms)
-                    .filter(
-                      ([key, atom]) => atom.atomLabel === param["paramType"]
-                    )
-                    .map(([key, atom]) => ({
-                      value: atom.nickname,
-                      label: atom.nickname,
-                    }))
-                }
-              />
-            ))}
-          </Input.Wrapper>
-        ))}
-      </Modal>
-      <Tooltip label={"Predicates"} position={"bottom"}>
-        <ActionIcon
-          color={"blue"}
-          variant={"light"}
-          onClick={() => setOpened(true)}
-        >
-          <IconZoomCode size={20} />
-        </ActionIcon>
-      </Tooltip>
-    </>
-  );
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const icons_1 = require("@tabler/icons");
+const core_1 = require("@mantine/core");
+const react_1 = __importStar(require("react"));
+const Predicate_1 = require("./Predicate/Predicate");
+function TestPredicatesBtn({ projectID, testID }) {
+    const [opened, setOpened] = (0, react_1.useState)(false);
+    const [predicates, setPredicates] = (0, react_1.useState)([]);
+    const [atoms, setAtoms] = (0, react_1.useState)([]);
+    function fetchAndSetPredicates(testID) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const predicates = yield window.electronAPI.getPredicates(testID);
+            setPredicates(predicates);
+        });
+    }
+    function fetchAndSetAtoms(testID) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const test = yield window.electronAPI.readTest(testID);
+            setAtoms(test.atoms);
+        });
+    }
+    (0, react_1.useEffect)(() => {
+        // Initialize State
+        fetchAndSetAtoms(testID).catch();
+        fetchAndSetPredicates(testID).catch();
+        // Bind listeners for database updates.
+        window.electronAPI.listenForPredicatesChange((_event, value) => {
+            console.log("Predicates Change");
+            fetchAndSetPredicates(testID).catch();
+        });
+        window.electronAPI.listenForCanvasChange((_event, value) => {
+            fetchAndSetAtoms(testID).catch();
+        });
+    }, [testID]);
+    return (react_1.default.createElement(react_1.default.Fragment, null,
+        react_1.default.createElement(core_1.Modal, { opened: opened, onClose: () => setOpened(false), title: react_1.default.createElement(core_1.Title, { size: "md" }, "Predicates") },
+            react_1.default.createElement(core_1.Text, { size: "xs", color: "dimmed" }, "For each predicate, select a state and parameters."),
+            react_1.default.createElement("br", null),
+            Object.entries(predicates).map(([key, value]) => (react_1.default.createElement(Predicate_1.Predicate, { key: key, predicate: value, atoms: atoms })))),
+        react_1.default.createElement(core_1.Tooltip, { label: "Predicates", position: "bottom" },
+            react_1.default.createElement(core_1.ActionIcon, { color: "violet", variant: "light", size: "lg", onClick: () => setOpened(true), style: { margin: "16px", zIndex: 1 } },
+                react_1.default.createElement(icons_1.IconFunction, null)))));
 }
-
-export default TestPredicatesBtn;
+exports.default = TestPredicatesBtn;

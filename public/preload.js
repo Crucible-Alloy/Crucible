@@ -129,6 +129,9 @@ const api = {
             fromAtom,
             toAtom,
         });
+        return new Promise((resolve) => {
+            electron_1.ipcRenderer.once(`${constants_1.CREATE_CONNECTION}-resp`, (event, resp) => resolve(resp));
+        });
     },
     deleteConnection: (connID) => {
         electron_1.ipcRenderer.send(constants_1.DELETE_CONNECTION, connID);
@@ -186,14 +189,17 @@ const api = {
     deleteAtom: (atomID) => {
         electron_1.ipcRenderer.send(constants_1.DELETE_ATOM, atomID);
     },
-    getPredicates: (projectID) => {
-        electron_1.ipcRenderer.send(constants_1.GET_PREDICATES, projectID);
+    getPredicates: (testID) => {
+        electron_1.ipcRenderer.send(constants_1.GET_PREDICATES, testID);
         return new Promise((resolve) => {
-            electron_1.ipcRenderer.once("got-predicates", (event, predicates) => resolve(predicates));
+            electron_1.ipcRenderer.once(`${constants_1.GET_PREDICATES}-resp`, (event, predicates) => resolve(predicates));
         });
     },
-    setPredicate: ({ projectID, predicateName, value, }) => {
-        electron_1.ipcRenderer.send(constants_1.SET_PREDICATE_TEST, projectID, predicateName, value);
+    updatePredicateState: ({ predicateID, state, }) => {
+        electron_1.ipcRenderer.send(constants_1.UPDATE_PRED_STATE, { predicateID, state });
+    },
+    updatePredParam: ({ predParamID, atomID, }) => {
+        electron_1.ipcRenderer.send(constants_1.UPDATE_PRED_PARAM, { predParamID, atomID });
     },
     // getAtomShape: (projectKey, sourceAtomKey) => {
     //   ipcRenderer.send(GET_ATOM_SHAPE, projectKey, sourceAtomKey);
@@ -228,6 +234,24 @@ const api = {
     },
     updateAtom: ({ atomID, left, top, }) => {
         electron_1.ipcRenderer.send(constants_1.UPDATE_ATOM, { atomID, left, top });
+    },
+    getAtomParents: (srcAtomID) => {
+        electron_1.ipcRenderer.send(constants_1.GET_PARENTS, srcAtomID);
+        return new Promise((resolve) => {
+            electron_1.ipcRenderer.once(`${constants_1.GET_PARENTS}-${srcAtomID}-resp`, (event, resp) => resolve(resp));
+        });
+    },
+    getAtomChildren: ({ label, projectID, }) => {
+        electron_1.ipcRenderer.send(constants_1.GET_CHILDREN, { label, projectID });
+        return new Promise((resolve) => {
+            electron_1.ipcRenderer.once(`${constants_1.GET_CHILDREN}-${label}-resp`, (event, resp) => resolve(resp));
+        });
+    },
+    getRelationsToAtom({ projectID, label, }) {
+        electron_1.ipcRenderer.send(constants_1.GET_TO_RELATIONS, { label, projectID });
+        return new Promise((resolve) => {
+            electron_1.ipcRenderer.once(`${constants_1.GET_TO_RELATIONS}-${label}-resp`, (event, resp) => resolve(resp));
+        });
     },
 };
 electron_1.contextBridge.exposeInMainWorld("electronAPI", api);

@@ -2,7 +2,15 @@ import { BrowserWindow } from "electron";
 import { ChildProcessWithoutNullStreams } from "child_process";
 import { AxiosResponse } from "axios";
 import { z, ZodError } from "zod";
-import { Atom, Prisma, Project, Test } from "@prisma/client";
+import {
+  Atom,
+  Predicate,
+  PredInstance,
+  PredParam,
+  Prisma,
+  Project,
+  Test,
+} from "@prisma/client";
 import {
   AtomRespSchema,
   NewProject,
@@ -48,7 +56,6 @@ import {
   SET_ACTIVE_TEST,
   DELETE_TEST,
   GET_PREDICATES,
-  SET_PREDICATE_TEST,
   GET_ATOM_SHAPE,
   SET_ATOM_SHAPE,
   SET_ATOM_INSTANCE_NICKNAME,
@@ -57,15 +64,16 @@ import {
   TEST_CAN_ADD_ATOM,
   READ_TEST,
   GET_ACTIVE_TEST,
+  UPDATE_PRED_STATE,
+  UPDATE_PRED_PARAM,
+  GET_PARENTS,
+  GET_CHILDREN,
+  GET_TO_RELATIONS,
 } from "../src/utils/constants";
 
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime";
 
 const prisma = new PrismaClient();
-
-export type AtomSourceWithRelations = Prisma.AtomSourceGetPayload<{
-  include: { fromRelations: true; toRelations: true; isChildOf: true };
-}>;
 
 export type TestWithCanvas = Prisma.TestGetPayload<{
   include: {
@@ -73,9 +81,21 @@ export type TestWithCanvas = Prisma.TestGetPayload<{
       include: {
         srcAtom: {
           include: {
-            fromRelations: true;
             isChildOf: true;
-            toRelations: true;
+            fromRelations: {
+              include: {
+                fromAtom: {
+                  include: {
+                    isChildOf: true;
+                  };
+                };
+              };
+            };
+            toRelations: {
+              include: {
+                fromAtom: true;
+              };
+            };
           };
         };
       };
@@ -84,10 +104,69 @@ export type TestWithCanvas = Prisma.TestGetPayload<{
   };
 }>;
 
+export type PredInstanceWithParams = Prisma.PredInstanceGetPayload<{
+  include: {
+    params: {
+      include: {
+        param: true;
+      };
+    };
+    predicate: true;
+  };
+}>;
+
+export type PredWithParams = Prisma.PredicateGetPayload<{
+  include: {
+    params: true;
+  };
+}>;
+
+export type PredParamWithSource = Prisma.PredInstanceParamsGetPayload<{
+  include: {
+    param: true;
+  };
+}>;
+
 export type AtomWithSource = Prisma.AtomGetPayload<{
   include: {
     srcAtom: {
-      include: { fromRelations: true; isChildOf: true; toRelations: true };
+      include: {
+        isChildOf: true;
+        fromRelations: {
+          include: {
+            fromAtom: {
+              include: {
+                isChildOf: true;
+              };
+            };
+          };
+        };
+        toRelations: {
+          include: {
+            fromAtom: true;
+          };
+        };
+      };
+    };
+  };
+}>;
+
+export type AtomSourceWithRelations = Prisma.AtomSourceGetPayload<{
+  include: {
+    isChildOf: true;
+    fromRelations: {
+      include: {
+        fromAtom: {
+          include: {
+            isChildOf: true;
+          };
+        };
+      };
+    };
+    toRelations: {
+      include: {
+        fromAtom: true;
+      };
     };
   };
 }>;
@@ -95,8 +174,10 @@ export type AtomWithSource = Prisma.AtomGetPayload<{
 // Global window variable
 let mainWindow: BrowserWindow, projectSelectWindow: BrowserWindow;
 
-// Number coercion helper because ipc encodes numbers as strings.
+// Number/Boolean coercion helper because ipc encodes numbers as strings.
 const number = z.coerce.number();
+const bool = z.coerce.boolean();
+
 const isDev = true;
 
 let springAPI: ChildProcessWithoutNullStreams;
@@ -136,11 +217,63 @@ async function createNewTest(
 
     if (!newTest) {
       return { success: false, error: "Could not create test." };
-    } else {
+    }
+
+    const testPredicates = await buildTestPredicates(projectID, newTest.id);
+    if (testPredicates.success) {
       return { success: true, error: null, test: newTest };
+    } else {
+      return { success: false, error: "Could not init test predicates" };
     }
   }
   return { success: false, error: "Could not create test." };
+}
+
+async function buildTestPredicates(projectID: number, newTestID: number) {
+  // Fetch the project predicates and their params.
+  const predicates = await prisma.predicate.findMany({
+    where: { projectID: projectID },
+    include: { params: true },
+  });
+
+  const newPredParamInstance = async (
+    param: PredParam,
+    newPred: PredInstance
+  ) => {
+    console.log("Creating new param: ", param);
+    await prisma.predInstanceParams.create({
+      data: { predInstID: newPred.id, predParamID: param.id },
+    });
+  };
+
+  const newPredInstance = async (predicate: PredWithParams) => {
+    console.log("Creating new predicate: ", predicate.name);
+    const predInstance = await prisma.predInstance.create({
+      data: { predID: predicate.id, testID: newTestID, state: null },
+    });
+
+    if (predInstance) {
+      predicate.params.forEach((param) => {
+        newPredParamInstance(param, predInstance);
+      });
+    }
+  };
+
+  if (predicates) {
+    console.log(predicates);
+    try {
+      // For each project predicate, create an instance of it associated to the test
+      predicates.forEach((predicate) => {
+        newPredInstance(predicate);
+      });
+    } catch (e) {
+      if (e instanceof PrismaClientKnownRequestError) {
+        console.log(e.message);
+        return { success: false, error: e.message };
+      }
+    }
+  }
+  return { success: true, error: null };
 }
 
 /**
@@ -586,8 +719,6 @@ async function deployAlloyAPI() {
   springAPI = require("child_process").spawn("java", ["-jar", jarPath, ""]);
 }
 
-// Open dev tools on launch in dev mode
-
 // After initialization, create new browser window.
 // Some APIs only available after this call.
 app.whenReady().then(() => {
@@ -870,7 +1001,9 @@ ipcMain.on(
           include: {
             srcAtom: {
               include: {
-                fromRelations: true,
+                fromRelations: {
+                  include: { fromAtom: { include: { isChildOf: true } } },
+                },
                 toRelations: true,
                 isChildOf: true,
               },
@@ -885,6 +1018,7 @@ ipcMain.on(
 );
 
 ipcMain.on(GET_TESTS, async (event, projectID: number) => {
+  console.log("MAIN GETTING TESTS");
   const tests = await prisma.test.findMany({
     where: { projectID: number.parse(projectID) },
   });
@@ -1057,21 +1191,27 @@ ipcMain.on(
     console.log("pID: ", projectID);
     console.log("from: ", fromAtom);
     console.log("to: ", toAtom);
+
     // Find relation with fromAtom.atomSrc.label and toAtom.atomSrc.label
-    const relation = await prisma.relation.findFirst({
+    const relations = await prisma.relation.findMany({
       where: {
         projectID: number.parse(projectID),
         fromLabel: fromAtom.srcAtom.label,
-        toLabel: toAtom.srcAtom.label,
+        toLabel: {
+          in: [
+            toAtom.srcAtom.label,
+            ...toAtom.srcAtom.isChildOf.map((rel) => rel.parentLabel),
+          ],
+        },
       },
     });
-
+    console.log(relations);
     // 2. Check relation multiplicity
-    if (relation) {
-      console.log(relation.multiplicity);
+    if (relations.length === 1) {
+      console.log(relations[0].multiplicity);
       if (
-        relation.multiplicity.split(" ")[0] === "lone" ||
-        relation.multiplicity.split(" ")[0] === "one"
+        relations[0].multiplicity.split(" ")[0] === "lone" ||
+        relations[0].multiplicity.split(" ")[0] === "one"
       ) {
         // 3. Find out if there are preexisting connections of that kind.
         const existingRels = await prisma.test.findFirst({
@@ -1079,10 +1219,9 @@ ipcMain.on(
           select: {
             connections: {
               where: {
-                fromLabel: relation.fromLabel,
-                toLabel: relation.toLabel,
+                fromLabel: relations[0].fromLabel,
+                toLabel: relations[0].toLabel,
                 fromID: number.parse(fromAtom.id),
-                toID: number.parse(toAtom.id),
               },
             },
           },
@@ -1090,7 +1229,7 @@ ipcMain.on(
 
         if (existingRels && existingRels.connections.length) {
           console.log("exisitingRels: ", existingRels);
-          // TODO: Return error and show notification
+          event.sender.send(`${CREATE_CONNECTION}-resp`, { success: false });
           return;
         }
       }
@@ -1099,8 +1238,9 @@ ipcMain.on(
         data: {
           fromID: number.parse(fromAtom.id),
           toID: number.parse(toAtom.id),
-          fromLabel: fromAtom.srcAtom.label,
-          toLabel: toAtom.srcAtom.label,
+          fromLabel: relations[0].fromLabel,
+          toLabel: relations[0].toLabel,
+          projectID: number.parse(projectID),
           testID: number.parse(fromAtom.testID),
         },
       });
@@ -1111,6 +1251,11 @@ ipcMain.on(
         event.sender.send(`${CREATE_CONNECTION}-resp`, { success: true });
         mainWindow.webContents.send("canvas-update");
       }
+    }
+
+    if (relations.length > 1) {
+      console.log("CONNECTION ERROR: More than one viable connection.");
+      event.sender.send(`${CREATE_CONNECTION}-resp`, { success: false });
     }
   }
 );
@@ -1175,13 +1320,110 @@ ipcMain.on(GET_ATOM_SOURCE, async (event, { srcAtomID }) => {
 });
 
 ipcMain.on(SET_ATOM_COLOR, async (event, { sourceAtomID, color }: SetColor) => {
-  const number = z.coerce.number();
   const update = await prisma.atomSource.update({
     where: { id: number.parse(sourceAtomID) },
     data: { color: color },
   });
 
   if (update) {
-    mainWindow.webContents.send("meta-data-update");
+    mainWindow.webContents.send("canvas-update");
   }
 });
+
+ipcMain.on(GET_PREDICATES, async (event, testID: number) => {
+  const predicates: PredInstanceWithParams[] =
+    await prisma.predInstance.findMany({
+      where: { testID: number.parse(testID) },
+      include: {
+        params: {
+          include: {
+            param: true,
+          },
+        },
+        predicate: true,
+      },
+    });
+  event.sender.send(`${GET_PREDICATES}-resp`, predicates ? predicates : []);
+});
+
+ipcMain.on(
+  UPDATE_PRED_STATE,
+  async (
+    event,
+    { predicateID, state }: { predicateID: number; state: boolean | null }
+  ) => {
+    console.log("MAIN: Updating predicate State");
+    console.log(state);
+    const update = await prisma.predInstance.update({
+      where: { id: number.parse(predicateID) },
+      data: { state: state },
+      include: {
+        params: true,
+      },
+    });
+
+    if (update) {
+      mainWindow.webContents.send("predicates-update");
+    }
+  }
+);
+
+ipcMain.on(
+  UPDATE_PRED_PARAM,
+  async (
+    event,
+    { predParamID, atomID }: { predParamID: number; atomID: number }
+  ) => {
+    console.log("MAIN: Updating predicate parameter");
+
+    const update = await prisma.predInstanceParams.update({
+      where: { id: number.parse(predParamID) },
+      data: { atom: number.parse(atomID) },
+    });
+
+    if (update) {
+      mainWindow.webContents.send("predicates-update");
+    }
+  }
+);
+
+ipcMain.on(GET_PARENTS, async (event, srcAtomID: number) => {
+  const srcAtom = await prisma.atomSource.findFirst({
+    where: { id: srcAtomID },
+    include: { isChildOf: true },
+  });
+  if (srcAtom && srcAtom.isChildOf.length > 0) {
+    event.sender.send(
+      `${GET_PARENTS}-${srcAtomID}-resp`,
+      srcAtom.isChildOf.map((parent) => parent.childLabel)
+    );
+  }
+});
+
+ipcMain.on(
+  GET_CHILDREN,
+  async (event, { label, projectID }: { label: string; projectID: number }) => {
+    const srcAtom = await prisma.atomSource.findFirst({
+      where: { label: label, projectID: number.parse(projectID) },
+      include: { isParentOf: true },
+    });
+    if (srcAtom && srcAtom.isParentOf.length > 0) {
+      event.sender.send(
+        `${GET_PARENTS}-${label}-resp`,
+        srcAtom.isParentOf.map((child) => child.childLabel)
+      );
+    }
+  }
+);
+
+ipcMain.on(
+  GET_TO_RELATIONS,
+  async (event, { label, projectID }: { label: string; projectID: number }) => {
+    const relations = await prisma.relation.findMany({
+      where: { toLabel: label, projectID: number.parse(projectID) },
+    });
+    if (relations) {
+      event.sender.send(`${GET_TO_RELATIONS}-${label}-resp`, relations);
+    }
+  }
+);
