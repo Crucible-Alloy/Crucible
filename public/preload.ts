@@ -326,10 +326,9 @@ const api = {
   },
 
   runTest: ({ projectID, testID }: { projectID: number; testID: number }) => {
-    let returnChannel = uuidv4();
-    ipcRenderer.send(RUN_TEST, projectID, testID, returnChannel);
+    ipcRenderer.send(RUN_TEST, { projectID, testID });
     return new Promise((resolve) => {
-      ipcRenderer.once(returnChannel, (event, testResponse) =>
+      ipcRenderer.once(`${RUN_TEST}-${testID}-resp`, (event, testResponse) =>
         resolve(testResponse)
       );
     });

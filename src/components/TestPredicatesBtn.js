@@ -71,7 +71,7 @@ function TestPredicatesBtn({ projectID, testID }) {
             react_1.default.createElement("br", null),
             Object.entries(predicates).map(([key, value]) => (react_1.default.createElement(Predicate_1.Predicate, { key: key, predicate: value, atoms: atoms })))),
         react_1.default.createElement(core_1.Tooltip, { label: "Predicates", position: "bottom" },
-            react_1.default.createElement(core_1.ActionIcon, { color: "violet", variant: "light", size: "lg", onClick: () => setOpened(true), style: { margin: "16px", zIndex: 1 } },
+            react_1.default.createElement(core_1.ActionIcon, { color: "violet", variant: "light", size: "lg", onClick: () => setOpened(true), style: { zIndex: 1 } },
                 react_1.default.createElement(icons_1.IconFunction, null)))));
 }
 exports.default = TestPredicatesBtn;

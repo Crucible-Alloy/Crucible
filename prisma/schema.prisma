@@ -108,7 +108,7 @@ model Connection {
   test         Test @relation(name: "testConnections", fields: [testID], references: [id], onDelete: Cascade)
   project      Project @relation(name: "project-connections", fields: [projectID], references: [id], onDelete: Cascade)
   from         Atom @relation(name: "connectionFrom", fields: [fromID], references: [id], onDelete: Cascade)
-  to           Atom @relation(name: "connectionTo", fields: [fromID], references: [id], onDelete: Cascade)
+  to           Atom @relation(name: "connectionTo", fields: [toID], references: [id], onDelete: Cascade)
 }
 
 // Instance of an Atom on a canvas
@@ -164,7 +164,7 @@ model PredInstanceParams {
   predInstID   Int
   atom         Int?
   param        PredParam @relation(name: "paramInstance", fields: [predParamID], references: [id], onDelete: Cascade )
-  predInst    PredInstance @relation(name: "predInstance", fields: [predInstID], references: [id])
+  predInst     PredInstance @relation(name: "predInstance", fields: [predInstID], references: [id])
 }
 
 // AtomData Relations -- As defined in alloy file

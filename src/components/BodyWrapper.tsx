@@ -3,6 +3,8 @@ import { IconChartDots3 } from "@tabler/icons";
 import React, { useEffect, useState } from "react";
 import { Test } from "@prisma/client";
 import TabContent from "./TabContent";
+import TestPlayBtn from "./TestPlayBtn";
+import TestPredicatesBtn from "./TestPredicatesBtn";
 
 interface Props {
   projectID: number;

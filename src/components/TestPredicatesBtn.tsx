@@ -65,7 +65,7 @@ function TestPredicatesBtn({ projectID, testID }: Props) {
           variant={"light"}
           size={"lg"}
           onClick={() => setOpened(true)}
-          style={{ margin: "16px", zIndex: 1 }}
+          style={{ zIndex: 1 }}
         >
           <IconFunction />
         </ActionIcon>

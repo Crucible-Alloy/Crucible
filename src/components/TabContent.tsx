@@ -1,12 +1,12 @@
 import React from "react";
-import { Box } from "@mantine/core";
+import { Box, Group } from "@mantine/core";
 import Canvas from "./Canvas";
 
 import { Test } from "@prisma/client";
 import { useViewportSize } from "@mantine/hooks";
 import TestPredicatesBtn from "./TestPredicatesBtn";
+import TestPlayBtn from "./TestPlayBtn";
 
-const TestPlayBtn = require("./TestPlayBtn.js");
 const TestSettingsBtn = require("./TestSettingsBtn.js");
 
 interface Props {
@@ -18,19 +18,32 @@ interface Props {
 function TabContent({ test, projectID, mousePos }: Props) {
   const { width, height } = useViewportSize();
   return (
-    <Box
-      sx={(theme) => ({
-        position: "relative",
-        height: "100%",
-        width: "100%",
-        overflow: "scroll",
-        backgroundColor: theme.colors.gray[0],
-        border: "solid 1px gray",
-      })}
-    >
-      <TestPredicatesBtn projectID={projectID} testID={test.id} />
-      <Canvas projectID={projectID} testID={test.id} />
-    </Box>
+    <>
+      <Group
+        style={{
+          position: "absolute",
+          top: 80,
+          left: 40,
+          margin: "16px",
+          zIndex: 1,
+        }}
+      >
+        <TestPlayBtn projectID={projectID} testID={test.id} disabled={false} />
+        <TestPredicatesBtn projectID={projectID} testID={test.id} />
+      </Group>
+      <Box
+        sx={(theme) => ({
+          position: "relative",
+          height: "100%",
+          width: "100%",
+          overflow: "scroll",
+          backgroundColor: theme.colors.gray[0],
+          border: "solid 1px gray",
+        })}
+      >
+        <Canvas projectID={projectID} testID={test.id} />
+      </Box>
+    </>
   );
 }
 

@@ -159,10 +159,9 @@ const api = {
         electron_1.ipcRenderer.on("projects-update", callback);
     },
     runTest: ({ projectID, testID }) => {
-        let returnChannel = uuidv4();
-        electron_1.ipcRenderer.send(constants_1.RUN_TEST, projectID, testID, returnChannel);
+        electron_1.ipcRenderer.send(constants_1.RUN_TEST, { projectID, testID });
         return new Promise((resolve) => {
-            electron_1.ipcRenderer.once(returnChannel, (event, testResponse) => resolve(testResponse));
+            electron_1.ipcRenderer.once(`${constants_1.RUN_TEST}-${testID}-resp`, (event, testResponse) => resolve(testResponse));
         });
     },
     setActiveTest: ({ projectID, testName, }) => {
