@@ -33,7 +33,7 @@ declare global {
   };
 }
 
-function App() {
+export default function App() {
   const { width, height } = useViewportSize();
   const { projectID } = useParams();
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -100,4 +100,3 @@ function App() {
   );
 }
 
-export default App;
