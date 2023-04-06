@@ -8,11 +8,6 @@ export const plugins = [
   new ForkTsCheckerWebpackPlugin(),
   new CopyPlugin({patterns: [
       {from: './src/JARs/*'},
-      {from: './prisma/schema.prisma'}
+      {from: './prisma/schema.prisma'}, // Comment out for local development, leave in for packaging.
     ]}),
-  // new webpack.EnvironmentPlugin(new webpack.EnvironmentPlugin({
-  //   DATABASE_URL: 'file:./dev.db',
-  // })
-  // ),
-
 ];

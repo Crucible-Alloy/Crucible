@@ -74,14 +74,6 @@ const os = require("os");
 
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime";
 
-process.env.PRISMA_QUERY_ENGINE_LIBRARY = path.join(__dirname, 'native_modules', 'client', 'query_engine-darwin.dylib.node');
-
-const prisma = new PrismaClient({datasources: {
-  db: {
-    url: `file:${path.join(process.resourcesPath, 'prisma/dev.db')}`,
-  },
-}});
-
 let selectedProject = -1;
 
 export type TestWithCanvas = Prisma.TestGetPayload<{
@@ -182,7 +174,23 @@ let mainWindow: BrowserWindow, projectSelectWindow: BrowserWindow;
 const number = z.coerce.number();
 const bool = z.coerce.boolean();
 
-const isDev = false;
+const isDev = true;
+let prisma: PrismaClient;
+
+if (isDev) {
+  process.env.PRISMA_QUERY_ENGINE_LIBRARY = path.join(__dirname, 'native_modules', 'client', 'query_engine-darwin.dylib.node');
+  prisma = new PrismaClient();
+
+} else {
+  process.env.PRISMA_QUERY_ENGINE_LIBRARY = path.join(__dirname, 'native_modules', 'client', 'query_engine-darwin.dylib.node');
+
+  prisma = new PrismaClient({datasources: {
+      db: {
+        url: `file:${path.join(process.resourcesPath, 'prisma/dev.db')}`,
+      },
+    }});
+}
+
 
 let springAPI: ChildProcessWithoutNullStreams;
 const isMac = true;
@@ -660,12 +668,10 @@ function createProjectSelectWindow() {
   });
 
   projectSelectWindow.loadURL(
-    isDev
-      ? "http://localhost:3000/projects"
-      : PROJECT_WINDOW_WEBPACK_ENTRY
+    PROJECT_WINDOW_WEBPACK_ENTRY
   );
 
-  if (!isDev) {
+  if (isDev) {
     projectSelectWindow.webContents.openDevTools({ mode: "detach" });
   }
 }
@@ -686,15 +692,13 @@ function createMainWindow(projectID: number) {
 
   //Load index.html
   mainWindow.loadURL(
-    isDev
-      ? `http://localhost:3000/main/${projectID}`
-      : MAIN_WINDOW_WEBPACK_ENTRY
+      MAIN_WINDOW_WEBPACK_ENTRY
   ).then(() => {
     selectedProject = projectID;
   });
 
 
-  if (!isDev) {
+  if (isDev) {
     mainWindow.webContents.openDevTools({ mode: "detach" });
   }
 }

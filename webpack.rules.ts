@@ -12,6 +12,7 @@ export const rules: Required<ModuleOptions>['rules'] = [
     test: /[/\\]node_modules[/\\].+\.(m?js|node)$/,
     // exclude: /\.prisma/,
     parser: { amd: false },
+    exclude: /\.prisma/,
     use: {
       loader: '@vercel/webpack-asset-relocator-loader',
       options: {
