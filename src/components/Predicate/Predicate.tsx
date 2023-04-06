@@ -2,7 +2,7 @@ import { Input, Select } from "@mantine/core";
 import React from "react";
 
 import { PredicateState } from "./PredicateState";
-import { AtomWithSource, PredInstanceWithParams } from "../../../public/main";
+import { AtomWithSource, PredInstanceWithParams } from "../../main";
 import { PredicateParam } from "./PredicateParam";
 interface Props {
   predicate: PredInstanceWithParams;

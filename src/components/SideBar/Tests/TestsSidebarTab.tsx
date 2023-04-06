@@ -14,7 +14,7 @@ import { Test } from "@prisma/client";
 import NewTestModal from "./NewTestModal";
 import TestListItem from "./TestListItem";
 
-const { SIDEBAR_WIDTH } = require("../../../utils/constants");
+import { SIDEBAR_WIDTH } from "../../../utils/constants";
 
 interface Props {
   projectID: number;

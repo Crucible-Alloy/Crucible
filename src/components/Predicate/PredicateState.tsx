@@ -1,7 +1,7 @@
 import { Box, Center, Input, SegmentedControl } from "@mantine/core";
 import { IconEqual, IconEqualNot, IconEyeOff } from "@tabler/icons";
 import React, { useState } from "react";
-import { PredInstanceWithParams } from "../../../public/main";
+import { PredInstanceWithParams } from "../../main";
 
 interface Props {
   predicate: PredInstanceWithParams;

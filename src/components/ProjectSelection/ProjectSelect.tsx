@@ -19,11 +19,10 @@ import {
 } from "@mantine/core";
 import { IconSettings } from "@tabler/icons";
 import NewProjectModal from "./NewProjectModal";
-
 import { Project, Relation, Test } from "@prisma/client";
-import { NewProject } from "../../../public/validation/formValidation";
+import { NewProject } from "../../validation/formValidation";
 import ProjectListItem from "./ProjectListItem";
-import { TestWithCanvas } from "../../../public/main";
+import { TestWithCanvas } from "../../main";
 
 export const ProjectSelect = () => {
   const theme = useMantineTheme();

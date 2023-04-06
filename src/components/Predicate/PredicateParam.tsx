@@ -1,7 +1,7 @@
 import { Select } from "@mantine/core";
 import React from "react";
 import { Atom, PredInstanceParams, PredParam } from "@prisma/client";
-import { AtomWithSource, PredParamWithSource } from "../../../public/main";
+import { AtomWithSource, PredParamWithSource } from "../../main";
 import { z } from "zod";
 
 interface Props {

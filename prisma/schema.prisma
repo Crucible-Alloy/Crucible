@@ -7,52 +7,52 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
+  url      = "file:./dev.db"
 }
 
 // An aSketch Project Object
 model Project {
-  id           Int    @id @default(autoincrement())
-  name         String @unique  // Unique name for use in filepath
-  projectPath  String @unique  // Folder path for storage of test files
-  alloyFile    String  // Reference to location of alloy file for sending to Springboot API
-  activeTab    String?  // Reference to currently active tab (by tab name)
-  tests        Test[]  // Array of test objects created by user
-  predicates   Predicate[]  @relation("projectPreds")  // Array of predicates defined in the alloy file
-  atoms        AtomSource[] @relation("projectAtoms")  // Array of Atom defined in the alloy file
-  tabs         Tab[] @relation("projectTabs")  // Array of opened tabs by user.
+  id           Int               @id @default(autoincrement())
+  name         String            @unique // Unique name for use in filepath
+  projectPath  String            @unique // Folder path for storage of test files
+  alloyFile    String // Reference to location of alloy file for sending to Springboot API
+  activeTab    String? // Reference to currently active tab (by tab name)
+  tests        Test[] // Array of test objects created by user
+  predicates   Predicate[]       @relation("projectPreds") // Array of predicates defined in the alloy file
+  atoms        AtomSource[]      @relation("projectAtoms") // Array of Atom defined in the alloy file
+  tabs         Tab[]             @relation("projectTabs") // Array of opened tabs by user.
   inheritances AtomInheritance[] @relation("projectInheritance")
-  connections  Connection[] @relation("project-connections")
-  relations    Relation[] @relation("projectRelations")
+  connections  Connection[]      @relation("project-connections")
+  relations    Relation[]        @relation("projectRelations")
 }
 
 // A Test Object
 model Test {
-  id           Int @id @default(autoincrement())
-  project      Project @relation(fields: [projectID], references: [id], onDelete: Cascade)
-  projectID    Int
-  name         String @unique  // Unique name for use in filepath
-  testFile     String @unique  // File path for storage of command string
-  tab          Tab? @relation
-  tabIsOpen    Boolean @default(false)
-  atomCount    Int @default(0) // Used in autogenerating nicknames. Increments on atom being added. Does not decrement.
-  atoms        Atom[] @relation("testAtoms") // Array of atom instances
-  predicates   PredInstance[] @relation("testPredicate") // Array of atom instances
-  connections  Connection[]  @relation("testConnections") // Array of connection instances
+  id          Int            @id @default(autoincrement())
+  project     Project        @relation(fields: [projectID], references: [id], onDelete: Cascade)
+  projectID   Int
+  name        String         @unique // Unique name for use in filepath
+  testFile    String         @unique // File path for storage of command string
+  tab         Tab?           @relation
+  tabIsOpen   Boolean        @default(false)
+  atomCount   Int            @default(0) // Used in autogenerating nicknames. Increments on atom being added. Does not decrement.
+  atoms       Atom[]         @relation("testAtoms") // Array of atom instances
+  predicates  PredInstance[] @relation("testPredicate") // Array of atom instances
+  connections Connection[]   @relation("testConnections") // Array of connection instances
 }
 
 // TODO: This model may not be necesarry once refactored
 model Tab {
-  id           Int @id @default(autoincrement())
-  project      Project @relation(name: "projectTabs", fields: [projectID], references: [id], onDelete: Cascade)
-  projectID    Int
-  test         Test @relation(fields: [testId], references: [id])  // Define tabs as relation to tests
-  testId       Int @unique
-  testName     String
+  id        Int     @id @default(autoincrement())
+  project   Project @relation(name: "projectTabs", fields: [projectID], references: [id], onDelete: Cascade)
+  projectID Int
+  test      Test    @relation(fields: [testId], references: [id]) // Define tabs as relation to tests
+  testId    Int     @unique
+  testName  String
 }
 
 // The Canvas for a Test
-//model Canvas {
+// model Canvas {
 //  id           Int @id @default(autoincrement())
 //  test         Test @relation(name: "testCanvas", fields: [testId], references: [id], onDelete: Cascade)
 //  testId       Int @unique
@@ -63,123 +63,125 @@ model Tab {
 
 // Metadata for an Atom type -- As defined in the alloy file
 model AtomSource {
-  id           Int @id @default(autoincrement())
-  project      Project @relation(name: "projectAtoms", fields: [projectID], references: [id], onDelete: Cascade)
-  projectID    Int
-  label        String  // Unique label for use in parents and children arrays as well as gui
-  isEnum       Boolean @default(false)
-  isLone       Boolean @default(false)
-  isOne        Boolean @default(false)
-  isSome       Boolean @default(false)
-  isAbstract   Boolean @default(false)
-  color        String  // Color to be displated on a canvas, semi-random default, user editable
-  shape        String @default("rectangle")  // Shape to be displayed on a canvas, user can select alternate shapes
-  fromRelations Relation[] @relation("relationFrom")  // List of relations the atom is defined as FROM
-  toRelations  Relation[] @relation("relationTo")  // List of relations the atom is defined as TO
-  isParentOf   AtomInheritance[] @relation("parent")
-  isChildOf    AtomInheritance[] @relation("child")
-  instances    Atom[]
+  id            Int               @id @default(autoincrement())
+  project       Project           @relation(name: "projectAtoms", fields: [projectID], references: [id], onDelete: Cascade)
+  projectID     Int
+  label         String // Unique label for use in parents and children arrays as well as gui
+  isEnum        Boolean           @default(false)
+  isLone        Boolean           @default(false)
+  isOne         Boolean           @default(false)
+  isSome        Boolean           @default(false)
+  isAbstract    Boolean           @default(false)
+  color         String // Color to be displated on a canvas, semi-random default, user editable
+  shape         String            @default("rectangle") // Shape to be displayed on a canvas, user can select alternate shapes
+  fromRelations Relation[]        @relation("relationFrom") // List of relations the atom is defined as FROM
+  toRelations   Relation[]        @relation("relationTo") // List of relations the atom is defined as TO
+  isParentOf    AtomInheritance[] @relation("parent")
+  isChildOf     AtomInheritance[] @relation("child")
+  instances     Atom[]
 
   @@unique([projectID, label])
   @@unique([projectID, label, id])
 }
 
 model AtomInheritance {
-  projectID    Int
-  parentLabel  String
-  childLabel   String
-  project      Project @relation(name: "projectInheritance", fields: [projectID], references: [id], onDelete: Cascade)
-  parent       AtomSource @relation(name: "parent", fields: [projectID, parentLabel], references: [projectID, label])
-  child        AtomSource @relation(name: "child", fields: [projectID, childLabel], references: [projectID, label])
+  projectID   Int
+  parentLabel String
+  childLabel  String
+  project     Project    @relation(name: "projectInheritance", fields: [projectID], references: [id], onDelete: Cascade)
+  parent      AtomSource @relation(name: "parent", fields: [projectID, parentLabel], references: [projectID, label])
+  child       AtomSource @relation(name: "child", fields: [projectID, childLabel], references: [projectID, label])
 
-  @@unique( fields: [projectID, parentLabel, childLabel], name: "atomInheritanceID")
+  @@unique(fields: [projectID, parentLabel, childLabel], name: "atomInheritanceID")
 }
 
 // Instance of a connection between two Atom on a canvas
 model Connection {
-  id           Int @id @default(autoincrement())
-  projectID    Int
-  testID       Int
-  toID         Int
-  fromID       Int
-  toLabel      String
-  fromLabel    String
-  connLabel    Relation @relation(name: "connLabel", fields: [toLabel, fromLabel, projectID], references: [toLabel, fromLabel, projectID])
-  test         Test @relation(name: "testConnections", fields: [testID], references: [id], onDelete: Cascade)
-  project      Project @relation(name: "project-connections", fields: [projectID], references: [id], onDelete: Cascade)
-  from         Atom @relation(name: "connectionFrom", fields: [fromID], references: [id], onDelete: Cascade)
-  to           Atom @relation(name: "connectionTo", fields: [toID], references: [id], onDelete: Cascade)
+  id        Int      @id @default(autoincrement())
+  projectID Int
+  testID    Int
+  toID      Int
+  fromID    Int
+  toLabel   String
+  fromLabel String
+  connLabel Relation @relation(name: "connLabel", fields: [toLabel, fromLabel, projectID], references: [toLabel, fromLabel, projectID])
+  test      Test     @relation(name: "testConnections", fields: [testID], references: [id], onDelete: Cascade)
+  project   Project  @relation(name: "project-connections", fields: [projectID], references: [id], onDelete: Cascade)
+  from      Atom     @relation(name: "connectionFrom", fields: [fromID], references: [id], onDelete: Cascade)
+  to        Atom     @relation(name: "connectionTo", fields: [toID], references: [id], onDelete: Cascade)
 }
 
 // Instance of an Atom on a canvas
 model Atom {
-  id           Int @id @default(autoincrement())
-  testID       Int
-  top          Int  // Y Coord
-  left         Int  // X Coord
-  srcID        Int
-  nickname     String // Name displayed on atom and used in command strings
-  srcAtom      AtomSource @relation(fields: [srcID], references: [id]) // Reference to the atom metadata
-  test         Test @relation(name: "testAtoms", fields: [testID], references: [id], onDelete: Cascade)
-  connsFrom    Connection[] @relation("connectionFrom")  // List of connections where instance is the FROM
-  connsTo      Connection[] @relation("connectionTo")  // List of connections where instance is the TO
-  @@unique(fields: [nickname, testID], name:"atomNickID")
+  id        Int          @id @default(autoincrement())
+  testID    Int
+  top       Int // Y Coord
+  left      Int // X Coord
+  srcID     Int
+  nickname  String // Name displayed on atom and used in command strings
+  srcAtom   AtomSource   @relation(fields: [srcID], references: [id]) // Reference to the atom metadata
+  test      Test         @relation(name: "testAtoms", fields: [testID], references: [id], onDelete: Cascade)
+  connsFrom Connection[] @relation("connectionFrom") // List of connections where instance is the FROM
+  connsTo   Connection[] @relation("connectionTo") // List of connections where instance is the TO
+
+  @@unique(fields: [nickname, testID], name: "atomNickID")
 }
 
 // Predicate Data -- As defined in alloy file
 model Predicate {
-  id           Int @id @default(autoincrement())
-  projectID    Int
-  name         String  // Name of the predicate as defined in the project
-  status       Boolean? // User defined test condition -- equals, not equals, or null (no test)
-  params       PredParam[]
-  project      Project @relation(name: "projectPreds", fields: [projectID], references: [id], onDelete: Cascade)
-  instances    PredInstance[] @relation("predStates")
+  id        Int            @id @default(autoincrement())
+  projectID Int
+  name      String // Name of the predicate as defined in the project
+  status    Boolean? // User defined test condition -- equals, not equals, or null (no test)
+  params    PredParam[]
+  project   Project        @relation(name: "projectPreds", fields: [projectID], references: [id], onDelete: Cascade)
+  instances PredInstance[] @relation("predStates")
 }
 
 // Predicate Parameters
 model PredParam {
-  id           Int @id @default(autoincrement())
-  predicate    Predicate @relation(fields: [predID], references: [id], onDelete: Cascade)
-  predID       Int
-  label        String  // Name of predicate parameter as defined in alloy file
-  paramType    String  // Type of atom valid for parameter (as a label) "this/List"
-  instances    PredInstanceParams[] @relation("paramInstance")
+  id        Int                  @id @default(autoincrement())
+  predicate Predicate            @relation(fields: [predID], references: [id], onDelete: Cascade)
+  predID    Int
+  label     String // Name of predicate parameter as defined in alloy file
+  paramType String // Type of atom valid for parameter (as a label) "this/List"
+  instances PredInstanceParams[] @relation("paramInstance")
 }
 
 // The instance of a predicate associated with a test.
 model PredInstance {
-  id           Int @id @default(autoincrement())
-  predID       Int
-  testID       Int
-  state        Boolean?
-  test         Test @relation(name: "testPredicate", fields: [testID], references: [id], onDelete: Cascade )
-  predicate    Predicate @relation(name: "predStates", fields: [predID], references: [id], onDelete: Cascade)
-  params       PredInstanceParams[] @relation("predInstance")
+  id        Int                  @id @default(autoincrement())
+  predID    Int
+  testID    Int
+  state     Boolean?
+  test      Test                 @relation(name: "testPredicate", fields: [testID], references: [id], onDelete: Cascade)
+  predicate Predicate            @relation(name: "predStates", fields: [predID], references: [id], onDelete: Cascade)
+  params    PredInstanceParams[] @relation("predInstance")
 }
 
 model PredInstanceParams {
-  id           Int @id @default(autoincrement())
-  predParamID  Int
-  predInstID   Int
-  atom         Int?
-  param        PredParam @relation(name: "paramInstance", fields: [predParamID], references: [id], onDelete: Cascade )
-  predInst     PredInstance @relation(name: "predInstance", fields: [predInstID], references: [id])
+  id          Int          @id @default(autoincrement())
+  predParamID Int
+  predInstID  Int
+  atom        Int?
+  param       PredParam    @relation(name: "paramInstance", fields: [predParamID], references: [id], onDelete: Cascade)
+  predInst    PredInstance @relation(name: "predInstance", fields: [predInstID], references: [id])
 }
 
 // AtomData Relations -- As defined in alloy file
 model Relation {
-  id           Int @id @default(autoincrement())
+  id           Int          @id @default(autoincrement())
   projectID    Int
-  label        String  // Unique label for use in connections and command string
-  multiplicity String  // Lone, One, Some, None
-  type         String  // Relation signature "{this/List->this/Node}"
-  fromLabel    String  // "this/List"
-  toLabel      String  // "this/Node"
-  project      Project @relation(name: "projectRelations", fields: [projectID], references: [id], onDelete: Cascade)
-  fromAtom     AtomSource @relation(name: "relationFrom", fields: [projectID, fromLabel], references: [projectID, label])
-  toAtom       AtomSource @relation(name: "relationTo", fields: [projectID, toLabel], references: [projectID, label])
+  label        String // Unique label for use in connections and command string
+  multiplicity String // Lone, One, Some, None
+  type         String // Relation signature "{this/List->this/Node}"
+  fromLabel    String // "this/List"
+  toLabel      String // "this/Node"
+  project      Project      @relation(name: "projectRelations", fields: [projectID], references: [id], onDelete: Cascade)
+  fromAtom     AtomSource   @relation(name: "relationFrom", fields: [projectID, fromLabel], references: [projectID, label])
+  toAtom       AtomSource   @relation(name: "relationTo", fields: [projectID, toLabel], references: [projectID, label])
   connections  Connection[] @relation("connLabel")
-  @@unique( fields: [projectID, label], name: "relationID")
-  @@unique( fields: [fromLabel, toLabel, projectID], name: "relationSignature")
+
+  @@unique(fields: [projectID, label], name: "relationID")
+  @@unique(fields: [fromLabel, toLabel, projectID], name: "relationSignature")
 }

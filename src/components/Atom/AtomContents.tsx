@@ -2,13 +2,12 @@ import { useEffect, useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import { getEmptyImage } from "react-dnd-html5-backend";
 import { MantineTheme, Paper, Text, useMantineTheme } from "@mantine/core";
-import { AtomWithSource, AtomSourceWithRelations } from "../../../public/main";
+import { AtomWithSource, AtomSourceWithRelations } from "../../main";
 import React from "react";
 import { Atom, AtomInheritance, AtomSource, Relation } from "@prisma/client";
 import { showNotification } from "@mantine/notifications";
 import { IconAlertTriangle } from "@tabler/icons";
-
-const { ATOM, CONNECTION } = require("../../utils/constants");
+import { ATOM, CONNECTION } from "../../utils/constants"
 
 interface Props {
   atom: AtomWithSource;
@@ -21,7 +20,7 @@ export function AtomContents({ atom }: Props) {
   const theme = useMantineTheme();
 
   useEffect(() => {
-    let acceptTypesSet = new Set<string>();
+    const acceptTypesSet = new Set<string>();
     window.electronAPI
       .getRelationsToAtom({
         label: srcData.label,
@@ -139,9 +138,7 @@ export function AtomContents({ atom }: Props) {
       position: "relative",
       // IE fallback: hide the real node using CSS when dragging
       // because IE will ignore our custom "empty image" drag preview.
-      // @ts-ignore
       opacity: isDragging ? 0 : 1,
-      // @ts-ignore
       backgroundColor: canDrop ? theme.colors.dark[3] : theme.colors.dark[5],
       margin: "auto",
     };

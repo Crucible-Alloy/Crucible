@@ -7,7 +7,7 @@ import { useViewportSize } from "@mantine/hooks";
 import TestPredicatesBtn from "./TestPredicatesBtn";
 import TestPlayBtn from "./TestPlayBtn";
 
-const TestSettingsBtn = require("./TestSettingsBtn.js");
+import TestSettingsBtn from "./TestSettingsBtn";
 
 interface Props {
   test: Test;

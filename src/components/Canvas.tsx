@@ -9,11 +9,11 @@ import {
   AtomSourceWithRelations,
   AtomWithSource,
   TestWithCanvas,
-} from "../../public/main";
+} from "../main";
 import { AtomInstance } from "./Atom/AtomInstance";
 import { Atom, AtomSource } from "@prisma/client";
 
-const { ATOM, ATOM_SOURCE } = require("../utils/constants");
+import { ATOM, ATOM_SOURCE } from "../utils/constants";
 
 interface Props {
   projectID: number;

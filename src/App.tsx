@@ -9,11 +9,12 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 import { useParams } from "react-router-dom";
 import { NotificationsProvider } from "@mantine/notifications";
 import React, { useEffect, useState } from "react";
-import { NewProject } from "../public/validation/formValidation";
+import { NewProject } from "./validation/formValidation";
 import { Atom, AtomSource, Project, Relation, Test } from "@prisma/client";
-import { AtomSourceWithRelations, TestWithCanvas } from "../public/main";
-import { ElectronAPI } from "../public/preload";
-const { CustomDragLayer } = require("./components/CustomDragLayer");
+import { AtomSourceWithRelations, TestWithCanvas } from "./main";
+import { ElectronAPI } from "./preload";
+import { CustomDragLayer } from "./components/CustomDragLayer";
+
 
 // TODO: Import Window electronAPI types in App.ts or somewhere more appropriate once we
 //  get it to refactored Typescript.
@@ -35,9 +36,10 @@ declare global {
 
 export default function App() {
   const { width, height } = useViewportSize();
-  const { projectID } = useParams();
+  // const { projectID } = useParams();
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const number = z.coerce.number();
+  const [projectID, setProjectID] = useState<number>();
   const handleMouseMove = (event: any) => {
     // 👇 Get mouse position relative to element
     const localX = event.clientX - event.target.offsetLeft;
@@ -45,6 +47,12 @@ export default function App() {
 
     setMousePos({ x: localX, y: localY });
   };
+
+  useEffect(() => {
+    window.electronAPI.getOpenProject().then((value: number) => {
+      setProjectID(number.parse(value))
+    })
+  }, []);
 
   useEffect(() => {
     const handleMouseMove = (event: any) => {
@@ -83,14 +91,15 @@ export default function App() {
                   })}
                 >
                   {" "}
-                  {<SidebarWrapper projectID={number.parse(projectID)} />}{" "}
+                  { projectID ? <SidebarWrapper projectID={number.parse(projectID)} /> : <></>}{" "}
                 </Navbar>
               }
             >
-              <BodyWrapper
+              {projectID ? <BodyWrapper
                 projectID={number.parse(projectID)}
                 mousePos={mousePos}
-              />
+              /> : <div>Loading</div>}
+
             </AppShell>
           </NotificationsProvider>
         </MantineProvider>

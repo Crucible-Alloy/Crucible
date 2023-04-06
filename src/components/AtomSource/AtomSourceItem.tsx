@@ -12,9 +12,8 @@ import {
   IconSubtask,
 } from "@tabler/icons";
 import AtomSourceSettingsModal from "./AtomSourceSettingsModal";
-import { AtomSourceWithRelations } from "../../../public/main";
-
-const { ATOM_SOURCE } = require("../../utils/constants");
+import { AtomSourceWithRelations } from "../../main";
+import { ATOM_SOURCE } from "../../utils/constants";
 
 function getStyles(left: number, top: number, isDragging: boolean) {
   //const transform = `translate3d(${left}px, ${top}px, 0)`

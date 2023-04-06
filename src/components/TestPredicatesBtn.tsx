@@ -6,7 +6,7 @@ import {
   AtomWithSource,
   PredInstanceWithParams,
   TestWithCanvas,
-} from "../../public/main";
+} from "../main";
 
 interface Props {
   projectID: number;

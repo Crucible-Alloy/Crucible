@@ -1,9 +1,7 @@
 import { IconCheck, IconPlayerPlay, IconX } from "@tabler/icons";
 import { Tooltip, ActionIcon } from "@mantine/core";
-import { useState } from "react";
+import React, { useState } from "react";
 import { showNotification } from "@mantine/notifications";
-import React from "react";
-
 interface Props {
   disabled: boolean;
   projectID: number;
