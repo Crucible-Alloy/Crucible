@@ -749,6 +749,7 @@ async function deployAlloyAPI() {
 // Some APIs only available after this call.
 app.whenReady().then(() => {
   deployAlloyAPI().then(() => {
+    console.log("SpringAPI ON PID:", springAPI.pid)
     createASketchMenu();
     createProjectSelectWindow();
 
@@ -778,8 +779,12 @@ app.on("window-all-closed", () => {
     app.quit();
 
     // Shutdown spring-boot api
-    treeKill(springAPI.pid);
+
   }
+});
+
+app.once('before-quit', () => {
+  treeKill(springAPI.pid);
 });
 
 ipcMain.on(GET_PROJECTS, async (event) => {
@@ -849,7 +854,7 @@ ipcMain.on(
   ) => {
     // some disj List0: List {some disj Node1, Node2: Node {List = List0 and Node = Node1+Node2 and header=List0->Node1 and link=Node1->Node2 and Acyclic[List0]}}
     let cmd = "";
-    let countArray = [];  // Stores the number of each type of atom.
+    const countArray = [];  // Stores the number of each type of atom.
     console.log(testID);
     const test = await prisma.test.findFirst({
       where: { id: number.parse(testID) },
@@ -966,7 +971,7 @@ ipcMain.on(
     const reqBody = JSON.stringify({
       path: test.project.alloyFile,
       command: cmd,
-      maximum: maxAtoms
+      maximum: maxAtoms.toString(),
     });
 
     const apiRequest = axios.post(`http://localhost:${PORT_NUMBER}/tests`, reqBody, {
