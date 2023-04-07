@@ -93,3 +93,6 @@ out/
 
 # Typescript Compiled
 dist/
+
+#Jetbrains
+.idea/
