@@ -10,8 +10,8 @@ import { rendererConfig } from './webpack.renderer.config';
 
 const config: ForgeConfig = {
   packagerConfig: {
-    appBundleId: "asketch.foo",
-    appCopyright: "Copyright © 2022 ASketch",
+    appBundleId: "com.crucible.app",
+    appCopyright: "Copyright © 2023 Crucible",
     extraResource: [
       "./node_modules/.prisma",
       "./prisma",
@@ -19,7 +19,10 @@ const config: ForgeConfig = {
     ],
   },
   rebuildConfig: {},
-  makers: [new MakerSquirrel({}), new MakerZIP({}, ['darwin']), new MakerRpm({}), new MakerDeb({})],
+  makers: [new MakerSquirrel({
+    authors: "Adam Emerson",
+    name: "Crucible",
+  }), new MakerZIP({}, ['darwin']), new MakerRpm({}), new MakerDeb({})],
   plugins: [
     new WebpackPlugin({
       mainConfig,

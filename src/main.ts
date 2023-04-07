@@ -5,7 +5,7 @@ declare const PROJECT_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
 
 
 import { BrowserWindow, shell , app, ipcMain, dialog, Menu, session } from "electron";
-import { ChildProcessWithoutNullStreams } from "child_process";
+import { ChildProcessWithoutNullStreams, ChildProcess } from "child_process";
 import axios, { AxiosResponse } from "axios";
 import * as child_process from "child_process";
 import { z, ZodError } from "zod";
@@ -174,6 +174,59 @@ let mainWindow: BrowserWindow, projectSelectWindow: BrowserWindow;
 // Number/Boolean coercion helper because ipc encodes numbers as strings.
 const number = z.coerce.number();
 const bool = z.coerce.boolean();
+
+const handleSquirrelEvent = function() {
+  if (process.platform != 'win32') {
+    return false;
+  }
+
+  function executeSquirrelCommand(args:any, done:any) {
+    const updateDotExe = path.resolve(path.dirname(process.execPath),
+      '..', 'update.exe');
+    const child = child_process.spawn(updateDotExe, args, { detached: true });
+
+    child.on('close', function(code:any) {
+      done();
+    });
+  }
+
+  function install(done:any) {
+    const target = path.basename(process.execPath);
+    executeSquirrelCommand(["--createShortcut", target], done);
+  }
+
+  function uninstall(done:any) {
+    const target = path.basename(process.execPath);
+    executeSquirrelCommand(["--removeShortcut", target], done);
+  }
+
+  const squirrelEvent = process.argv[1];
+
+  switch (squirrelEvent) {
+
+    case '--squirrel-install':
+      install(app.quit);
+      return true;
+
+    case '--squirrel-updated':
+      install(app.quit);
+      return true;
+
+    case '--squirrel-obsolete':
+      app.quit();
+      return true;
+
+    case '--squirrel-uninstall':
+      uninstall(app.quit);
+      return true;
+  }
+
+  return false;
+  };
+
+if (handleSquirrelEvent()) {
+     app.quit();
+}
 
 const isDev = true;
 let prisma: PrismaClient;
