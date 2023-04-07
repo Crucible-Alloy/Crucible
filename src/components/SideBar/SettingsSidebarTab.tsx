@@ -1,7 +1,6 @@
 import { Group, Input } from "@mantine/core";
 import { IconFileSearch } from "@tabler/icons";
-import { useEffect, useState } from "react";
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 interface Props {
   projectID: number;
@@ -17,7 +16,7 @@ function SettingsSidebarTab({ projectID }: Props) {
   }, []);
 
   function trimFullPath(filePath: string) {
-    let segments = filePath.split("/");
+    const segments = filePath.split("/");
     console.log(segments[-1]);
     return segments.pop();
   }

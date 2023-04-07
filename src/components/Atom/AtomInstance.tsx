@@ -2,8 +2,7 @@ import React, { CSSProperties, useEffect, useState } from "react";
 import { useDrag } from "react-dnd";
 import { getEmptyImage } from "react-dnd-html5-backend";
 import { AtomContents } from "./AtomContents";
-import { useMantineTheme, Container } from "@mantine/core";
-import { Atom, Project } from "@prisma/client";
+import {useMantineTheme, Container, MantineTheme} from "@mantine/core";
 import { AtomWithSource, AtomSourceWithRelations } from "../../main";
 import { CONNECTION } from "../../utils/constants";
 function getAtomStyles(
@@ -58,7 +57,7 @@ export function AtomInstance({ contentsBeingDragged, atom }: Props) {
   }, []);
 
   useEffect(() => {
-    window.electronAPI.listenForMetaDataChange((_event: any, value: any) => {
+    window.electronAPI.listenForMetaDataChange(() => {
       window.electronAPI
         .getAtomSource(atom.srcID)
         .then((srcAtom: AtomSourceWithRelations) => {

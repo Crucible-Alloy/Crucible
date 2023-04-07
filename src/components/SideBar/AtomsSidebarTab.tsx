@@ -1,8 +1,6 @@
 import { Center, Group, Loader, ScrollArea, Stack, Title } from "@mantine/core";
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AtomSourceItem } from "../AtomSource/AtomSourceItem";
-import { useEffect } from "react";
-import React from "react";
 import { AtomSourceWithRelations } from "../../main";
 import { SIDEBAR_HEIGHT } from "../../utils/constants";
 

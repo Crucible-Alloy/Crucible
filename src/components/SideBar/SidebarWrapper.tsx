@@ -4,11 +4,7 @@ import {
   IconAtom,
   IconTestPipe,
 } from "@tabler/icons";
-// import AtomsSidebarTab from "./AtomsSidebarTab";
-// import SettingsSidebarTab from "./SettingsSidebarTab";
-// import TestsSidebarTab from "./TestsSidebarTab";
-import { useRef, useState } from "react";
-import React from "react";
+import React, { useState } from "react";
 import AtomsSidebarTab from "./AtomsSidebarTab";
 import TestsSidebarTab from "./Tests/TestsSidebarTab";
 import SettingsSidebarTab from "./SettingsSidebarTab";
@@ -20,7 +16,6 @@ interface Props {
 function SidebarWrapper({ projectID }: Props) {
   const [active, setActive] = useState<number | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const ref = useRef(null);
 
   const data = [
     {
@@ -51,7 +46,7 @@ function SidebarWrapper({ projectID }: Props) {
   }
 
   const items = data.map((item, index) => (
-    <Center key={item.label} sx={(theme) => ({ width: "100%" })}>
+    <Center key={item.label} sx={() => ({ width: "100%" })}>
       <ActionIcon
         key={item.label}
         size={"xl"}
@@ -70,38 +65,7 @@ function SidebarWrapper({ projectID }: Props) {
       </ActionIcon>
     </Center>
   ));
-  // return (
-  //   <Tabs
-  //     color="blue"
-  //     p={"none"}
-  //     m={"sm"}
-  //     defaultValue={"atoms"}
-  //     variant={"pills"}
-  //     radius={"xl"}
-  //     orientation={"vertical"}
-  //   >
-  //     <Tabs.List>
-  //       <Tabs.Tab value="atoms" icon={<IconAtom size={34} />}></Tabs.Tab>
-  //       <Tabs.Tab value="tests" icon={<IconTestPipe size={34} />}></Tabs.Tab>
-  //       <Tabs.Tab
-  //         value="settings"
-  //         icon={<IconAdjustmentsHorizontal size={34} />}
-  //       ></Tabs.Tab>
-  //     </Tabs.List>
-  //
-  //     <Tabs.Panel value={"atoms"}>
-  //       <AtomsSidebarTab projectID={projectID} />
-  //     </Tabs.Panel>
-  //
-  //     <Tabs.Panel value={"tests"}>
-  //       <TestsSidebarTab projectID={projectID} />
-  //     </Tabs.Panel>
-  //
-  //     <Tabs.Panel value={"settings"}>
-  //       <SettingsSidebarTab projectID={projectID} />
-  //     </Tabs.Panel>
-  //   </Tabs>
-  // );
+
   return (
     <>
       <Stack

@@ -19,10 +19,8 @@ import {
 } from "@mantine/core";
 import { IconSettings } from "@tabler/icons";
 import NewProjectModal from "./NewProjectModal";
-import { Project, Relation, Test } from "@prisma/client";
-import { NewProject } from "../../validation/formValidation";
+import { Project } from "@prisma/client";
 import ProjectListItem from "./ProjectListItem";
-import { TestWithCanvas } from "../../main";
 
 export const ProjectSelect = () => {
   const theme = useMantineTheme();
@@ -39,7 +37,7 @@ export const ProjectSelect = () => {
 
   // TODO: Dynamically reload after project deletion
   useEffect(() => {
-    window.electronAPI.listenForProjectsChange((_event: any, value: any) => {
+    window.electronAPI.listenForProjectsChange(() => {
       console.log("got projects update");
       loadProjects().then(() => setLoading(false));
     });

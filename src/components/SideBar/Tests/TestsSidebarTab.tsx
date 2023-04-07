@@ -5,11 +5,8 @@ import {
   ScrollArea,
   Stack,
   Title,
-  Flex,
 } from "@mantine/core";
-import { useState } from "react";
-import { useEffect } from "react";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Test } from "@prisma/client";
 import NewTestModal from "./NewTestModal";
 import TestListItem from "./TestListItem";
@@ -42,7 +39,7 @@ function TestsSidebarTab({ projectID }: Props) {
       {tests.length > 0 ? (
         <Stack sx={{ height: "100vh" }}>
           <ScrollArea offsetScrollbars>
-            {Object.entries(tests).map(([key, value]) => (
+            {Object.entries(tests).map(([, value]) => (
               <Container
                 key={value.id}
                 p={"xs"}

@@ -6,8 +6,8 @@ import { useForm } from "@mantine/form";
 
 interface Props {
   opened: boolean;
-  setModalOpened: (val: boolean) => any;
-  setTests: (data: Test[]) => any;
+  setModalOpened: (val: boolean) => void;
+  setTests: (data: Test[]) => void;
   tests: Test[];
   projectID: number;
 }
@@ -16,7 +16,6 @@ function NewTestModal({
   opened,
   setModalOpened,
   setTests,
-  tests,
   projectID,
 }: Props) {
   const form = useForm({

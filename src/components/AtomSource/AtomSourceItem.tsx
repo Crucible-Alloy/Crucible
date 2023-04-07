@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ActionIcon, Group, Paper, Text } from "@mantine/core";
 import { useDrag } from "react-dnd";
 import { getEmptyImage } from "react-dnd-html5-backend";
-import React from "react";
 import {
   IconArrowMoveRight,
   IconCaretDown,
@@ -14,17 +13,6 @@ import {
 import AtomSourceSettingsModal from "./AtomSourceSettingsModal";
 import { AtomSourceWithRelations } from "../../main";
 import { ATOM_SOURCE } from "../../utils/constants";
-
-function getStyles(left: number, top: number, isDragging: boolean) {
-  //const transform = `translate3d(${left}px, ${top}px, 0)`
-  return {
-    position: "absolute",
-    // IE fallback: hide the real node using CSS when dragging
-    // because IE will ignore our custom "empty image" drag preview.
-    opacity: isDragging ? 0 : 1,
-    height: isDragging ? 0 : "",
-  };
-}
 
 interface Props {
   atomSource: AtomSourceWithRelations;

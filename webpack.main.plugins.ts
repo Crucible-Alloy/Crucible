@@ -8,6 +8,6 @@ export const plugins = [
   new ForkTsCheckerWebpackPlugin(),
   new CopyPlugin({patterns: [
       {from: './src/JARs/*'},
-      {from: './prisma/schema.prisma'}, // Comment out for local development, leave in for packaging.
+      // {from: './prisma/schema.prisma'}, // Comment out for local development, leave in for packaging.
     ]}),
 ];

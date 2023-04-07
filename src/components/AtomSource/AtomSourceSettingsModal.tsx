@@ -15,7 +15,7 @@ import { AtomSource } from "@prisma/client";
 interface Props {
   atomSource: AtomSource;
   opened: boolean;
-  setModalOpened: (val: boolean) => any;
+  setModalOpened: (val: boolean) => void;
 }
 
 function AtomSourceSettingsModal({
@@ -33,7 +33,7 @@ function AtomSourceSettingsModal({
 
   function handleShapeChange(shape: string) {
     setShapeValue(shape);
-    window.electronAPI.setAtomShape(atomSource.projectID, atomSource.id, shape);
+    window.electronAPI.setAtomShape({projectID: atomSource.projectID, sourceAtomID: atomSource.id, shape: shape});
   }
 
   return (

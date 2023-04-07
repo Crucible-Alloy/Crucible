@@ -1,4 +1,4 @@
-let constants = {
+const constants = {
   // API CHANNELS
 
   // ATOMS

@@ -1,7 +1,8 @@
 // Form Validation for test creation.
-import { z } from "zod";
-import { PrismaClient } from "@prisma/client";
+import {z} from "zod";
+import {PrismaClient} from "@prisma/client";
 import fs from "fs";
+
 const prisma = new PrismaClient();
 
 const validFileName = /^[-\w^&'@{}[\],$=!#().%+~ ]+$/;
@@ -10,7 +11,7 @@ async function isTestNameAvailable(
   name: string,
   projectID: number
 ): Promise<boolean> {
-  let test = await prisma.test.findFirst({
+  const test = await prisma.test.findFirst({
     where: {
       name: { equals: name },
       projectID: { equals: projectID },
@@ -25,7 +26,7 @@ async function isTestNameAvailable(
  * @returns Promise<Project | null>
  */
 async function isProjectNameAvailable(name: string): Promise<boolean> {
-  let project = await prisma.project.findFirst({
+  const project = await prisma.project.findFirst({
     where: {
       name: { equals: name },
     },
@@ -48,8 +49,7 @@ const NewTestSchema = z
   })
   .refine(
     async ({ testName, projectID }) => {
-      let result = await isTestNameAvailable(testName, projectID);
-      return result;
+      return await isTestNameAvailable(testName, projectID);
     },
     (val) => ({
       message: `A test named ${val.testName} already exists in this project.`,
@@ -65,8 +65,7 @@ const NewProjectSchema = z
       .min(3, "Project name should be at least 3 characters.")
       .refine(
         async (val) => {
-          let result = await isProjectNameAvailable(val);
-          return result;
+          return await isProjectNameAvailable(val);
         },
         (val) => ({ message: `A project named ${val} already exists.` })
       ),

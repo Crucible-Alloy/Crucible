@@ -97,7 +97,6 @@ export default function App() {
             >
               {projectID ? <BodyWrapper
                 projectID={number.parse(projectID)}
-                mousePos={mousePos}
               /> : <div>Loading</div>}
 
             </AppShell>

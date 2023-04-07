@@ -4,7 +4,7 @@ import { getEmptyImage } from "react-dnd-html5-backend";
 import { MantineTheme, Paper, Text, useMantineTheme } from "@mantine/core";
 import { AtomWithSource, AtomSourceWithRelations } from "../../main";
 import React from "react";
-import { Atom, AtomInheritance, AtomSource, Relation } from "@prisma/client";
+import { Relation } from "@prisma/client";
 import { showNotification } from "@mantine/notifications";
 import { IconAlertTriangle } from "@tabler/icons";
 import { ATOM, CONNECTION } from "../../utils/constants"

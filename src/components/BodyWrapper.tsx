@@ -3,14 +3,11 @@ import { IconChartDots3 } from "@tabler/icons";
 import React, { useEffect, useState } from "react";
 import { Test } from "@prisma/client";
 import TabContent from "./TabContent";
-import TestPlayBtn from "./TestPlayBtn";
-import TestPredicatesBtn from "./TestPredicatesBtn";
 
 interface Props {
   projectID: number;
-  mousePos: { x: number; y: number };
 }
-function BodyWrapper({ projectID, mousePos }: Props) {
+function BodyWrapper({ projectID }: Props) {
   const [tabs, setTabs] = useState<Test[]>([]);
   const [activeTab, setActiveTab] = useState<TabsValue>(null);
 
@@ -23,7 +20,7 @@ function BodyWrapper({ projectID, mousePos }: Props) {
 
   // Listen for updates to tabs
   useEffect(() => {
-    window.electronAPI.listenForTabsChange((_event: any, value: any) => {
+    window.electronAPI.listenForTabsChange(() => {
       console.log("got tabs update");
       loadTabs().then(() =>
         loadActiveTab().then(() => console.log("Update tabs and active tab"))
@@ -33,7 +30,7 @@ function BodyWrapper({ projectID, mousePos }: Props) {
 
   const loadTabs = async () => {
     window.electronAPI.getTests(projectID).then((tests: Test[]) => {
-      let openTests = tests.filter((test: Test) => test.tabIsOpen);
+      const openTests = tests.filter((test: Test) => test.tabIsOpen);
       setTabs(openTests);
     });
   };
@@ -117,7 +114,6 @@ function BodyWrapper({ projectID, mousePos }: Props) {
               <TabContent
                 projectID={projectID}
                 test={test}
-                mousePos={mousePos}
               />
             </Tabs.Panel>
           ))}

@@ -8,7 +8,7 @@ import { NewProject } from "../../validation/formValidation";
 // TODO: Zod schema validation for form?
 
 interface Props {
-  setModalOpened(val: boolean): any;
+  setModalOpened(val: boolean): void;
   opened: boolean;
 }
 

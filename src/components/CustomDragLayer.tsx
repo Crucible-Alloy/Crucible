@@ -34,8 +34,8 @@ function getItemStyles(
     };
   }
   if (item.renderType === ATOM) {
-    let left = Math.round(delta.x);
-    let top = Math.round(delta.y);
+    const left = Math.round(delta.x);
+    const top = Math.round(delta.y);
     const transform = `translate(
             ${mousePos.x + (initialSourceOffset.x - initialOffset.x) + left}px, 
             ${mousePos.y + (initialSourceOffset.y - initialOffset.y) + top}px
@@ -79,9 +79,7 @@ export const CustomDragLayer = ({ mousePos }: any) => {
           <Arrow
             startPoint={{ x: mousePos.x, y: mousePos.y }}
             endPoint={{
-              //@ts-ignore
               x: mousePos.x + delta.x + 16,
-              //@ts-ignore
               y: mousePos.y + delta.y + 16,
             }}
             config={{ arrowColor: theme.colors.blue[5], strokeWidth: 5 }}

@@ -1,6 +1,5 @@
 import { Select } from "@mantine/core";
 import React from "react";
-import { Atom, PredInstanceParams, PredParam } from "@prisma/client";
 import { AtomWithSource, PredParamWithSource } from "../../main";
 import { z } from "zod";
 
@@ -27,8 +26,8 @@ export function PredicateParam({ param, atoms }: Props) {
       data={
         // Get the Atom from the canvas that match the type of the parameter
         Object.entries(atoms)
-          .filter(([key, atom]) => atom.srcAtom.label === param.param.paramType)
-          .map(([key, atom]) => ({
+          .filter(([, atom]) => atom.srcAtom.label === param.param.paramType)
+          .map(([, atom]) => ({
             value: atom.id.toString(),
             label: atom.nickname,
           }))

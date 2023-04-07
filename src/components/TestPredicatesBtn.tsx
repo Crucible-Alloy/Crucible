@@ -1,4 +1,4 @@
-import { IconFunction, IconZoomCode } from "@tabler/icons";
+import { IconFunction } from "@tabler/icons";
 import { ActionIcon, Modal, Text, Title, Tooltip } from "@mantine/core";
 import React, { useEffect, useState } from "react";
 import { Predicate } from "./Predicate/Predicate";
@@ -9,11 +9,10 @@ import {
 } from "../main";
 
 interface Props {
-  projectID: number;
   testID: number;
 }
 
-function TestPredicatesBtn({ projectID, testID }: Props) {
+function TestPredicatesBtn({ testID }: Props) {
   const [opened, setOpened] = useState(false);
   const [predicates, setPredicates] = useState<PredInstanceWithParams[]>([]);
   const [atoms, setAtoms] = useState<AtomWithSource[]>([]);
@@ -35,11 +34,11 @@ function TestPredicatesBtn({ projectID, testID }: Props) {
     fetchAndSetPredicates(testID).catch();
 
     // Bind listeners for database updates.
-    window.electronAPI.listenForPredicatesChange((_event: any, value: any) => {
+    window.electronAPI.listenForPredicatesChange(() => {
       console.log("Predicates Change");
       fetchAndSetPredicates(testID).catch();
     });
-    window.electronAPI.listenForCanvasChange((_event: any, value: any) => {
+    window.electronAPI.listenForCanvasChange(() => {
       fetchAndSetAtoms(testID).catch();
     });
   }, [testID]);

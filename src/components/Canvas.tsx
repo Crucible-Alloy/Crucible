@@ -6,7 +6,6 @@ import { IconAlertTriangle } from "@tabler/icons";
 import { useClickOutside } from "@mantine/hooks";
 import { Affix, Popover, Select, Title } from "@mantine/core";
 import {
-  AtomSourceWithRelations,
   AtomWithSource,
   TestWithCanvas,
 } from "../main";
@@ -16,11 +15,10 @@ import { Atom, AtomSource } from "@prisma/client";
 import { ATOM, ATOM_SOURCE } from "../utils/constants";
 
 interface Props {
-  projectID: number;
   testID: number;
 }
 
-function Canvas({ projectID, testID }: Props) {
+function Canvas({ testID }: Props) {
   const [canvasItems, setCanvas] = useState<TestWithCanvas>();
   const [atomMenu, setAtomMenu] = useState(false);
   const [coords, setCoords] = useState<{
@@ -124,8 +122,8 @@ function Canvas({ projectID, testID }: Props) {
         const delta = monitor.getDifferenceFromInitialOffset();
         if (delta) {
           if (isAtomInstance(item.data)) {
-            let left = Math.round(item.data.left + delta.x);
-            let top = Math.round(item.data.top + delta.y);
+            const left = Math.round(item.data.left + delta.x);
+            const top = Math.round(item.data.top + delta.y);
             if (monitor.getItemType() === ATOM) {
               console.log("Existing atom dragged.");
               updateAtom(item.data.id, left, top);

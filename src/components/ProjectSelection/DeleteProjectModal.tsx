@@ -4,15 +4,10 @@ import {
   Code,
   Group,
   Modal,
-  Stack,
   Text,
-  Textarea,
   TextInput,
   Title,
 } from "@mantine/core";
-import { IconTrash } from "@tabler/icons";
-import { useEffect } from "react";
-import { ZodError } from "zod";
 import { Project } from "@prisma/client";
 import { showNotification } from "@mantine/notifications";
 
@@ -20,7 +15,7 @@ import { showNotification } from "@mantine/notifications";
 // TODO: Zod schema validation for form?
 
 interface Props {
-  setModalOpened(val: boolean): any;
+  setModalOpened(val: boolean): void;
   opened: boolean;
   project: Project;
 }

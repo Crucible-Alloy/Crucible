@@ -3,20 +3,15 @@ import { Box, Group } from "@mantine/core";
 import Canvas from "./Canvas";
 
 import { Test } from "@prisma/client";
-import { useViewportSize } from "@mantine/hooks";
 import TestPredicatesBtn from "./TestPredicatesBtn";
 import TestPlayBtn from "./TestPlayBtn";
-
-import TestSettingsBtn from "./TestSettingsBtn";
 
 interface Props {
   test: Test;
   projectID: number;
-  mousePos: { x: number; y: number };
 }
 
-function TabContent({ test, projectID, mousePos }: Props) {
-  const { width, height } = useViewportSize();
+function TabContent({ test, projectID }: Props) {
   return (
     <>
       <Group
@@ -29,7 +24,7 @@ function TabContent({ test, projectID, mousePos }: Props) {
         }}
       >
         <TestPlayBtn projectID={projectID} testID={test.id} disabled={false} />
-        <TestPredicatesBtn projectID={projectID} testID={test.id} />
+        <TestPredicatesBtn testID={test.id} />
       </Group>
       <Box
         sx={(theme) => ({
@@ -41,7 +36,7 @@ function TabContent({ test, projectID, mousePos }: Props) {
           border: "solid 1px gray",
         })}
       >
-        <Canvas projectID={projectID} testID={test.id} />
+        <Canvas testID={test.id} />
       </Box>
     </>
   );

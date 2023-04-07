@@ -1,10 +1,9 @@
-import React from "react";
 import { Input } from "@mantine/core";
 import { IconFileSearch } from "@tabler/icons";
-import { useState } from "react";
+import React, { useState } from "react";
 
 interface Props {
-  setSelectedFile(val: string): any;
+  setSelectedFile(val: string): void;
   selectedFile: string;
 }
 
@@ -12,8 +11,8 @@ function FileSelector(props: Props) {
   const [trimmedPath, setTrimmedPath] = useState<string>("");
 
   function trimFullPath(filePath: string): string {
-    let segments = filePath.split("/");
-    let stringCandidate = segments.pop();
+    const segments = filePath.split("/");
+    const stringCandidate = segments.pop();
     if (stringCandidate) {
       return stringCandidate;
     } else {
