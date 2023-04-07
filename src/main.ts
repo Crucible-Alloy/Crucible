@@ -75,6 +75,7 @@ const os = require("os");
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime";
 
 let selectedProject = -1;
+const PORT_NUMBER = 10122
 
 export type TestWithCanvas = Prisma.TestGetPayload<{
   include: {
@@ -461,7 +462,7 @@ async function initProjectData(data: NewProject, projectID: number) {
     // Send file to alloy API and get back metadata
     const options = {
       method: "POST",
-      url: "http://localhost:8080/files",
+      url: `http://localhost:${PORT_NUMBER}/files`,
       headers: {
         "Content-Type": "application/json",
       },
@@ -848,6 +849,7 @@ ipcMain.on(
   ) => {
     // some disj List0: List {some disj Node1, Node2: Node {List = List0 and Node = Node1+Node2 and header=List0->Node1 and link=Node1->Node2 and Acyclic[List0]}}
     let cmd = "";
+    let countArray = [];  // Stores the number of each type of atom.
     console.log(testID);
     const test = await prisma.test.findFirst({
       where: { id: number.parse(testID) },
@@ -879,6 +881,7 @@ ipcMain.on(
       const type = atomTypeArr[i];
       cmd += "some disj";
       const atoms = test.atoms.filter((atom) => atom.srcAtom.label === type);
+      countArray.push(atoms.length)
       for (let j = 0; j < atoms.length; j++) {
         const atom = atoms[j];
         cmd += ` ${atom.nickname.replace(" ", "")}`;
@@ -956,12 +959,17 @@ ipcMain.on(
     cmd += "}".repeat(cmd.split("{").length - 1);
     console.log(cmd);
     console.log(test.project.alloyFile);
+
+    // Get the maximum of a single type of atom in the test
+    const maxAtoms = Math.max(...countArray)
+
     const reqBody = JSON.stringify({
       path: test.project.alloyFile,
       command: cmd,
+      maximum: maxAtoms
     });
 
-    const apiRequest = axios.post("http://localhost:8080/tests", reqBody, {
+    const apiRequest = axios.post(`http://localhost:${PORT_NUMBER}/tests`, reqBody, {
       headers: { "Content-Type": "application/json" },
     });
 
@@ -972,136 +980,6 @@ ipcMain.on(
           : event.sender.send(`${RUN_TEST}-${testID}-resp`, "Pass");
       }
     });
-
-    //   // let canvas = store.get(`projects.${projectKey}.tests.${testKey}.canvas`);
-    //   // let atoms = store.get(`projects.${projectKey}.atoms`);
-    //   let commandString = "";
-    //   let atomsWithIndexes = {};
-    //
-    //   // Type assignment
-    //   // For atomType in project.Atom
-    //   Object.entries(atoms).map(([sourceAtomKey, sourceAtom]: any) => {
-    //     // // Assign each atom a numeral for use in command string
-    //     // Object.entries(canvas["Atom"]).map(([canvasAtomKey, canvasAtom], index) => {
-    //     //   atomsWithIndexes[canvasAtomKey] = index;
-    //     // })
-    //
-    //     // For atom in canvas where type matches atomType
-    //     commandString += "some disj";
-    //     let atomsOfType: any = Object.entries(canvas["atoms"]).filter(
-    //       ([canvasAtomKey, canvasAtom]: any) =>
-    //         sourceAtomKey === canvasAtom["sourceAtomKey"]
-    //     );
-    //     for (let i = 0; i < atomsOfType.length; i++) {
-    //       console.log(atomsOfType[i][1].nickname);
-    //       commandString += ` ${atomsOfType[i][1].nickname.split("/")[1]}`;
-    //       if (i < atomsOfType.length - 1) {
-    //         commandString += ",";
-    //       }
-    //     }
-    //     commandString += `: ${sourceAtom["label"].split("/")[1]} {`;
-    //   });
-    //
-    //   // Set equals these Atom and only these Atom.
-    //   // For each type of atom in our project.
-    //   Object.entries(atoms).map(([sourceAtomKey, sourceAtom]: any) => {
-    //     commandString += `${sourceAtom["label"].split("/")[1]} = `;
-    //     // Get Atom on the canvas with a matching type.
-    //     let matchedAtoms: any = Object.entries(canvas["atoms"]).filter(
-    //       ([key, value]: any) => sourceAtomKey === value["sourceAtomKey"]
-    //     );
-    //     // console.log(matchedAtoms)
-    //     // For each matching atom, append their nickname to the string
-    //     for (let i = 0; i < matchedAtoms.length; i++) {
-    //       commandString += `${matchedAtoms[i][1].nickname.split("/")[1]} `;
-    //       if (i < matchedAtoms.length - 1) {
-    //         commandString += "+ ";
-    //       }
-    //     }
-    //     commandString += ` and `;
-    //   });
-    //
-    //   // Get a list of the unique connection types in the canvas
-    //   let connectionTypes = [
-    //     ...new Set(
-    //       Object.entries(canvas["connections"]).map(
-    //         (value: any) => value[1]["connectionLabel"]
-    //       )
-    //     ),
-    //   ];
-    //
-    //   // Iterate over the found connection types
-    //   for (let i = 0; i < connectionTypes.length; i++) {
-    //     commandString += `${connectionTypes[i]}=`;
-    //     // Filter our canvas connections down to just the ones that match the current connection type
-    //     let canvasConnections = Object.entries(canvas["connections"]).filter(
-    //       ([key, value]: any) => value["connectionLabel"] === connectionTypes[i]
-    //     );
-    //     // Add each connection to the commandString, and if we aren't on the last one, add a plus.
-    //     for (let j = 0; j < canvasConnections.length; j++) {
-    //       let value: any = canvasConnections[j][1];
-    //       commandString += `${value["fromNickname"].split("/")[1]}->${
-    //         value["toNickname"].split("/")[1]
-    //       }`;
-    //       if (j < canvasConnections.length - 1) {
-    //         commandString += `+`;
-    //       }
-    //     }
-    //     // If we have more connection types, string them with 'and'
-    //     if (i < connectionTypes.length - 1) {
-    //       commandString += " and ";
-    //     }
-    //   }
-    //
-    //   // Get the active predicates
-    //   let activePreds: any = Object.entries(
-    //     store.get(`projects.${projectKey}.predicates`)
-    //   ).filter(
-    //     ([key, value]: any) =>
-    //       value.status === "equals" || value.status === "negate"
-    //   );
-    //
-    //   if (activePreds.length > 0) {
-    //     commandString += " and ";
-    //   }
-    //
-    //   // Iterate over the active predicates and add them in
-    //   for (let i = 0; i < activePreds.length; i++) {
-    //     console.log(activePreds[i]);
-    //     if (activePreds[i][1].status === "negate") {
-    //       commandString += `not ${activePreds[i][0]}[${
-    //         activePreds[i][1].params[0].atom.split("/")[1]
-    //       }]`;
-    //     } else if (activePreds[i][1].status === "equals") {
-    //       commandString += `${activePreds[i][0]}[${
-    //         activePreds[i][1].params[0].atom.split("/")[1]
-    //       }]`;
-    //     }
-    //
-    //     if (i < activePreds.length - 1) {
-    //       commandString += " and ";
-    //     }
-    //   }
-    //
-    //   // Close our brackets all at the end
-    //   commandString += "}".repeat(commandString.split("{").length - 1);
-    //
-    //   console.log(commandString);
-    //   // Send command string to Alloy Analyzer
-    //   let reqBody = JSON.stringify({
-    //     path: store.get(`projects.${projectKey}.alloyFile`),
-    //     command: commandString,
-    //   });
-    //   const apiRequest = axios.post("http://localhost:8080/tests", reqBody, {
-    //     headers: { "Content-Type": "application/json" },
-    //   });
-    //   apiRequest.then((data: AxiosResponse) => {
-    //     if (data.data) {
-    //       data.data.includes("Unsatisfiable")
-    //         ? event.sender.send(returnChannel, "Fail")
-    //         : event.sender.send(returnChannel, "Pass");
-    //     }
-    //   });
   }
 );
 
