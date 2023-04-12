@@ -28,11 +28,11 @@ function SidebarWrapper({ projectID }: Props) {
       label: "tests",
       drawerContent: <TestsSidebarTab projectID={projectID} />,
     },
-    {
-      icon: IconAdjustmentsHorizontal,
-      label: "settings",
-      drawerContent: <SettingsSidebarTab projectID={projectID} />,
-    },
+    // {
+    //   icon: IconAdjustmentsHorizontal,
+    //   label: "settings",
+    //   drawerContent: <SettingsSidebarTab projectID={projectID} />,
+    // },
   ];
 
   function handleClick(index: number) {
@@ -43,6 +43,11 @@ function SidebarWrapper({ projectID }: Props) {
       setActive(null);
       setDrawerOpen(!drawerOpen);
     }
+  }
+
+  function handleDrawerClose() {
+    setDrawerOpen(false)
+    setActive(null)
   }
 
   const items = data.map((item, index) => (
@@ -84,7 +89,7 @@ function SidebarWrapper({ projectID }: Props) {
         opened={drawerOpen}
         withOverlay={false}
         size={400}
-        onClose={() => setDrawerOpen(false)}
+        onClose={() => handleDrawerClose()}
       >
         <Box
           sx={(theme) => ({

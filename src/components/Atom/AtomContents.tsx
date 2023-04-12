@@ -1,20 +1,26 @@
-import { useEffect, useState } from "react";
+import { CSSProperties, useEffect, useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import { getEmptyImage } from "react-dnd-html5-backend";
-import { MantineTheme, Paper, Text, useMantineTheme } from "@mantine/core";
+import { ActionIcon, Flex, Group, MantineTheme, Paper, Stack, Text, useMantineTheme } from "@mantine/core";
 import { AtomWithSource, AtomSourceWithRelations } from "../../main";
 import React from "react";
 import { Relation } from "@prisma/client";
 import { showNotification } from "@mantine/notifications";
-import { IconAlertTriangle } from "@tabler/icons";
-import { ATOM, CONNECTION } from "../../utils/constants"
+import { IconAlertTriangle, IconPencil, IconTrash } from "@tabler/icons";
+import { ATOM, ATOM_HEIGHT, ATOM_WIDTH, CONNECTION } from "../../utils/constants"
+import ConnectionNode from "./ConnectionNode";
+import NewProjectModal from "../ProjectSelection/NewProjectModal";
+import EditAtomModal from "./EditAtomModal";
 
 interface Props {
   atom: AtomWithSource;
+  contentsBeingDragged: boolean;
 }
-export function AtomContents({ atom }: Props) {
+export function AtomContents({ atom, contentsBeingDragged }: Props) {
+
   const [srcData, setSrcData] = useState<AtomSourceWithRelations>(atom.srcAtom);
   const [acceptTypes, setAcceptTypes] = useState<string[]>([]);
+  const [modalOpened, setModalOpened] = useState<boolean>(false);
 
   const renderType = ATOM;
   const theme = useMantineTheme();
@@ -126,52 +132,105 @@ export function AtomContents({ atom }: Props) {
       });
   }
 
-  function getAtomStyles(
-    theme: MantineTheme,
-    shape: string,
-    left: number,
-    top: number
-  ): React.CSSProperties {
-    // const transform = `translate3d(${left}px, ${top}px, 0)`
+  // function getAtomStyles(
+  //   theme: MantineTheme,
+  //   shape: string,
+  //   left: number,
+  //   top: number
+  // ): React.CSSProperties {
+  //   // const transform = `translate3d(${left}px, ${top}px, 0)`
+  //
+  //   return {
+  //     position: "absolute",
+  //     // IE fallback: hide the real node using CSS when dragging
+  //     // because IE will ignore our custom "empty image" drag preview.
+  //     opacity: isDragging ? 0 : 1,
+  //     backgroundColor: canDrop ? theme.colors.dark[3] : theme.colors.dark[5],
+  //     margin: "auto",
+  //   };
+  // }
 
-    return {
-      position: "relative",
-      // IE fallback: hide the real node using CSS when dragging
-      // because IE will ignore our custom "empty image" drag preview.
+  function getAtomStyles(
+    color: string,
+    contentsBeingDragged: boolean,
+    theme: MantineTheme,
+    left: number,
+    top: number,
+  ): CSSProperties {
+    const transform = `translate3d(${left}px, ${top}px, 0)`;
+
+    const styles: CSSProperties = {
+      overflow: 'hidden',
+      minWidth: `${240}px`,
+      minHeight: `${120}px`,
+      position: "absolute",
+      borderRadius: "4px",
+      backgroundColor: theme.colors.gray[8],
       opacity: isDragging ? 0 : 1,
-      backgroundColor: canDrop ? theme.colors.dark[3] : theme.colors.dark[5],
-      margin: "auto",
-    };
+      filter: canDrop ? 'brightness(105%)' : '',
+      boxShadow: canDrop ? 'rgba(80, 200, 120, .90) 0px 5px 16px' : '',
+  };
+
+    // If we are being dragged via the AtomContents module, leave the positioning to the drag layer.
+    if (!contentsBeingDragged) {
+      styles.transform = transform
+      styles.WebkitTransform = transform
+    }
+    return styles
   }
 
   return srcData && atom ? (
-    <Paper
+    <Stack
       ref={drag}
-      p="md"
-      radius={"md"}
       role="DraggableBox"
-      style={getAtomStyles(theme, srcData.shape, atom.left, atom.top)}
+      spacing={0}
+      id={atom.id.toString()}
+      style={getAtomStyles(atom.srcAtom.color, contentsBeingDragged, theme, atom.left, atom.top)}
     >
-      <Text
-        ref={drop}
-        p={"xl"}
-        size={"xl"}
-        color={srcData.color}
-        weight={800}
-        align={"center"}
+      <Paper
+        sx={{backgroundColor: atom.srcAtom.color, borderRadius: '4px 4px 0 0', overflow: "hidden"}}
+        p={'sm'}
       >
-        {` ${atom.nickname} `}
-      </Text>
-    </Paper>
+        <Flex justify={'space-between'}>
+          <Text
+            size={"md"}
+            color={'white'}
+            weight={900}
+            align={"left"}
+          >
+            {` ${atom.nickname} `}
+          </Text>
+          <ActionIcon variant={'transparent'} color={'dark'} radius={'xl'} size={'sm'} onClick={() => setModalOpened(true)}>
+            <IconPencil color={'white'}/>
+          </ActionIcon>
+        </Flex>
+      </Paper>
+      <Paper
+      sx={{backgroundColor: theme.colors.gray[8]}}
+      p={'sm'}
+      >
+        <Group>
+          <div ref={drop} className={"connectionNode"} style={{backgroundColor: canDrop ? theme.colors.green[5] : theme.colors.gray[6]}}></div>
+          <div>
+            <Flex justify={'space-between'}>
+              <Text color={'white'} weight={400}>{atom.srcAtom.label.split('/').at(-1)}</Text>
+            </Flex>
+            {atom.srcAtom.fromRelations.map((rel) => (
+              <ConnectionNode color={theme.colors.gray[5]} name={rel.label} atom={atom} relation={rel} />
+            ))}
+          </div>
+        </Group>
+      </Paper>
+      <EditAtomModal setModalOpened={setModalOpened} opened={modalOpened}  atom={atom}/>
+    </Stack>
   ) : (
     <Paper
       ref={drag}
       p="md"
       radius={"md"}
       role="DraggableBox"
-      style={{ opacity: isDragging ? 0 : 1 }}
     >
-      <Text ref={drop} size={"xl"} weight={800}>
+      <Text size={"xl"} weight={800}>
         {" "}
         {}{" "}
       </Text>

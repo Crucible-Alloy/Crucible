@@ -91,18 +91,26 @@ export type TestWithCanvas = Prisma.TestGetPayload<{
                     isChildOf: true;
                   };
                 };
+                toAtom: true;
               };
             };
             toRelations: {
               include: {
                 fromAtom: true;
+                toAtom: true;
               };
             };
           };
         };
       };
     };
-    connections: true;
+    connections: {
+      include: {
+        from: true;
+        to: true;
+        connLabel: true;
+      };
+    }
   };
 }>;
 export type PredInstanceWithParams = Prisma.PredInstanceGetPayload<{
@@ -137,11 +145,13 @@ export type AtomWithSource = Prisma.AtomGetPayload<{
                 isChildOf: true;
               };
             };
+            toAtom: true;
           };
         };
         toRelations: {
           include: {
             fromAtom: true;
+            toAtom: true;
           };
         };
       };
@@ -158,11 +168,13 @@ export type AtomSourceWithRelations = Prisma.AtomSourceGetPayload<{
             isChildOf: true;
           };
         };
+        toAtom: true;
       };
     };
     toRelations: {
       include: {
         fromAtom: true;
+        toAtom: true;
       };
     };
   };
@@ -829,10 +841,9 @@ app.whenReady().then(() => {
 // Close app on exit for linux/windows.
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
+    treeKill(springAPI.pid);
     app.quit();
-
     // Shutdown spring-boot api
-
   }
 });
 
@@ -1095,7 +1106,7 @@ ipcMain.on(
             srcAtom: {
               include: {
                 fromRelations: {
-                  include: { fromAtom: { include: { isChildOf: true } } },
+                  include: { fromAtom: { include: { isChildOf: true } }, toAtom: true },
                 },
                 toRelations: true,
                 isChildOf: true,
@@ -1103,7 +1114,7 @@ ipcMain.on(
             },
           },
         },
-        connections: true,
+        connections: {include: {to: true, from: true, connLabel: true}},
       },
     });
     event.sender.send(data.returnKey, test ? test : {});

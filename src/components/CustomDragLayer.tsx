@@ -5,6 +5,7 @@ import { useMantineTheme } from "@mantine/core";
 import { Arrow } from "react-absolute-svg-arrows";
 import { AtomInstance } from "./Atom/AtomInstance";
 import { AtomSourceItem } from "./AtomSource/AtomSourceItem";
+import { AtomContents } from "./Atom/AtomContents";
 
 const layerStyles: CSSProperties = {
   position: "absolute",
@@ -69,7 +70,7 @@ export const CustomDragLayer = ({ mousePos }: any) => {
   const renderItem = () => {
     switch (item.renderType) {
       case ATOM:
-        return <AtomInstance contentsBeingDragged={true} atom={item.data} />;
+        return <AtomContents contentsBeingDragged={true} atom={item.data} />;
 
       case ATOM_SOURCE:
         return <AtomSourceItem atomSource={item.data} />;

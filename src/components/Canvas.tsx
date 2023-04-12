@@ -4,21 +4,28 @@ import Xarrow from "react-xarrows";
 import { showNotification } from "@mantine/notifications";
 import { IconAlertTriangle } from "@tabler/icons";
 import { useClickOutside } from "@mantine/hooks";
-import { Affix, Popover, Select, Title } from "@mantine/core";
+import { Affix, Popover, Select, Title, useMantineTheme } from "@mantine/core";
 import {
   AtomWithSource,
   TestWithCanvas,
 } from "../main";
 import { AtomInstance } from "./Atom/AtomInstance";
-import { Atom, AtomSource } from "@prisma/client";
+import { Atom, AtomSource, Connection } from "@prisma/client";
 
-import { ATOM, ATOM_SOURCE } from "../utils/constants";
+import { ATOM, ATOM_HEIGHT, ATOM_SOURCE, ATOM_WIDTH } from "../utils/constants";
+import { AtomContents } from "./Atom/AtomContents";
+import { Arrow } from "react-absolute-svg-arrows";
+import { z } from "zod";
 
 interface Props {
   testID: number;
 }
 
 function Canvas({ testID }: Props) {
+
+  const AtomHeight = 120
+  const AtomWidth = 240
+
   const [canvasItems, setCanvas] = useState<TestWithCanvas>();
   const [atomMenu, setAtomMenu] = useState(false);
   const [coords, setCoords] = useState<{
@@ -28,6 +35,7 @@ function Canvas({ testID }: Props) {
   const [atoms, setAtoms] = useState<AtomWithSource[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [quickInsertData, setQuickInsertData] = useState([]);
+  const theme = useMantineTheme();
 
   useEffect(() => {
     window.electronAPI.listenForCanvasChange((_event: any, value: any) => {
@@ -202,18 +210,24 @@ function Canvas({ testID }: Props) {
           </Popover>
         </Affix>
         {canvasItems.atoms.map((atom: AtomWithSource) => (
-          <AtomInstance
+          <AtomContents
             key={atom.id}
             contentsBeingDragged={false}
             atom={atom}
           />
         ))}
-        {canvasItems.connections.map((connection) => (
-          <Xarrow
+        {canvasItems.connections.map((connection, index) => {
+          return <Xarrow
             start={JSON.stringify(connection.fromID)}
             end={JSON.stringify(connection.toID)}
+            labels={connection.connLabel.label}
           />
-        ))}
+          // const start = {x: connection.from.left + AtomWidth, y: connection.from.top + AtomHeight / 2}
+          // const end = {x: connection.to.left, y: (connection.to.top + AtomHeight / 2)}
+          //
+          // return <Arrow startPoint={start} endPoint={end}
+          //        config={{ arrowColor: theme.colors.blue[5], strokeWidth: 5, }} />
+        })}
       </div>
     );
   } else {

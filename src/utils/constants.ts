@@ -74,6 +74,9 @@ const constants = {
   // UI VARIABLES
   SIDEBAR_WIDTH: 350,
   SIDEBAR_HEIGHT: 700,
+  ATOM_HEIGHT: 120,
+  ATOM_WIDTH: 240,
+
 
   // ITEM TYPES
   ATOM: "Atom",

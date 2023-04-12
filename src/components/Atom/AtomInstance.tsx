@@ -101,7 +101,7 @@ export function AtomInstance({ contentsBeingDragged, atom }: Props) {
       )}
       // role="ConnectionArrow"
     >
-      <AtomContents atom={atom} />
+      {/*<AtomContents atom={atom} />*/}
     </Container>
   ) : (
     <Container
@@ -118,7 +118,7 @@ export function AtomInstance({ contentsBeingDragged, atom }: Props) {
       )}
       // role="ConnectionArrow"
     >
-      <AtomContents atom={atom} />
+      {/*<AtomContents atom={atom} />*/}
     </Container>
   );
 }
