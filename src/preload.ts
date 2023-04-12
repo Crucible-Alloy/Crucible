@@ -296,8 +296,13 @@ const api = {
     });
   },
 
-  deleteConnection: (connID: number) => {
-    ipcRenderer.send(DELETE_CONNECTION, connID);
+  deleteConnection: (atomID: number) => {
+    ipcRenderer.send(DELETE_CONNECTION, atomID);
+    return new Promise((resolve) => {
+      ipcRenderer.once(`${DELETE_CONNECTION}-resp`, (event, resp) =>
+        resolve(resp)
+      );
+    });
   },
 
   listenForCanvasChange: (callback: any) => {
@@ -395,6 +400,10 @@ const api = {
 
   deleteAtom: (atomID: number) => {
     ipcRenderer.send(DELETE_ATOM, atomID);
+    return new Promise((resolve) => {
+      ipcRenderer.once(`${DELETE_ATOM}-resp`,
+        (event, resp) => resolve(resp))
+    })
   },
 
   getPredicates: (testID: number) => {

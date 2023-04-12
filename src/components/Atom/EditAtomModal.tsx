@@ -4,6 +4,7 @@ import { IconFileSearch, IconFolders, IconTag } from "@tabler/icons";
 import { useForm } from "@mantine/form";
 import { NewProject } from "../../validation/formValidation";
 import { AtomWithSource } from "../../main";
+import * as electron from "electron";
 
 // TODO: Validation for project location to ensure no conflicting paths
 // TODO: Zod schema validation for form?
@@ -52,10 +53,23 @@ function EditAtomModal({ setModalOpened, opened, atom }: Props) {
 
   function deleteConnections() {
     // Delete all connections
+    window.electronAPI.deleteConnection(atom.id).then((resp: {success: boolean, error?: string}) => {
+      if (resp.success) {
+        setModalOpened(false)
+      } else {
+        console.log(resp.error)
+      }
+    })
   }
 
   function deleteAtom() {
-    // Delete the atom (and all connections)
+    window.electronAPI.deleteAtom(atom.id).then((resp: {success: boolean, error?: string}) => {
+      if (resp.success) {
+        setModalOpened(false)
+      } else {
+        console.log(resp.error)
+      }
+    })
   }
 
   return (

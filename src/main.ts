@@ -895,16 +895,22 @@ ipcMain.on(DELETE_ATOM, async (event, atomID) => {
 
   if (deletion) {
     mainWindow.webContents.send("canvas-update");
+    event.sender.send(`${DELETE_ATOM}-resp`, {success: true, error: null})
+  } else {
+    event.sender.send(`${DELETE_ATOM}-resp`, {success: false, error: "Could not delete atom."})
   }
 });
 
-ipcMain.on(DELETE_CONNECTION, async (event, connID) => {
-  const deletion = await prisma.atom.delete({
-    where: { id: number.parse(connID) },
+ipcMain.on(DELETE_CONNECTION, async (event, atomID) => {
+  const deletion = await prisma.connection.deleteMany({
+    where: { OR: [{ toID: number.parse(atomID)}, {fromID: number.parse(atomID)}] },
   });
 
   if (deletion) {
     mainWindow.webContents.send("canvas-update");
+    event.sender.send(`${DELETE_CONNECTION}-resp`, {success: true, error: null})
+  } else {
+    event.sender.send(`${DELETE_CONNECTION}-resp`, {success: false, error: "Could not delete connections."})
   }
 });
 

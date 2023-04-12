@@ -188,7 +188,7 @@ export function AtomContents({ atom, contentsBeingDragged }: Props) {
       style={getAtomStyles(atom.srcAtom.color, contentsBeingDragged, theme, atom.left, atom.top)}
     >
       <Paper
-        sx={{backgroundColor: atom.srcAtom.color, borderRadius: '4px 4px 0 0', overflow: "hidden"}}
+        sx={{backgroundColor: atom.srcAtom.color, borderRadius: '4px 4px 0 0'}}
         p={'sm'}
       >
         <Flex justify={'space-between'}>
