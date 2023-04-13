@@ -30,7 +30,6 @@ import {
   GET_ATOM_SHAPE,
   SET_ATOM_SHAPE,
   GET_ATOM_INSTANCE,
-  SET_ATOM_INSTANCE_NICKNAME,
   VALIDATE_NEW_PROJECT_FORM,
   GET_PROJECT,
   DELETE_PROJECT,
@@ -48,6 +47,7 @@ import {
   GET_PARENTS,
   GET_CHILDREN,
   GET_TO_RELATIONS,
+  UPDATE_ATOM_NICK,
 } from "./utils/constants";
 import { Project, Relation, Test } from "@prisma/client";
 import { NewProject } from "./validation/formValidation";
@@ -451,16 +451,6 @@ const api = {
     ipcRenderer.send(SET_ATOM_SHAPE, args);
   },
 
-  // setAtomInstanceNickname: (projectKey, testKey, atomKey, nickname) => {
-  //   ipcRenderer.send(
-  //     SET_ATOM_INSTANCE_NICKNAME,
-  //     projectKey,
-  //     testKey,
-  //     atomKey,
-  //     nickname
-  //   );
-  // },
-
   testCanAddAtom: ({
     testID,
     sourceAtomID,
@@ -496,6 +486,17 @@ const api = {
     top: number;
   }) => {
     ipcRenderer.send(UPDATE_ATOM, { atomID, left, top });
+  },
+
+  updateAtomNickname: ({atomID, nickName, testID}: {atomID: string, nickName: string, testID: string}) => {
+    console.log("Preload says hi.")
+    console.log(atomID, nickName, testID)
+    ipcRenderer.send(UPDATE_ATOM_NICK, atomID, nickName, testID);
+    return new Promise((resolve) => {
+      ipcRenderer.once(`${UPDATE_ATOM_NICK}-resp`, (event, resp) => {
+        resolve(resp)
+      })
+    })
   },
 
   getAtomParents: (srcAtomID: number): Promise<string[]> => {

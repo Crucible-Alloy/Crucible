@@ -30,6 +30,7 @@ const constants = {
   CREATE_CONNECTION: "make-connection",
 
   UPDATE_ATOM: "update-atom",
+  UPDATE_ATOM_NICK: "update-atom-nick",
 
   DELETE_ATOM: "delete-atom",
   DELETE_CONNECTION: "delete-connection",

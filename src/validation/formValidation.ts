@@ -34,6 +34,19 @@ async function isProjectNameAvailable(name: string): Promise<boolean> {
   return project == null;
 }
 
+async function isAtomNameAvailable(nickname: string, testID: number): Promise<boolean> {
+  const project = await prisma.atom.findFirst({
+    where: {
+      AND: [
+        { nickname: { equals: nickname } },
+        { testID: {equals: testID} }
+      ]
+
+    },
+  });
+  return project == null;
+}
+
 const NewTestSchema = z
   .object({
     testName: z
@@ -80,6 +93,20 @@ const NewProjectSchema = z
     })
   );
 
+const AtomNickNameSchema = z
+  .object({
+    nickName: z
+      .string().min(3, "Atom name should be at least 3 characters."),
+    testID: z.coerce.number()
+  })
+  .refine(
+    async (data) => { return await isAtomNameAvailable(data.nickName, data.testID) },
+    (data) => ({
+      message: `${data.nickName} already exists in this test.`,
+      path: ["nickName"],
+    })
+  );
+
 const AtomRespSchema = z.object({
   label: z.string(),
   isEnum: z.coerce.boolean(),
@@ -113,5 +140,6 @@ export type ValidAtomResp = z.infer<typeof AtomRespSchema>;
 export type ValidPredResp = z.infer<typeof PredicateRespSchema>;
 export type NewTest = z.infer<typeof NewTestSchema>;
 export type NewProject = z.infer<typeof NewProjectSchema>;
+export type AtomNickName = z.infer<typeof AtomNickNameSchema>;
 
-export { NewTestSchema, AtomRespSchema, PredicateRespSchema, NewProjectSchema };
+export { NewTestSchema, AtomRespSchema, PredicateRespSchema, NewProjectSchema, AtomNickNameSchema };

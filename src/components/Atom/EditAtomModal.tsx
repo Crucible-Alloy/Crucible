@@ -1,10 +1,8 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Button, Group, Modal, Stack, TextInput } from "@mantine/core";
-import { IconFileSearch, IconFolders, IconTag } from "@tabler/icons";
+import { IconTag } from "@tabler/icons";
 import { useForm } from "@mantine/form";
-import { NewProject } from "../../validation/formValidation";
 import { AtomWithSource } from "../../main";
-import * as electron from "electron";
 
 // TODO: Validation for project location to ensure no conflicting paths
 // TODO: Zod schema validation for form?
@@ -16,39 +14,36 @@ interface Props {
 }
 
 function EditAtomModal({ setModalOpened, opened, atom }: Props) {
-  const form = useForm({
-    initialValues: {
-      nickName: atom.nickname,
-    },
-  });
 
-  // Set the default project location in the form
-  // TODO: Can this be moved into initial values somehow? I think the issue is that it is async.
-  useEffect(() => {
-    window.electronAPI.getHomeDirectory().then((homedir: string) => {
-      form.setFieldValue("projectPath", `${homedir}/aSketchProjects/`);
-    });
-  }, [opened]);
+  // TODO: Resolve conversion error in form. Data not making it to main process.
+  // const form = useForm({
+  //   initialValues: {
+  //     nickName: "",
+  //   },
+  // });
 
   /* Asynchronously check for validation errors and if none, create the project on ipcMain */
-  function updateAtomNickName(values: {nickName: string}) {
-    window.electronAPI
-      .updateAtomNickName(values.nickName)
-      .then((resp: { success: boolean; error: any; }) => {
-        if (resp.error) {
-          resp.error.forEach((error: any) => {
-            form.setFieldError(error.path[0], error.message);
-          });
-        } else if (resp.success) {
-          // Alert to success
-        }
-      });
-  }
+  // function updateAtomNickName(values: { nickName: string } ) {
+  //   console.log(values.nickName)
+  //   console.log(atom.id)
+  //   console.log(atom.testID)
+  //   window.electronAPI
+  //     .updateAtomNickname({atomID: atom.id.toString(), nickName: values.nickName, testID: atom.testID.toString()})
+  //     .then((resp: { success: boolean; error: any; }) => {
+  //       if (resp.error) {
+  //         resp.error.forEach((error: any) => {
+  //           form.setFieldError(error.path[0], error.message);
+  //         });
+  //       } else if (resp.success) {
+  //         // Alert to success
+  //       }
+  //     });
+  // }
 
   /* Close the modal and reset the form to default values. */
   function closeModal() {
     setModalOpened(false);
-    form.reset();
+    // form.reset();
   }
 
   function deleteConnections() {
@@ -78,22 +73,22 @@ function EditAtomModal({ setModalOpened, opened, atom }: Props) {
       onClose={() => closeModal()}
       title="Edit Atom"
     >
-      <form onSubmit={form.onSubmit((values) => updateAtomNickName(values))}>
-        <Stack>
-          <TextInput
-            required
-            withAsterisk
-            label="Atom Nickname"
-            description={"A way for you to easily identify the atom."}
-            icon={<IconTag />}
-            {...form.getInputProps("nickName")}
-          />
+      {/*<form onSubmit={form.onSubmit((values) => updateAtomNickName(values))}>*/}
+      {/*  <Stack>*/}
+      {/*    <TextInput*/}
+      {/*      required*/}
+      {/*      withAsterisk*/}
+      {/*      label="Atom Nickname"*/}
+      {/*      description={"A way for you to easily identify the atom."}*/}
+      {/*      icon={<IconTag />}*/}
+      {/*      {...form.getInputProps("nickName")}*/}
+      {/*    />*/}
 
-          <Button m={"sm"} type="submit">
-            Update
-          </Button>
-        </Stack>
-      </form>
+      {/*    <Button m={"sm"} type="submit">*/}
+      {/*      Update*/}
+      {/*    </Button>*/}
+      {/*  </Stack>*/}
+      {/*</form>*/}
 
       <Group grow>
         <Button color='red' m={'sm'} onClick={() => deleteConnections()}>

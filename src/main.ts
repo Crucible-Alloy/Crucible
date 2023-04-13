@@ -11,6 +11,7 @@ import * as child_process from "child_process";
 import { z, ZodError } from "zod";
 import { Atom, PredInstance, PredParam, Prisma, Project, Test, PrismaClient } from "@prisma/client";
 import {
+  AtomNickName, AtomNickNameSchema,
   AtomRespSchema,
   NewProject,
   NewProjectSchema,
@@ -62,6 +63,7 @@ import {
   GET_PARENTS,
   GET_CHILDREN,
   GET_TO_RELATIONS,
+  UPDATE_ATOM_NICK,
 } from "./utils/constants";
 
 import unhandled from "electron-unhandled";
@@ -369,6 +371,20 @@ async function validateNewProject(
     if (e instanceof ZodError) {
       return { success: false, error: e.issues };
     } else {
+      throw e;
+    }
+  }
+}
+
+async function validateAtomNickname(data: AtomNickName): Promise<{success: boolean; error?: any}> {
+  try {
+    await AtomNickNameSchema.parseAsync(data);
+    return { success: true, error: null }
+  } catch (e) {
+    if (e instanceof ZodError) {
+      return { success: false, error: e.issues };
+    } else {
+      console.log("ERROR")
       throw e;
     }
   }
@@ -1415,6 +1431,34 @@ ipcMain.on(UPDATE_ATOM, async (event, { atomID, left, top }) => {
     mainWindow.webContents.send("canvas-update");
   }
 });
+
+ipcMain.on(UPDATE_ATOM_NICK, async (event, nickName, atomID, testID) => {
+  // validate that the name is not already in use on this test
+  console.log("MAIN RECEIVED NICKNAME REQUEST");
+  const validationResp = await validateAtomNickname({nickName, testID});
+  if (!validationResp.success) {
+    event.sender.send(`${UPDATE_ATOM_NICK}-resp`, validationResp);
+    return;
+  }
+
+  // Update the atom with the new nickname
+  const atom = await prisma.atom.update({
+    where: {id: number.parse(atomID)},
+    data: {
+      nickname: nickName
+    }
+  })
+
+  // If prisma fails, return error
+  if (!atom) {
+    event.sender.send(`${UPDATE_ATOM_NICK}-resp`, { success: false, error: "Could not update nickname." });
+    return;
+  }
+
+  // Send signal to canvas to update, return success.
+  mainWindow.webContents.send('canvas-update');
+  event.sender.send(`${UPDATE_ATOM_NICK}-resp`, { success: true, error: null })
+})
 
 ipcMain.on(GET_ATOM_SOURCE, async (event, { srcAtomID }) => {
   const atom = await prisma.atomSource.findFirst({

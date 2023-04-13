@@ -48,7 +48,7 @@ function TestPredicatesBtn({ testID }: Props) {
       <Modal
         opened={opened}
         onClose={() => setOpened(false)}
-        title={<Title size={"md"}>Predicates</Title>}
+        title={<Title size={"md"}>Predicates & Assertions</Title>}
       >
         <Text size={"xs"} color={"dimmed"}>
           For each predicate, select a state and parameters.
