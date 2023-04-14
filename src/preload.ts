@@ -85,10 +85,6 @@ export interface ElectronAPI {
     projectID: number;
     testID: number;
   }) => Promise<unknown>;
-  createConnection: (data: {
-    fromAtom: AtomWithSource;
-    toAtom: AtomWithSource;
-  }) => any;
 }
 
 import { v4 as uuidv4 } from "uuid";
@@ -276,17 +272,20 @@ const api = {
     testID,
     fromAtom,
     toAtom,
+    relation,
   }: {
     projectID: number;
     testID: number;
     fromAtom: AtomWithSource;
     toAtom: AtomWithSource;
+    relation: Relation;
   }) => {
     ipcRenderer.send(CREATE_CONNECTION, {
       projectID,
       testID,
       fromAtom,
       toAtom,
+      relation,
     });
 
     return new Promise((resolve) => {

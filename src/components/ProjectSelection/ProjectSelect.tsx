@@ -112,8 +112,9 @@ export const ProjectSelect = () => {
         }
       >
         {/*TODO: Fix scroll area so that all projects are visible. */}
-        <ScrollArea>
+
           <Stack mr={"xl"}>
+            <ScrollArea.Autosize maxHeight={400}>
             {projects.length > 0 ? (
               projects.map((project: Project) => (
                 <ProjectListItem project={project} key={project.id} />
@@ -126,8 +127,8 @@ export const ProjectSelect = () => {
                 </Title>
               </Center>
             )}
+            </ScrollArea.Autosize>
           </Stack>
-        </ScrollArea>
         <NewProjectModal setModalOpened={setModalOpened} opened={modalOpened} />
       </AppShell>
     );

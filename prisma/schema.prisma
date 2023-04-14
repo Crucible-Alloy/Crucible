@@ -105,7 +105,8 @@ model Connection {
   fromID    Int
   toLabel   String
   fromLabel String
-  connLabel Relation @relation(name: "connLabel", fields: [toLabel, fromLabel, projectID], references: [toLabel, fromLabel, projectID])
+  label     String
+  connLabel Relation @relation(name: "connLabel", fields: [toLabel, fromLabel, projectID, label], references: [toLabel, fromLabel, projectID, label])
   test      Test     @relation(name: "testConnections", fields: [testID], references: [id], onDelete: Cascade)
   project   Project  @relation(name: "project-connections", fields: [projectID], references: [id], onDelete: Cascade)
   from      Atom     @relation(name: "connectionFrom", fields: [fromID], references: [id], onDelete: Cascade)
@@ -183,6 +184,6 @@ model Relation {
   toAtom       AtomSource   @relation(name: "relationTo", fields: [projectID, toLabel], references: [projectID, label])
   connections  Connection[] @relation("connLabel")
 
+  @@unique(fields: [fromLabel, toLabel, label, projectID], name: "relationSignature")
   @@unique(fields: [projectID, label], name: "relationID")
-  @@unique(fields: [fromLabel, toLabel, projectID], name: "relationSignature")
 }

@@ -9,7 +9,7 @@ import { ChildProcessWithoutNullStreams, ChildProcess } from "child_process";
 import axios, { AxiosResponse } from "axios";
 import * as child_process from "child_process";
 import { z, ZodError } from "zod";
-import { Atom, PredInstance, PredParam, Prisma, Project, Test, PrismaClient } from "@prisma/client";
+import {Atom, PredInstance, PredParam, Prisma, Project, Test, PrismaClient, Relation} from "@prisma/client";
 import {
   AtomNickName, AtomNickNameSchema,
   AtomRespSchema,
@@ -487,6 +487,7 @@ async function initializeRelations(atoms: ValidAtomResp[], projectID: number) {
   for (const atom of atoms) {
     // Insert parents of atom to atomInheritance table.
     if (atom.relations) {
+      console.log(atom.relations)
       for (const relation of atom.relations) {
         // Nasty transformation to get the last label in a -> chain e.g. "{this/Book->this/Name->this/Listing}"
         const toLabel = relation.type
@@ -1305,54 +1306,48 @@ ipcMain.on(
       testID,
       fromAtom,
       toAtom,
+      relation
     }: {
       projectID: number;
       testID: number;
       fromAtom: AtomWithSource;
       toAtom: AtomWithSource;
+      relation: Relation;
     }
   ) => {
     console.log("WORKING ON CONNECTION");
     console.log("pID: ", projectID);
     console.log("from: ", fromAtom);
     console.log("to: ", toAtom);
-
+    console.log('relation: ', relation);
     // Find relation with fromAtom.atomSrc.label and toAtom.atomSrc.label
-    const relations = await prisma.relation.findMany({
-      where: {
-        projectID: number.parse(projectID),
-        fromLabel: fromAtom.srcAtom.label,
-        toLabel: {
-          in: [
-            toAtom.srcAtom.label,
-            ...toAtom.srcAtom.isChildOf.map((rel) => rel.parentLabel),
-          ],
-        },
-      },
-    });
-    console.log(relations);
+    // const relations = await prisma.relation.findMany({
+    //   where: {
+    //     projectID: number.parse(projectID),
+    //     fromLabel: fromAtom.srcAtom.label,
+    //     toLabel: {
+    //       in: [
+    //         toAtom.srcAtom.label,
+    //         ...toAtom.srcAtom.isChildOf.map((rel) => rel.parentLabel),
+    //       ],
+    //     },
+    //   },
+    // });
     // 2. Check relation multiplicity
-    if (relations.length === 1) {
-      console.log(relations[0].multiplicity);
-      if (
-        relations[0].multiplicity.split(" ")[0] === "lone" ||
-        relations[0].multiplicity.split(" ")[0] === "one"
-      ) {
+    if (
+      relation.multiplicity.split(" ")[0] === "lone" ||
+      relation.multiplicity.split(" ")[0] === "one"
+    ) {
         // 3. Find out if there are preexisting connections of that kind.
-        const existingRels = await prisma.test.findFirst({
-          where: { id: number.parse(testID) },
-          select: {
-            connections: {
-              where: {
-                fromLabel: relations[0].fromLabel,
-                toLabel: relations[0].toLabel,
-                fromID: number.parse(fromAtom.id),
-              },
-            },
-          },
+        const existingRels = await prisma.connection.findFirst({
+          where: {
+            label: relation.label,
+            fromLabel: relation.fromLabel,
+            testID: testID,
+          }
         });
 
-        if (existingRels && existingRels.connections.length) {
+        if (existingRels) {
           console.log("existingRels: ", existingRels);
           event.sender.send(`${CREATE_CONNECTION}-resp`, { success: false });
           return;
@@ -1363,8 +1358,9 @@ ipcMain.on(
         data: {
           fromID: number.parse(fromAtom.id),
           toID: number.parse(toAtom.id),
-          fromLabel: relations[0].fromLabel,
-          toLabel: relations[0].toLabel,
+          fromLabel: relation.fromLabel,
+          toLabel: relation.toLabel,
+          label: relation.label,
           projectID: number.parse(projectID),
           testID: number.parse(fromAtom.testID),
         },
@@ -1375,13 +1371,10 @@ ipcMain.on(
       if (connection) {
         event.sender.send(`${CREATE_CONNECTION}-resp`, { success: true });
         mainWindow.webContents.send("canvas-update");
+        return;
       }
-    }
 
-    if (relations.length > 1) {
-      console.log("CONNECTION ERROR: More than one viable connection.");
       event.sender.send(`${CREATE_CONNECTION}-resp`, { success: false });
-    }
   }
 );
 

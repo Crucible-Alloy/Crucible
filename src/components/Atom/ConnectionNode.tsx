@@ -56,7 +56,7 @@ function ConnectionNode({color, name, atom, relation}: Props) {
       {name} : {relation.multiplicity.split(' ')[0]}
       <IconArrowRight height={12}/>
       {relation.toLabel.split('/').at(-1)}
-      <div className={'connectionNode'} ref={drag} style={{backgroundColor: 'white', border: `4px solid ${atom.srcAtom.color}`}} />
+      <div className={'connectionNode'} id={atom.id.toString() + relation.label} ref={drag} style={{backgroundColor: 'white', border: `4px solid ${atom.srcAtom.color}`}} />
     </Group>
   );
 }

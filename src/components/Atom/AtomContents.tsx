@@ -1,15 +1,13 @@
-import { CSSProperties, useEffect, useState } from "react";
+import React, { CSSProperties, useEffect, useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import { getEmptyImage } from "react-dnd-html5-backend";
 import { ActionIcon, Flex, Group, MantineTheme, Paper, Stack, Text, useMantineTheme } from "@mantine/core";
 import { AtomWithSource, AtomSourceWithRelations } from "../../main";
-import React from "react";
 import { Relation } from "@prisma/client";
 import { showNotification } from "@mantine/notifications";
-import { IconAlertTriangle, IconPencil, IconTrash } from "@tabler/icons";
-import { ATOM, ATOM_HEIGHT, ATOM_WIDTH, CONNECTION } from "../../utils/constants"
+import { IconAlertTriangle, IconPencil, } from "@tabler/icons";
+import { ATOM, CONNECTION } from "../../utils/constants"
 import ConnectionNode from "./ConnectionNode";
-import NewProjectModal from "../ProjectSelection/NewProjectModal";
 import EditAtomModal from "./EditAtomModal";
 
 interface Props {
@@ -17,8 +15,6 @@ interface Props {
   contentsBeingDragged: boolean;
 }
 export function AtomContents({ atom, contentsBeingDragged }: Props) {
-
-  const [srcData, setSrcData] = useState<AtomSourceWithRelations>(atom.srcAtom);
   const [acceptTypes, setAcceptTypes] = useState<string[]>([]);
   const [modalOpened, setModalOpened] = useState<boolean>(false);
 
@@ -29,18 +25,18 @@ export function AtomContents({ atom, contentsBeingDragged }: Props) {
     const acceptTypesSet = new Set<string>();
     window.electronAPI
       .getRelationsToAtom({
-        label: srcData.label,
-        projectID: srcData.projectID,
+        label: atom.srcAtom.label,
+        projectID: atom.srcAtom.projectID,
       })
       .then((resp: Relation[]) => {
         console.log(resp);
         resp.forEach((relation) => acceptTypesSet.add(relation.fromLabel));
-        if (srcData.isChildOf.length > 0) {
-          srcData.isChildOf.forEach((parent) => {
+        if (atom.srcAtom.isChildOf.length > 0) {
+          atom.srcAtom.isChildOf.forEach((parent) => {
             window.electronAPI
               .getRelationsToAtom({
                 label: parent.parentLabel,
-                projectID: srcData.projectID,
+                projectID: atom.srcAtom.projectID,
               })
               .then((resp: Relation[]) => {
                 console.log(resp);
@@ -68,13 +64,13 @@ export function AtomContents({ atom, contentsBeingDragged }: Props) {
       item: {
         renderType,
         data: atom,
-        metaData: srcData,
+        metaData: atom.srcAtom,
       },
       collect: (monitor) => ({
         isDragging: monitor.isDragging(),
       }),
     }),
-    [renderType, atom, srcData]
+    [renderType, atom]
   );
 
   const [{ isOver, canDrop }, drop] = useDrop(
@@ -93,13 +89,14 @@ export function AtomContents({ atom, contentsBeingDragged }: Props) {
               testID: item.data.testID,
               fromAtom: item.data,
               toAtom: atom,
+              relation: item.relation
             });
         }
 
         return undefined;
       },
     }),
-    [atom, srcData]
+    [atom]
   );
 
   async function addNewConnection({
@@ -107,11 +104,13 @@ export function AtomContents({ atom, contentsBeingDragged }: Props) {
     testID,
     fromAtom,
     toAtom,
+    relation,
   }: {
     projectID: number;
     testID: number;
     fromAtom: AtomWithSource;
     toAtom: AtomWithSource;
+    relation: Relation;
   }) {
     window.electronAPI
       .createConnection({
@@ -119,6 +118,7 @@ export function AtomContents({ atom, contentsBeingDragged }: Props) {
         testID,
         fromAtom,
         toAtom,
+        relation,
       })
       .then((resp: { success: boolean }) => {
         if (!resp.success) {
@@ -179,12 +179,12 @@ export function AtomContents({ atom, contentsBeingDragged }: Props) {
     return styles
   }
 
-  return srcData && atom ? (
+  return atom ? (
     <Stack
+      id={atom.id.toString()}
       ref={drag}
       role="DraggableBox"
       spacing={0}
-      id={atom.id.toString()}
       style={getAtomStyles(atom.srcAtom.color, contentsBeingDragged, theme, atom.left, atom.top)}
     >
       <Paper
@@ -210,7 +210,7 @@ export function AtomContents({ atom, contentsBeingDragged }: Props) {
       p={'sm'}
       >
         <Group>
-          <div ref={drop} className={"connectionNode"} style={{backgroundColor: canDrop ? theme.colors.green[5] : theme.colors.gray[6]}}></div>
+          <div id={atom.id.toString() + 'receiver'} ref={drop} className={"connectionNode"} style={{backgroundColor: canDrop ? theme.colors.green[5] : theme.colors.gray[6]}}></div>
           <div>
             <Flex justify={'space-between'}>
               <Text color={'white'} weight={400}>{atom.srcAtom.label.split('/').at(-1)}</Text>

@@ -218,8 +218,8 @@ function Canvas({ testID }: Props) {
         ))}
         {canvasItems.connections.map((connection, index) => {
           return <Xarrow
-            start={JSON.stringify(connection.fromID)}
-            end={JSON.stringify(connection.toID)}
+            start={connection.fromID + connection.label}
+            end={connection.toID.toString()}
             labels={connection.connLabel.label}
           />
           // const start = {x: connection.from.left + AtomWidth, y: connection.from.top + AtomHeight / 2}
