@@ -72,12 +72,13 @@ unhandled();
 const treeKill = require("tree-kill");
 const path = require("path");
 const fs = require("fs");
+const ps = require('ps-node');
 const os = require("os");
 
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime";
 
 let selectedProject = -1;
-const PORT_NUMBER = 10122
+const PORT_NUMBER = 10121
 
 export type TestWithCanvas = Prisma.TestGetPayload<{
   include: {
@@ -858,14 +859,33 @@ app.whenReady().then(() => {
 // Close app on exit for linux/windows.
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
-    treeKill(springAPI.pid);
+    console.log('Not mac! Enter exit procedure.')
+    console.log(springAPI.pid)
+    const apiRequest = axios.get(`http://localhost:${PORT_NUMBER}/pid`);
+    console.log(apiRequest)
+    ps.kill(springAPI.pid, (err: any) => {
+      if (err) {
+        throw new Error(err)
+      }
+      else console.log(`Process ${springAPI.pid} killed.`)
+    });
     app.quit();
     // Shutdown spring-boot api
   }
 });
 
-app.once('before-quit', () => {
-  treeKill(springAPI.pid);
+app.on('before-quit', () => {
+  console.log('Enter before quit procedure.')
+  console.log(springAPI.pid)
+  const apiRequest = axios.get(`http://localhost:${PORT_NUMBER}/pid`);
+  console.log(apiRequest)
+  springAPI.kill()
+  ps.kill(springAPI.pid, (err: any) => {
+    if (err) {
+      throw new Error(err)
+    }
+    else console.log(`Process ${springAPI.pid} killed.`)
+  });
 });
 
 ipcMain.on(GET_PROJECTS, async (event) => {
@@ -931,7 +951,7 @@ ipcMain.on(DELETE_CONNECTION, async (event, atomID) => {
   }
 });
 
-// TODO: Get rid of any types
+// TODO: Get rid of "any" types
 
 ipcMain.on(
   RUN_TEST,
