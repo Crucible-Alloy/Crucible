@@ -54,9 +54,9 @@ function ProjectListItem({ project }: Props) {
         </Grid.Col>
         <Grid.Col span={2}>
           <Group position={"right"}>
-            <ActionIcon color={"gray"} variant={"subtle"} size={20}>
-              <IconSettings />
-            </ActionIcon>
+            {/*<ActionIcon color={"gray"} variant={"subtle"} size={20}>*/}
+            {/*  <IconSettings />*/}
+            {/*</ActionIcon>*/}
             <ActionIcon
               color={"gray"}
               variant={"subtle"}

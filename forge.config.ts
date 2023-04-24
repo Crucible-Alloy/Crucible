@@ -12,6 +12,7 @@ const config: ForgeConfig = {
   packagerConfig: {
     appBundleId: "com.crucible.app",
     appCopyright: "Copyright © 2023 Crucible",
+    icon: './public/favicon',
     extraResource: [
       "./node_modules/.prisma",
       "./prisma",

@@ -57,7 +57,7 @@ export function PredicateState({ predicate }: Props) {
             label: (
               <Center>
                 <IconEqual size={16} />
-                <Box ml={10}>Equals</Box>
+                <Box ml={10}>Valid</Box>
               </Center>
             ),
             value: "true",
@@ -66,7 +66,7 @@ export function PredicateState({ predicate }: Props) {
             label: (
               <Center>
                 <IconEqualNot size={16} />
-                <Box ml={10}>Not Equals</Box>
+                <Box ml={10}>Invalid</Box>
               </Center>
             ),
             value: "false",

@@ -106,7 +106,7 @@ export const ProjectSelect = () => {
                 />
               </MediaQuery>
 
-              <Title>ASketch</Title>
+              <Title>Crucible</Title>
             </div>
           </Header>
         }
