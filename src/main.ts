@@ -858,36 +858,46 @@ app.whenReady().then(() => {
   });
 });
 
+async function getPid() {
+  const options = {
+    method: "GET",
+    url: `http://localhost:${PORT_NUMBER}/pid`,
+    headers: {
+      "Content-Type": "application/json",
+    }
+  };
+  const apiRequest = axios.request(options);
+
+  const resp: AxiosResponse<{
+    atoms: ValidAtomResp[];
+    functions: ValidPredResp[];
+  }> = await apiRequest;
+  console.log(apiRequest)
+  return apiRequest;
+}
+
 // Close app on exit for linux/windows.
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
     console.log('Not mac! Enter exit procedure.')
     console.log(springAPI.pid)
-    const apiRequest = axios.get(`http://localhost:${PORT_NUMBER}/pid`);
-    console.log(apiRequest)
-    ps.kill(springAPI.pid, (err: any) => {
-      if (err) {
-        throw new Error(err)
-      }
-      else console.log(`Process ${springAPI.pid} killed.`)
-    });
-    app.quit();
     // Shutdown spring-boot api
+    getPid().then((pid) => {
+      console.log(pid.data)
+      ps.kill(pid.data, (err: any) => {
+        if (err) {
+          throw new Error(err)
+        }
+        else console.log(`Process ${springAPI.pid} killed.`)
+      });
+      app.quit();
+    });
   }
 });
 
 app.on('before-quit', () => {
   console.log('Enter before quit procedure.')
   console.log(springAPI.pid)
-  const apiRequest = axios.get(`http://localhost:${PORT_NUMBER}/pid`);
-  console.log(apiRequest)
-  springAPI.kill()
-  ps.kill(springAPI.pid, (err: any) => {
-    if (err) {
-      throw new Error(err)
-    }
-    else console.log(`Process ${springAPI.pid} killed.`)
-  });
 });
 
 ipcMain.on(GET_PROJECTS, async (event) => {
