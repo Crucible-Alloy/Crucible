@@ -239,8 +239,10 @@ const handleSquirrelEvent = function() {
   return false;
   };
 
-if (handleSquirrelEvent()) {
-     app.quit();
+if (process.platform == 'win32') {
+  if (handleSquirrelEvent()) {
+    app.quit();
+  }
 }
 
 const isDev = true;
@@ -810,7 +812,7 @@ function getColorArray() {
   ];
 }
 
-/* Deploy Alloy Analyzer SpringBoot API on port 8080*/
+/* Deploy Alloy Analyzer SpringBoot API on port 10121*/
 async function deployAlloyAPI() {
   const jarPath = `${path.join(__dirname, "/src/JARs/aSketch-API.jar")}`
   console.log(jarPath);
