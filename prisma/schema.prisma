@@ -179,6 +179,8 @@ model Relation {
   type         String // Relation signature "{this/List->this/Node}"
   fromLabel    String // "this/List"
   toLabel      String // "this/Node"
+  arityCount   Int          @default(1)
+  dependsOn    String?
   project      Project      @relation(name: "projectRelations", fields: [projectID], references: [id], onDelete: Cascade)
   fromAtom     AtomSource   @relation(name: "relationFrom", fields: [projectID, fromLabel], references: [projectID, label])
   toAtom       AtomSource   @relation(name: "relationTo", fields: [projectID, toLabel], references: [projectID, label])

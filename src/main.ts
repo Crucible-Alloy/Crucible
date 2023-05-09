@@ -488,13 +488,20 @@ async function initializeInheritance(
 
 async function initializeRelations(atoms: ValidAtomResp[], projectID: number) {
   for (const atom of atoms) {
+    let dependsOn = null
     // Insert parents of atom to atomInheritance table.
     if (atom.relations) {
       console.log(atom.relations)
       for (const relation of atom.relations) {
+        const relAtoms = relation.type.split("->")
+        const arityCount = relAtoms.length - 1
+        console.log(arityCount)
+        if (arityCount > 1) {
+          // Get the relation, minus the final atom
+          dependsOn = relAtoms.slice(0, relAtoms.length - 1).join('->') + '}'
+        }
         // Nasty transformation to get the last label in a -> chain e.g. "{this/Book->this/Name->this/Listing}"
-        const toLabel = relation.type
-          .split("->")[relation.type.split("->").length - 1].split("}")[0];
+        const toLabel = relAtoms[relAtoms.length - 1].split("}")[0];
         // See if the inheritance is already in the database.
         await prisma.relation.upsert({
           where: {
@@ -510,6 +517,8 @@ async function initializeRelations(atoms: ValidAtomResp[], projectID: number) {
             type: relation.type,
             fromLabel: atom.label,
             toLabel: toLabel,
+            arityCount: arityCount,
+            dependsOn: dependsOn,
           },
           update: {},
         });
