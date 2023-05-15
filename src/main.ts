@@ -494,9 +494,9 @@ async function initializeRelations(atoms: ValidAtomResp[], projectID: number) {
       console.log(atom.relations)
       for (const relation of atom.relations) {
         const relAtoms = relation.type.split("->")
-        const arityCount = relAtoms.length - 1
+        const arityCount = relAtoms.length
         console.log(arityCount)
-        if (arityCount > 1) {
+        if (arityCount > 2) {
           // Get the relation, minus the final atom
           dependsOn = relAtoms.slice(0, relAtoms.length - 1).join('->') + '}'
         }
@@ -961,7 +961,7 @@ ipcMain.on(DELETE_ATOM, async (event, atomID) => {
 
 ipcMain.on(DELETE_CONNECTION, async (event, atomID) => {
   const deletion = await prisma.connection.deleteMany({
-    where: { OR: [{ toID: number.parse(atomID)}, {fromID: number.parse(atomID)}] },
+    where: { OR: [{ toID: number.parse(atomID)}, {fromID: number.parse(atomID)}, {dependID: number.parse(atomID)}] },
   });
 
   if (deletion) {
@@ -1040,15 +1040,36 @@ ipcMain.on(
     for (let i = 0; i < connTypeArr.length; i++) {
       const type = connTypeArr[i];
       cmd += ` and ${type}=`;
+
       const connections = test.connections.filter(
         (conn) => conn.connLabel.label === type
       );
+
       for (let j = 0; j < connections.length; j++) {
         const conn = connections[j];
-        cmd += `${conn.from.nickname.replace(
-          " ",
-          ""
-        )}->${conn.to.nickname.replace(" ", "")}`;
+
+        if (conn.connLabel.arityCount > 2) {
+          // check connections for one matching dependsOn signature and fromID === the fromID of conn
+          console.log(conn.connLabel.dependsOn)
+          const matches = test.connections.filter(c => c.connLabel.type == conn.connLabel.dependsOn && c.fromID == conn.fromID)
+
+          console.log("Matches: ", matches)
+
+          if (matches.length) {
+            cmd += `${matches[0].from.nickname.replace(
+              " ",
+              ""
+            )}->${matches[0].to.nickname.replace(
+              " ",
+              "")}->${conn.to.nickname.replace(" ", "")}`;
+          }
+        } else {
+          cmd += `${conn.from.nickname.replace(
+            " ",
+            ""
+          )}->${conn.to.nickname.replace(" ", "")}`;
+        }
+
         if (j < connections.length - 1) cmd += "+";
       }
     }
@@ -1620,3 +1641,27 @@ ipcMain.on('get-active-project', async (event) => {
    event.sender.send('get-active-project-resp', selectedProject)
   }
 );
+
+ipcMain.on('is-connection-enabled', async (event, {atomID, relationDependsOn}) => {
+  console.log("Checking for dependency in connections")
+  const connections = await prisma.connection.findMany({
+    where: {fromID: number.parse(atomID)},
+    include: {connLabel: true}
+  })
+
+  if (connections) {
+    connections.forEach((conn) => {
+      console.log(conn)
+      if (conn.connLabel.type === relationDependsOn) {
+
+        // Connection matches dependency, enable button.
+        event.sender.send(`is-connection-${atomID + relationDependsOn}-enabled-resp`, true)
+        return
+      }
+    })
+  }
+
+  // No connections match
+  event.sender.send(`is-connection-${atomID + relationDependsOn}-enabled-resp`, false)
+  return
+})

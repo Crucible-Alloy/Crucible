@@ -19,6 +19,7 @@ function ConnectionNode({color, name, atom, relation}: Props) {
     atom.srcAtom
   );
   const [atomTypes, setAtomTypes] = useState([atom.srcAtom.label]);
+  const [isEnabled, setIsEnabled] = useState(false);
 
   const [{ isDragging }, drag, preview] = useDrag(
     () => ({
@@ -33,8 +34,9 @@ function ConnectionNode({color, name, atom, relation}: Props) {
       collect: (monitor) => ({
         isDragging: monitor.isDragging(),
       }),
+      canDrag: isEnabled,
     }),
-    [atom, metaData]
+    [atom, metaData, isEnabled]
   );
 
   useEffect(() => {
@@ -51,12 +53,29 @@ function ConnectionNode({color, name, atom, relation}: Props) {
     setAtomTypes([...atomTypes, ...parentAtoms]);
   }, []);
 
+  useEffect(() => {
+    if (relation.arityCount > 2) {
+      console.log("Depends on: ", relation.dependsOn)
+      console.log(atom)
+      window.electronAPI.connectionNodeEnabled(
+        {relationDependsOn: relation.dependsOn, atomID: atom.id}
+      ).then((resp: boolean) => {
+        console.log('Got depends on response.')
+        setIsEnabled(resp)
+      })
+
+    } else {
+      setIsEnabled(true)
+    }
+  }, [atom]);
+
+
   return (
-    <Group spacing={'xs'} sx={{height: '32px', color: 'white', fontSize: '12px'}}>
+    <Group spacing={'xs'} sx={{height: '32px', color: isEnabled ? 'white' : 'gray', fontSize: '12px'}}>
       {name} : {relation.multiplicity.split(' ')[0]}
       <IconArrowRight height={12}/>
       {relation.toLabel.split('/').at(-1)}
-      <div className={'connectionNode'} id={atom.id.toString() + relation.label} ref={drag} style={{backgroundColor: 'white', border: `4px solid ${atom.srcAtom.color}`}} />
+      <div className={'connectionNode'} id={atom.id.toString() + relation.label} ref={drag} style={{backgroundColor: isEnabled ? 'white' : 'dark-gray', border: `4px solid ${ isEnabled ? atom.srcAtom.color : 'gray'}`}} />
     </Group>
   );
 }

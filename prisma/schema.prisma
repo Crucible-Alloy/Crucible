@@ -98,19 +98,22 @@ model AtomInheritance {
 
 // Instance of a connection between two Atom on a canvas
 model Connection {
-  id        Int      @id @default(autoincrement())
+  id        Int         @id @default(autoincrement())
   projectID Int
   testID    Int
   toID      Int
   fromID    Int
+  dependID  Int?        @unique
   toLabel   String
   fromLabel String
   label     String
-  connLabel Relation @relation(name: "connLabel", fields: [toLabel, fromLabel, projectID, label], references: [toLabel, fromLabel, projectID, label])
-  test      Test     @relation(name: "testConnections", fields: [testID], references: [id], onDelete: Cascade)
-  project   Project  @relation(name: "project-connections", fields: [projectID], references: [id], onDelete: Cascade)
-  from      Atom     @relation(name: "connectionFrom", fields: [fromID], references: [id], onDelete: Cascade)
-  to        Atom     @relation(name: "connectionTo", fields: [toID], references: [id], onDelete: Cascade)
+  connLabel Relation    @relation(name: "connLabel", fields: [toLabel, fromLabel, projectID, label], references: [toLabel, fromLabel, projectID, label])
+  test      Test        @relation(name: "testConnections", fields: [testID], references: [id], onDelete: Cascade)
+  project   Project     @relation(name: "project-connections", fields: [projectID], references: [id], onDelete: Cascade)
+  from      Atom        @relation(name: "connectionFrom", fields: [fromID], references: [id], onDelete: Cascade)
+  to        Atom        @relation(name: "connectionTo", fields: [toID], references: [id], onDelete: Cascade)
+  depends   Connection? @relation(name: "dependsOn", fields: [dependID], references: [id], onDelete: Cascade)
+  dependent Connection? @relation(name: "dependsOn")
 }
 
 // Instance of an Atom on a canvas

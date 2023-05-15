@@ -48,6 +48,7 @@ import {
   GET_CHILDREN,
   GET_TO_RELATIONS,
   UPDATE_ATOM_NICK,
+  CREATE_DEPENDENT_CONNECTION,
 } from "./utils/constants";
 import { Project, Relation, Test } from "@prisma/client";
 import { NewProject } from "./validation/formValidation";
@@ -290,6 +291,37 @@ const api = {
 
     return new Promise((resolve) => {
       ipcRenderer.once(`${CREATE_CONNECTION}-resp`, (event, resp) =>
+        resolve(resp)
+      );
+    });
+  },
+
+  createDependentConnection: ({
+                       projectID,
+                       testID,
+                       fromAtom,
+                       toAtom,
+                       relation,
+                       dependency
+                     }: {
+    projectID: number;
+    testID: number;
+    fromAtom: AtomWithSource;
+    toAtom: AtomWithSource;
+    relation: Relation;
+    dependency: number;
+  }) => {
+    ipcRenderer.send(CREATE_DEPENDENT_CONNECTION, {
+      projectID,
+      testID,
+      fromAtom,
+      toAtom,
+      relation,
+      dependency
+    });
+
+    return new Promise((resolve) => {
+      ipcRenderer.once(`${CREATE_DEPENDENT_CONNECTION}-resp`, (event, resp) =>
         resolve(resp)
       );
     });
@@ -539,6 +571,14 @@ const api = {
     ipcRenderer.send('get-active-project');
     return new Promise((resolve) => {
       ipcRenderer.once('get-active-project-resp', (event, resp) => resolve(resp))
+    })
+  },
+
+  connectionNodeEnabled({relationDependsOn, atomID}: {relationDependsOn: string, atomID: number}): Promise<boolean> {
+    ipcRenderer.send('is-connection-enabled', {relationDependsOn, atomID});
+
+    return new Promise((resolve) => {
+      ipcRenderer.once(`is-connection-${atomID + relationDependsOn}-enabled-resp`, (event, resp) => resolve(resp))
     })
   }
 };

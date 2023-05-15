@@ -9,6 +9,7 @@ import { IconAlertTriangle, IconPencil, } from "@tabler/icons";
 import { ATOM, CONNECTION } from "../../utils/constants"
 import ConnectionNode from "./ConnectionNode";
 import EditAtomModal from "./EditAtomModal";
+import ConnDependencyModal from "./ConnDependencyModal";
 
 interface Props {
   atom: AtomWithSource;
@@ -17,6 +18,7 @@ interface Props {
 export function AtomContents({ atom, contentsBeingDragged }: Props) {
   const [acceptTypes, setAcceptTypes] = useState<string[]>([]);
   const [modalOpened, setModalOpened] = useState<boolean>(false);
+  const [dependsModalOpened, setDependsModalOpened] = useState<boolean>(false);
 
   const renderType = ATOM;
   const theme = useMantineTheme();
@@ -112,6 +114,12 @@ export function AtomContents({ atom, contentsBeingDragged }: Props) {
     toAtom: AtomWithSource;
     relation: Relation;
   }) {
+
+    if (relation.arityCount > 2) {
+      setDependsModalOpened(true)
+      return
+    }
+
     window.electronAPI
       .createConnection({
         projectID,
@@ -222,6 +230,7 @@ export function AtomContents({ atom, contentsBeingDragged }: Props) {
         </Group>
       </Paper>
       <EditAtomModal setModalOpened={setModalOpened} opened={modalOpened}  atom={atom}/>
+      <ConnDependencyModal setModalOpened={setDependsModalOpened} opened={dependsModalOpened} atom={atom}/>
     </Stack>
   ) : (
     <Paper

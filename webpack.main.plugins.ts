@@ -1,5 +1,4 @@
 import * as path from "path";
-
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
 import * as webpack from "webpack";
