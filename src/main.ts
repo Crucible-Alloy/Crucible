@@ -9,7 +9,7 @@ import { ChildProcessWithoutNullStreams, ChildProcess } from "child_process";
 import axios, { AxiosResponse } from "axios";
 import * as child_process from "child_process";
 import { z, ZodError } from "zod";
-import {Atom, PredInstance, PredParam, Prisma, Project, Test, PrismaClient, Relation} from "@prisma/client";
+import {Atom, PredInstance, PredParam, Prisma, Project, Test, PrismaClient, Relation, Connection} from "@prisma/client";
 import {
   AtomNickName, AtomNickNameSchema,
   AtomRespSchema,
@@ -105,6 +105,8 @@ export type TestWithCanvas = Prisma.TestGetPayload<{
             };
           };
         };
+        connsFrom: true;
+        connsTo: true;
       };
     };
     connections: {
@@ -159,6 +161,8 @@ export type AtomWithSource = Prisma.AtomGetPayload<{
         };
       };
     };
+    connsFrom: true;
+    connsTo: true;
   };
 }>;
 export type AtomSourceWithRelations = Prisma.AtomSourceGetPayload<{
@@ -1197,6 +1201,8 @@ ipcMain.on(
                 isChildOf: true,
               },
             },
+            connsFrom: true,
+            connsTo: true,
           },
         },
         connections: {include: {to: true, from: true, connLabel: true}},
@@ -1368,13 +1374,15 @@ ipcMain.on(
       testID,
       fromAtom,
       toAtom,
-      relation
+      relation,
+      dependency,
     }: {
       projectID: number;
       testID: number;
       fromAtom: AtomWithSource;
       toAtom: AtomWithSource;
       relation: Relation;
+      dependency: number | null;
     }
   ) => {
     console.log("WORKING ON CONNECTION");
@@ -1382,25 +1390,13 @@ ipcMain.on(
     console.log("from: ", fromAtom);
     console.log("to: ", toAtom);
     console.log('relation: ', relation);
-    // Find relation with fromAtom.atomSrc.label and toAtom.atomSrc.label
-    // const relations = await prisma.relation.findMany({
-    //   where: {
-    //     projectID: number.parse(projectID),
-    //     fromLabel: fromAtom.srcAtom.label,
-    //     toLabel: {
-    //       in: [
-    //         toAtom.srcAtom.label,
-    //         ...toAtom.srcAtom.isChildOf.map((rel) => rel.parentLabel),
-    //       ],
-    //     },
-    //   },
-    // });
-    // 2. Check relation multiplicity
+    let connection: Connection = null;
+    // Check relation multiplicity
     if (
       relation.multiplicity.split(" ")[0] === "lone" ||
       relation.multiplicity.split(" ")[0] === "one"
     ) {
-        // 3. Find out if there are preexisting connections of that kind.
+        // Find out if there are preexisting connections of that kind.
         const existingRels = await prisma.connection.findFirst({
           where: {
             label: relation.label,
@@ -1415,18 +1411,38 @@ ipcMain.on(
           return;
         }
       }
-      // 4. Else, add connection.
-      const connection = await prisma.connection.create({
-        data: {
-          fromID: number.parse(fromAtom.id),
-          toID: number.parse(toAtom.id),
-          fromLabel: relation.fromLabel,
-          toLabel: relation.toLabel,
-          label: relation.label,
-          projectID: number.parse(projectID),
-          testID: number.parse(fromAtom.testID),
-        },
-      });
+      // Else, add connection.
+      if (dependency) {
+        connection = await prisma.connection.create({
+          data: {
+            fromID: number.parse(fromAtom.id),
+            toID: number.parse(toAtom.id),
+            fromNick: fromAtom.nickname,
+            toNick: toAtom.nickname,
+            fromLabel: relation.fromLabel,
+            toLabel: relation.toLabel,
+            label: relation.label,
+            projectID: number.parse(projectID),
+            testID: number.parse(fromAtom.testID),
+            dependID: number.parse(dependency),
+          },
+        });
+      }
+      else {
+        connection = await prisma.connection.create({
+          data: {
+            fromID: number.parse(fromAtom.id),
+            toID: number.parse(toAtom.id),
+            fromNick: fromAtom.nickname,
+            toNick: toAtom.nickname,
+            fromLabel: relation.fromLabel,
+            toLabel: relation.toLabel,
+            label: relation.label,
+            projectID: number.parse(projectID),
+            testID: number.parse(fromAtom.testID),
+          },
+        });
+      }
       console.log("Connection created");
 
       // Alert GUI to successful connection creation and refresh test.

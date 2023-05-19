@@ -106,6 +106,8 @@ model Connection {
   dependID  Int?        @unique
   toLabel   String
   fromLabel String
+  toNick    String
+  fromNick  String
   label     String
   connLabel Relation    @relation(name: "connLabel", fields: [toLabel, fromLabel, projectID, label], references: [toLabel, fromLabel, projectID, label])
   test      Test        @relation(name: "testConnections", fields: [testID], references: [id], onDelete: Cascade)

@@ -19,6 +19,8 @@ export function AtomContents({ atom, contentsBeingDragged }: Props) {
   const [acceptTypes, setAcceptTypes] = useState<string[]>([]);
   const [modalOpened, setModalOpened] = useState<boolean>(false);
   const [dependsModalOpened, setDependsModalOpened] = useState<boolean>(false);
+  const [connDependency, setConnDependency] = useState(null);
+  const [fromAtom, setFromAtom] = useState(null);
 
   const renderType = ATOM;
   const theme = useMantineTheme();
@@ -117,6 +119,10 @@ export function AtomContents({ atom, contentsBeingDragged }: Props) {
 
     if (relation.arityCount > 2) {
       setDependsModalOpened(true)
+      setConnDependency(relation)
+      setFromAtom(fromAtom)
+      console.log("From Atom: ", fromAtom)
+      console.log("Connection depends on: ", relation.dependsOn)
       return
     }
 
@@ -230,7 +236,7 @@ export function AtomContents({ atom, contentsBeingDragged }: Props) {
         </Group>
       </Paper>
       <EditAtomModal setModalOpened={setModalOpened} opened={modalOpened}  atom={atom}/>
-      <ConnDependencyModal setModalOpened={setDependsModalOpened} opened={dependsModalOpened} atom={atom}/>
+      <ConnDependencyModal setModalOpened={setDependsModalOpened} opened={dependsModalOpened} fromAtom={fromAtom} toAtom={atom} connDependency={connDependency}/>
     </Stack>
   ) : (
     <Paper

@@ -311,7 +311,7 @@ const api = {
     relation: Relation;
     dependency: number;
   }) => {
-    ipcRenderer.send(CREATE_DEPENDENT_CONNECTION, {
+    ipcRenderer.send(CREATE_CONNECTION, {
       projectID,
       testID,
       fromAtom,
@@ -321,7 +321,7 @@ const api = {
     });
 
     return new Promise((resolve) => {
-      ipcRenderer.once(`${CREATE_DEPENDENT_CONNECTION}-resp`, (event, resp) =>
+      ipcRenderer.once(`${CREATE_CONNECTION}-resp`, (event, resp) =>
         resolve(resp)
       );
     });
