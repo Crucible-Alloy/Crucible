@@ -26,7 +26,7 @@ function TabContent({ test, projectID }: Props) {
       >
         <TestPlayBtn projectID={projectID} testID={test.id} disabled={false} />
         <TestPredicatesBtn testID={test.id} />
-        <Benchmark disabled={false} projectID={projectID} testID={test.id} />
+        {/*<Benchmark disabled={false} projectID={projectID} testID={test.id} />*/}
       </Group>
       <Box
         sx={(theme) => ({
