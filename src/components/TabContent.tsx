@@ -5,6 +5,7 @@ import Canvas from "./Canvas";
 import { Test } from "@prisma/client";
 import TestPredicatesBtn from "./TestPredicatesBtn";
 import TestPlayBtn from "./TestPlayBtn";
+import Benchmark from "./Benchmark";
 
 interface Props {
   test: Test;
@@ -25,6 +26,7 @@ function TabContent({ test, projectID }: Props) {
       >
         <TestPlayBtn projectID={projectID} testID={test.id} disabled={false} />
         <TestPredicatesBtn testID={test.id} />
+        <Benchmark disabled={false} projectID={projectID} testID={test.id} />
       </Group>
       <Box
         sx={(theme) => ({

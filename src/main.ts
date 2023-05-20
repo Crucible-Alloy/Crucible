@@ -985,6 +985,7 @@ ipcMain.on(
     { projectID, testID }: { projectID: number; testID: number }
   ) => {
     // some disj List0: List {some disj Node1, Node2: Node {List = List0 and Node = Node1+Node2 and header=List0->Node1 and link=Node1->Node2 and Acyclic[List0]}}
+    const start = Date.now()
     let cmd = "";
     const countArray = [];  // Stores the number of each type of atom.
     console.log(testID);
@@ -1118,13 +1119,20 @@ ipcMain.on(
     console.log(cmd);
     console.log(test.project.alloyFile);
 
+    const end = Date.now()
+    console.log(`RUNTIME FOR CMD STRING CONSTRUCTION: ${end - start} ms`)
     // Get the maximum of a single type of atom in the test
     const maxAtoms = Math.max(...countArray)
+
+    // Number of higher arity connections
+    const highArityCount = test.connections.filter((conn) => conn.connLabel.arityCount > 2)
+    console.log(highArityCount)
+
 
     const reqBody = JSON.stringify({
       path: test.project.alloyFile,
       command: cmd,
-      maximum: maxAtoms.toString(),
+      maximum: (maxAtoms + highArityCount.length).toString(),
     });
 
     const apiRequest = axios.post(`http://localhost:${PORT_NUMBER}/tests`, reqBody, {
@@ -1137,6 +1145,7 @@ ipcMain.on(
           ? event.sender.send(`${RUN_TEST}-${testID}-resp`, "Fail")
           : event.sender.send(`${RUN_TEST}-${testID}-resp`, "Pass");
       }
+      console.log(`RUNTIME FOR Execution: ${Date.now() - start} ms`)
     });
   }
 );
@@ -1401,6 +1410,7 @@ ipcMain.on(
           where: {
             label: relation.label,
             fromLabel: relation.fromLabel,
+            fromID: fromAtom.id,
             testID: testID,
           }
         });
@@ -1680,4 +1690,210 @@ ipcMain.on('is-connection-enabled', async (event, {atomID, relationDependsOn}) =
   // No connections match
   event.sender.send(`is-connection-${atomID + relationDependsOn}-enabled-resp`, false)
   return
+})
+
+// BENCHMARKS
+async function thirtySixAndSixtyCV() {
+  // CV
+  const userSrc = await prisma.atomSource.findFirst({where: {projectID: 3, label: 'this/User'}});
+  const workSrc = await prisma.atomSource.findFirst({where: {projectID: 3, label: 'this/Work'}});
+  const instSrc = await prisma.atomSource.findFirst({where: {projectID: 3, label: 'this/Institution'}});
+  const idSrc = await prisma.atomSource.findFirst({where: {projectID: 3, label: 'this/Id'}});
+  const rels = await prisma.relation.findMany({where: {projectID: 3}})
+  // 36 Atoms & 60 connections
+
+
+  // Create test
+  let test: Test;
+  const testResp = await createNewTest(3, '36 and 60')
+  if (testResp.test) {
+    test = testResp.test
+  }
+
+  // insert atoms
+  const users = []
+  const ids = []
+  const work = []
+  const institutions = []
+
+  for (let i = 0; i < 9; i++) {
+    await prisma.atom.create({data: {top: 0, left: 0, nickname: `user${i}`, srcID: userSrc.id, testID: test.id}})
+    await prisma.atom.create({data: {top: 0, left: 0, nickname: `work${i}`, srcID: workSrc.id, testID: test.id}})
+    await prisma.atom.create({data: {top: 0, left: 0, nickname: `inst${i}`, srcID: instSrc.id, testID: test.id}})
+    await prisma.atom.create({data: {top: 0, left: 0, nickname: `id${i}`, srcID: idSrc.id, testID: test.id}})
+  }
+
+  const userRecords = await prisma.atom.findMany({where: {testID: test.id, srcID: userSrc.id}, take: 6})
+  const workRecords = await prisma.atom.findMany({where: {testID: test.id, srcID: workSrc.id}});
+  const instRecords = await prisma.atom.findMany({where: {testID: test.id, srcID: instSrc.id}});
+
+  // Connect each work to a source (6 records)
+  for (let i = 0; i < 6; i++) {
+    console.log(test.id)
+    const conn = await prisma.connection.create({data: {
+      fromID: number.parse(workRecords[i].id),
+      toID: number.parse(instRecords[i].id),
+      fromNick: workRecords[i].nickname,
+      toNick: instRecords[i].nickname,
+      fromLabel: 'this/Work',
+      toLabel: 'this/Source',
+      label: 'source',
+      projectID: 3,
+      testID: number.parse(test.id)
+    }})
+  }
+
+  // Connect each user to every work atom (6 * 9 records, 54)
+  for (const rec of userRecords) {
+    for (let i = 0; i < workRecords.length; i++) {
+      const conn = await prisma.connection.create({data: {
+          fromID: number.parse(rec.id),
+          toID: number.parse(workRecords[i].id),
+          fromNick: rec.nickname,
+          toNick: workRecords[i].nickname,
+          fromLabel: 'this/User',
+          toLabel: 'this/Work',
+          label: 'visible',
+          projectID: 3,
+          testID: number.parse(test.id)
+        }})
+    }
+  }
+}
+
+async function fortyEightAndEightyCV() {
+  // CV
+  const userSrc = await prisma.atomSource.findFirst({where: {projectID: 3, label: 'this/User'}});
+  const workSrc = await prisma.atomSource.findFirst({where: {projectID: 3, label: 'this/Work'}});
+  const instSrc = await prisma.atomSource.findFirst({where: {projectID: 3, label: 'this/Institution'}});
+  const idSrc = await prisma.atomSource.findFirst({where: {projectID: 3, label: 'this/Id'}});
+  const rels = await prisma.relation.findMany({where: {projectID: 3}})
+  // 48 Atoms & 80 connections
+
+
+  // Create test
+  let test: Test;
+  const testResp = await createNewTest(3, '48 and 80')
+  if (testResp.test) {
+    test = testResp.test
+  }
+
+  // insert atoms
+  const users = []
+  const ids = []
+  const work = []
+  const institutions = []
+
+  for (let i = 0; i < 12; i++) {
+    await prisma.atom.create({data: {top: 0, left: 0, nickname: `user${i}`, srcID: userSrc.id, testID: test.id}})
+    await prisma.atom.create({data: {top: 0, left: 0, nickname: `work${i}`, srcID: workSrc.id, testID: test.id}})
+    await prisma.atom.create({data: {top: 0, left: 0, nickname: `inst${i}`, srcID: instSrc.id, testID: test.id}})
+    await prisma.atom.create({data: {top: 0, left: 0, nickname: `id${i}`, srcID: idSrc.id, testID: test.id}})
+  }
+
+  const userRecords = await prisma.atom.findMany({where: {testID: test.id, srcID: userSrc.id}, take: 6})
+  const workRecords = await prisma.atom.findMany({where: {testID: test.id, srcID: workSrc.id}});
+  const instRecords = await prisma.atom.findMany({where: {testID: test.id, srcID: instSrc.id}});
+
+  for (let i = 0; i < 8; i++) {
+    console.log(test.id)
+    const conn = await prisma.connection.create({data: {
+        fromID: number.parse(workRecords[i].id),
+        toID: number.parse(instRecords[i].id),
+        fromNick: workRecords[i].nickname,
+        toNick: instRecords[i].nickname,
+        fromLabel: 'this/Work',
+        toLabel: 'this/Source',
+        label: 'source',
+        projectID: 3,
+        testID: number.parse(test.id)
+      }})
+  }
+
+  for (const rec of userRecords) {
+    for (let i = 0; i < workRecords.length; i++) {
+      const conn = await prisma.connection.create({data: {
+          fromID: number.parse(rec.id),
+          toID: number.parse(workRecords[i].id),
+          fromNick: rec.nickname,
+          toNick: workRecords[i].nickname,
+          fromLabel: 'this/User',
+          toLabel: 'this/Work',
+          label: 'visible',
+          projectID: 3,
+          testID: number.parse(test.id)
+        }})
+    }
+  }
+}
+async function buildBenchmarkTests() {
+  // CV
+  const userSrc = await prisma.atomSource.findFirst({where: {projectID: 3, label: 'this/User'}});
+  const workSrc = await prisma.atomSource.findFirst({where: {projectID: 3, label: 'this/Work'}});
+  const instSrc = await prisma.atomSource.findFirst({where: {projectID: 3, label: 'this/Institution'}});
+  const idSrc = await prisma.atomSource.findFirst({where: {projectID: 3, label: 'this/Id'}});
+  const rels = await prisma.relation.findMany({where: {projectID: 3}})
+  // 60 Atoms & 100 connections
+
+
+  // Create test
+  let test: Test;
+  const testResp = await createNewTest(3, '60 and 100')
+  if (testResp.test) {
+    test = testResp.test
+  }
+
+  // insert atoms
+  const users = []
+  const ids = []
+  const work = []
+  const institutions = []
+
+  for (let i = 0; i < 15; i++) {
+    await prisma.atom.create({data: {top: 0, left: 0, nickname: `user${i}`, srcID: userSrc.id, testID: test.id}})
+    await prisma.atom.create({data: {top: 0, left: 0, nickname: `work${i}`, srcID: workSrc.id, testID: test.id}})
+    await prisma.atom.create({data: {top: 0, left: 0, nickname: `inst${i}`, srcID: instSrc.id, testID: test.id}})
+    await prisma.atom.create({data: {top: 0, left: 0, nickname: `id${i}`, srcID: idSrc.id, testID: test.id}})
+  }
+
+
+  const userRecords = await prisma.atom.findMany({where: {testID: test.id, srcID: userSrc.id}, take: 6})
+  const workRecords = await prisma.atom.findMany({where: {testID: test.id, srcID: workSrc.id}});
+  const instRecords = await prisma.atom.findMany({where: {testID: test.id, srcID: instSrc.id}});
+
+  // 10 connections
+  for (let i = 0; i < 10; i++) {
+    console.log(test.id)
+    const conn = await prisma.connection.create({data: {
+        fromID: number.parse(workRecords[i].id),
+        toID: number.parse(instRecords[i].id),
+        fromNick: workRecords[i].nickname,
+        toNick: instRecords[i].nickname,
+        fromLabel: 'this/Work',
+        toLabel: 'this/Source',
+        label: 'source',
+        projectID: 3,
+        testID: number.parse(test.id)
+      }})
+  }
+
+  // 15 * 6 = 90 connections
+  for (const rec of userRecords) {
+    for (let i = 0; i < workRecords.length; i++) {
+      const conn = await prisma.connection.create({data: {
+          fromID: number.parse(rec.id),
+          toID: number.parse(workRecords[i].id),
+          fromNick: rec.nickname,
+          toNick: workRecords[i].nickname,
+          fromLabel: 'this/User',
+          toLabel: 'this/Work',
+          label: 'visible',
+          projectID: 3,
+          testID: number.parse(test.id)
+        }})
+    }
+  }
+}
+ipcMain.on('build-benchmark', async () => {
+  await buildBenchmarkTests();
 })

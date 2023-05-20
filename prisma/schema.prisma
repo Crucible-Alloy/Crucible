@@ -32,14 +32,17 @@ model Test {
   id          Int            @id @default(autoincrement())
   project     Project        @relation(fields: [projectID], references: [id], onDelete: Cascade)
   projectID   Int
-  name        String         @unique // Unique name for use in filepath
-  testFile    String         @unique // File path for storage of command string
+  name        String
+  testFile    String
   tab         Tab?           @relation
   tabIsOpen   Boolean        @default(false)
   atomCount   Int            @default(0) // Used in autogenerating nicknames. Increments on atom being added. Does not decrement.
   atoms       Atom[]         @relation("testAtoms") // Array of atom instances
   predicates  PredInstance[] @relation("testPredicate") // Array of atom instances
   connections Connection[]   @relation("testConnections") // Array of connection instances
+
+  @@unique([name, projectID])
+  @@unique([testFile, projectID])
 }
 
 // TODO: This model may not be necesarry once refactored

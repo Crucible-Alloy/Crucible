@@ -580,6 +580,10 @@ const api = {
     return new Promise((resolve) => {
       ipcRenderer.once(`is-connection-${atomID + relationDependsOn}-enabled-resp`, (event, resp) => resolve(resp))
     })
+  },
+
+  buildBenchmark() {
+    ipcRenderer.send('build-benchmark');
   }
 };
 
