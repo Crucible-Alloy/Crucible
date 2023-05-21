@@ -28,23 +28,23 @@ Getting started with Crucible is as simple as loading in your existing Alloy scr
 
 When you launch Crucible, you will be met with the Project Selection window.  To get started, select "New Project", and fill out the project creation form, being sure to point your new project to an existing Alloy file.
 
-[SCREENSHOT OF PROJECT CREATION FORM]
+![](images/new_project.png)
 
 ### Create A Test
 
 Once you have created a new project, you will be met with the project window, where you will spend most of your time in Crucible.  To create your first test, open the test drawer by clicking the test tube icon on the left side of the window.  Select "New Test" to create your first test.
 
-[SCREENSHOT OF TEST CREATION FORM]
+![](images/test_creation.gif)
 
 Now that we have a test, selecting it from the test drawer will open our canvas.  The canvas is the basis of a Crucible test.  To build our test, open the Atoms drawer on the left-hand side of the screen and drag some Atoms into the canvas.
 
-[GIF OF DRAGGING ATOMS TO CANVAS]
+![](images/add_an_atom.gif)
 
 Once we have a few Atoms, we will want to create connections between them.  Using the connection node on an atom, we can drag a connection to another atom.  
 
 Valid connection targets will be highlighted green.  Multiplicity constraints are enforced and Crucible will notify you in the event you attempt to violate one.
 
-[GIF OF CREATING A CONNECTION]
+![](images/add_connections.gif)
 
 ### Running A Test
 
@@ -54,7 +54,7 @@ To run your test, click the green "Run" button in the upper left-hand corner of 
 
 Additionally, you can modify your test by enabling predicates in the predicated window, which can be accessed via the purple "Predicates" button found adjacent to the "Run" button.  Predicates are disabled by default, but can be toggled to Valid or Invalid states at which point your test-case will be evaluated accordingly.
 
-[GIF OF TOGGLING A PREDICATE]
+![](images/toggle_predicates.gif)
 
 # Developing For Crucible
 
@@ -71,7 +71,7 @@ When running a test, a command string is generated based on the graph and sent o
 
 Project and test state are all maintained inside the SQLite database.
 
-The codebase for the SpringBoot API can be found [HERE]
+The SpringBoot API codebase can be found [here](https://github.com/AdamGEmerson/Crucible-API).
 
 ## Setting Up The Dev Environment
 
@@ -89,4 +89,3 @@ If you are working locally, `npm run start` will launch the Electron app and Spr
 
 If you are ready to package the application, uncomment line 10 of `webpack.main.plugins.ts` or else you will end up with runtime errors.
 
-The SpringBoot API codebase can be found [HERE]

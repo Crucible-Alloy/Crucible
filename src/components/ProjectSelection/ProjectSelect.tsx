@@ -16,11 +16,13 @@ import {
   Loader,
   Center,
   ScrollArea,
+  Image
 } from "@mantine/core";
 import { IconSettings } from "@tabler/icons";
 import NewProjectModal from "./NewProjectModal";
 import { Project } from "@prisma/client";
 import ProjectListItem from "./ProjectListItem";
+
 
 export const ProjectSelect = () => {
   const theme = useMantineTheme();
@@ -106,7 +108,7 @@ export const ProjectSelect = () => {
                 />
               </MediaQuery>
 
-              <Title>Crucible</Title>
+              <Image src={require('/src/full_logo/logo_1x.png')} maw={220}></Image>
             </div>
           </Header>
         }

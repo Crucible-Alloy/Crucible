@@ -780,6 +780,7 @@ function createMainWindow(projectID: number) {
     // Set browser window parameters
     width: 1600,
     height: 900,
+    title: "Crucible",
     webPreferences: {
       contextIsolation: true, // must be set to true when contextBridge is enabled
       nodeIntegration: false,

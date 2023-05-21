@@ -6,6 +6,10 @@ import * as webpack from "webpack";
 
 export const plugins = [
   new ForkTsCheckerWebpackPlugin(),
+  new CopyPlugin({patterns: [
+      {from: './src/full_logo/*'},
+      // {from: './prisma/schema.prisma'}, // Comment out for local development, leave in for packaging.
+    ]}),
   // new CopyPlugin({patterns: [
   //     {from: './src/JARs/*', to: path.join(__dirname, 'dist'),}
   //   ]}),

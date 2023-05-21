@@ -9,6 +9,10 @@ export const rules: Required<ModuleOptions>['rules'] = [
     use: 'node-loader',
   },
   {
+    test: /\.(png|jpg|gif|svg|glb)$/,
+    type: 'asset/resource'
+  },
+  {
     test: /[/\\]node_modules[/\\].+\.(m?js|node)$/,
     // exclude: /\.prisma/,
     parser: { amd: false },
