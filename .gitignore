@@ -99,3 +99,11 @@ dist/
 
 #Prisma db
 prisma/dev.db
+
+# Compile forge configs
+forge.config.js
+webpack.main.config.js
+webpack.main.plugins.js
+webpack.plugins.js
+webpack.renderer.config.js
+webpack.rules.js
