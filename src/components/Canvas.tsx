@@ -162,13 +162,13 @@ function Canvas({ testID }: Props) {
       <div
         ref={drop}
         className={"canvas"}
-        onContextMenu={(e) => {
-          e.preventDefault();
-          const clickCoords = { clickX: e.pageX, clickY: e.pageY };
-          // console.log(clickCoords);
-          // console.log(quickInsertData);
-          setCoords(clickCoords);
-        }}
+        // onContextMenu={(e) => {
+        //   e.preventDefault();
+        //   const clickCoords = { clickX: e.pageX, clickY: e.pageY };
+        //   // console.log(clickCoords);
+        //   // console.log(quickInsertData);
+        //   setCoords(clickCoords);
+        // }}
       >
         <Affix
           sx={{ display: validCoords ? "initial" : "none" }}
