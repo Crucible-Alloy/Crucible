@@ -1095,10 +1095,6 @@ ipcMain.on(
       },
     });
 
-    if (!preds) {
-      // Run command
-    }
-
     for (let i = 0; i < preds.length; i++) {
       console.log("in preds loop");
       const pred = preds[i];
@@ -1127,13 +1123,13 @@ ipcMain.on(
 
     // Number of higher arity connections
     const highArityCount = test.connections.filter((conn) => conn.connLabel.arityCount > 2)
-    console.log(highArityCount)
+    console.log(highArityCount.length)
 
 
     const reqBody = JSON.stringify({
       path: test.project.alloyFile,
       command: cmd,
-      maximum: (maxAtoms + highArityCount.length).toString(),
+      maximum: (maxAtoms + highArityCount.length + 1).toString(),
     });
 
     const apiRequest = axios.post(`http://localhost:${PORT_NUMBER}/tests`, reqBody, {
