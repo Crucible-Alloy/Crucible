@@ -5,6 +5,7 @@ import { useDrag } from "react-dnd";
 import { CONNECTION } from "../../utils/constants";
 import { AtomSourceWithRelations } from "../../main";
 import { Relation } from "@prisma/client";
+import {getEmptyImage} from "react-dnd-html5-backend";
 
 interface Props {
   color: string;
@@ -20,6 +21,10 @@ function ConnectionNode({color, name, atom, relation}: Props) {
   );
   const [atomTypes, setAtomTypes] = useState([atom.srcAtom.label]);
   const [isEnabled, setIsEnabled] = useState(false);
+
+  useEffect(() => {
+    preview(getEmptyImage(), { captureDraggingState: true });
+  }, []);
 
   const [{ isDragging }, drag, preview] = useDrag(
     () => ({

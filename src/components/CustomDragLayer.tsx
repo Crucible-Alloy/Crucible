@@ -26,7 +26,7 @@ function getItemStyles(
   delta: any,
   mousePos: any
 ) {
-  let { x, y } = currentSourceOffset;
+  const { x, y } = currentSourceOffset;
   if (item.renderType === ATOM_SOURCE) {
     const transform = `translate(${x}px, ${y}px)`;
     return {
@@ -45,7 +45,11 @@ function getItemStyles(
   }
 }
 
-export const CustomDragLayer = ({ mousePos }: any) => {
+interface Props {
+  mousePos: {x: number, y: number}
+}
+
+export const CustomDragLayer = ({ mousePos }: Props ) => {
   const theme = useMantineTheme();
 
   const {
@@ -80,8 +84,8 @@ export const CustomDragLayer = ({ mousePos }: any) => {
           <Arrow
             startPoint={{ x: mousePos.x, y: mousePos.y }}
             endPoint={{
-              x: mousePos.x + delta.x + 16,
-              y: mousePos.y + delta.y + 16,
+              x: delta.x < 16 ? mousePos.x + delta.x + 16 : mousePos.x + delta.x,
+              y: mousePos.y + delta.y,
             }}
             config={{ arrowColor: theme.colors.blue[5], strokeWidth: 5 }}
           />

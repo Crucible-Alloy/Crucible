@@ -96,7 +96,6 @@ export function AtomContents({ atom, contentsBeingDragged }: Props) {
               relation: item.relation
             });
         }
-
         return undefined;
       },
     }),
@@ -146,24 +145,6 @@ export function AtomContents({ atom, contentsBeingDragged }: Props) {
       });
   }
 
-  // function getAtomStyles(
-  //   theme: MantineTheme,
-  //   shape: string,
-  //   left: number,
-  //   top: number
-  // ): React.CSSProperties {
-  //   // const transform = `translate3d(${left}px, ${top}px, 0)`
-  //
-  //   return {
-  //     position: "absolute",
-  //     // IE fallback: hide the real node using CSS when dragging
-  //     // because IE will ignore our custom "empty image" drag preview.
-  //     opacity: isDragging ? 0 : 1,
-  //     backgroundColor: canDrop ? theme.colors.dark[3] : theme.colors.dark[5],
-  //     margin: "auto",
-  //   };
-  // }
-
   function getAtomStyles(
     color: string,
     contentsBeingDragged: boolean,
@@ -179,7 +160,8 @@ export function AtomContents({ atom, contentsBeingDragged }: Props) {
       minHeight: `${120}px`,
       position: "absolute",
       borderRadius: "4px",
-      backgroundColor: theme.colors.gray[8],
+      backgroundColor: isOver ? theme.colors.gray[6] : theme.colors.gray[8],
+
       opacity: isDragging ? 0 : 1,
       filter: canDrop ? 'brightness(105%)' : '',
       boxShadow: canDrop ? 'rgba(80, 200, 120, .90) 0px 5px 16px' : '',
@@ -223,8 +205,8 @@ export function AtomContents({ atom, contentsBeingDragged }: Props) {
       sx={{backgroundColor: theme.colors.gray[8]}}
       p={'sm'}
       >
-        <Group>
-          <div id={atom.id.toString() + 'receiver'} ref={drop} className={"connectionNode"} style={{backgroundColor: canDrop ? theme.colors.green[5] : theme.colors.gray[6]}}></div>
+        <Group styles={{position: 'absolute'}}>
+          <div id={atom.id.toString() + 'receiver'} ref={drop} className={"receiver"} style={{backgroundColor: isOver ? theme.colors.green[5] : theme.colors.gray[6],}}></div>
           <div>
             <Flex justify={'space-between'}>
               <Text color={'white'} weight={400}>{atom.srcAtom.label.split('/').at(-1)}</Text>

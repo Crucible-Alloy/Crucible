@@ -38,3 +38,8 @@ code {
   cursor: pointer;
   filter: brightness(85%);
 }
+.receiver {
+  height: 32px;
+  width: 32px;
+  background-color: gray;
+}
