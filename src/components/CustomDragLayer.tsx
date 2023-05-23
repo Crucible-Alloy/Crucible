@@ -70,7 +70,7 @@ export const CustomDragLayer = ({ mousePos }: any) => {
   const renderItem = () => {
     switch (item.renderType) {
       case ATOM:
-        return <AtomContents contentsBeingDragged={true} atom={item.data} />;
+        return <AtomContents contentsBeingDragged={true} atom={item.data} atoms={[]} />;
 
       case ATOM_SOURCE:
         return <AtomSourceItem atomSource={item.data} />;

@@ -64,6 +64,7 @@ import {
   GET_CHILDREN,
   GET_TO_RELATIONS,
   UPDATE_ATOM_NICK,
+  CREATE_HIGH_ARITY_CONNECTION,
 } from "./utils/constants";
 
 import unhandled from "electron-unhandled";
@@ -536,12 +537,19 @@ async function initializePredicates(
   projectID: number
 ) {
   for (const pred of predicates) {
+    let label = pred.label
+    // Preprocess to remove 'this/' to homogenize assertions and predicates
+    if (pred.label.includes('this/')) {
+      label = pred.label.split('/')[1]
+    }
+
     const newPred = await prisma.predicate.create({
       data: {
         projectID: projectID,
-        name: pred.label,
+        name: label,
       },
     });
+
     for (const param of pred.parameters) {
       await prisma.predParam.create({
         data: {
@@ -1099,7 +1107,7 @@ ipcMain.on(
       console.log("in preds loop");
       const pred = preds[i];
       cmd += pred.state ? " and " : " and not ";
-      cmd += `${pred.predicate.name.split("/")[1]}[`;
+      cmd += `${pred.predicate.name}[`;
       for (let j = 0; j < pred.params.length; j++) {
         const param = pred.params[j];
         const atomNick = test.atoms.filter((atom) => atom.id === param.atom);
@@ -1462,6 +1470,102 @@ ipcMain.on(
       event.sender.send(`${CREATE_CONNECTION}-resp`, { success: false });
   }
 );
+
+ipcMain.on(
+  CREATE_HIGH_ARITY_CONNECTION,
+  async (
+    event,
+    { projectID, testID, atomOneID, atomTwoID, atomThreeID, relation }:
+    {
+      projectID: number;
+      testID: number;
+      atomOneID: number;
+      atomTwoID: number;
+      atomThreeID: number;
+      relation: Relation;
+    }
+  ) => {
+    console.log("WORKING ON CONNECTION");
+    console.log("pID: ", projectID);
+    console.log("from: ", atomOneID);
+    console.log("to: ", atomTwoID);
+    console.log('relation: ', relation.type);
+    let connectionOne: Connection = null;
+    let connectionTwo: Connection = null;
+    // Check relation multiplicity
+    if (
+      relation.multiplicity.split(" ")[0] === "lone" ||
+      relation.multiplicity.split(" ")[0] === "one"
+    ) {
+      // Find out if there are preexisting connections of that kind.
+      const existingRels = await prisma.connection.findMany({
+        where: {
+          label: relation.label,
+          fromID: number.parse(atomOneID),
+          testID: number.parse(testID),
+        }
+      });
+
+      if (existingRels.length > relation.arityCount - 1) {
+        console.log("existingRels: ", existingRels);
+        event.sender.send(`${CREATE_CONNECTION}-resp`, { success: false });
+        return;
+      }
+    }
+    // Else, add connection.
+
+    const atomOne = await prisma.atom.findFirst({where: {id: number.parse(atomOneID), testID: number.parse(testID)}})
+    const atomTwo = await prisma.atom.findFirst({where: {id: number.parse(atomTwoID), testID: number.parse(testID)}})
+    const atomThree = await prisma.atom.findFirst({where: {id: number.parse(atomThreeID), testID: number.parse(testID)}})
+
+    console.log("Building first half")
+    connectionOne = await prisma.connection.create({
+      data: {
+        fromID: number.parse(atomOne.id),
+        toID: number.parse(atomTwo.id),
+        fromNick: atomOne.nickname,
+        toNick: atomTwo.nickname,
+        fromLabel: relation.fromLabel,
+        toLabel: relation.toLabel,
+        label: relation.label,
+        projectID: number.parse(projectID),
+        testID: number.parse(testID),
+      },
+    });
+
+    // Create second half of connection
+    if (connectionOne) {
+      console.log("Building second half")
+      connectionTwo = await prisma.connection.create({
+        data: {
+          fromID: number.parse(atomOne.id),
+          toID: number.parse(atomThree.id),
+          fromNick: atomOne.nickname,
+          toNick: atomThree.nickname,
+          fromLabel: relation.fromLabel,
+          toLabel: relation.toLabel,
+          label: relation.label,
+          projectID: number.parse(projectID),
+          testID: number.parse(testID),
+          dependID: connectionOne.id
+        },
+      });
+    }
+
+    // Link connection one to connection two, (co-dependent)
+    if (connectionTwo)
+      connectionOne = await prisma.connection.update({where: {id: connectionOne.id}, data: {dependID: connectionTwo.id}})
+
+    // Alert GUI to successful connection creation and refresh test.
+    if (connectionOne && connectionTwo) {
+      console.log("Connection created");
+      event.sender.send(`${CREATE_HIGH_ARITY_CONNECTION}-resp`, { success: true });
+      mainWindow.webContents.send("canvas-update");
+      return;
+    }
+
+    event.sender.send(`${CREATE_HIGH_ARITY_CONNECTION}-resp`, { success: false });
+  });
 
 ipcMain.on(GET_ATOM_SOURCES, async (event, projectID: number) => {
   console.log(`Getting atoms with projectID: ${projectID}`);

@@ -214,6 +214,7 @@ function Canvas({ testID }: Props) {
             key={atom.id}
             contentsBeingDragged={false}
             atom={atom}
+            atoms={canvasItems.atoms}
           />
         ))}
         {canvasItems.connections.map((connection, index) => {
@@ -221,6 +222,7 @@ function Canvas({ testID }: Props) {
             start={connection.fromID + connection.label}
             end={connection.toID.toString()}
             labels={connection.connLabel.label}
+            color={connection.connLabel.arityCount > 2 ? theme.colors.orange[5] : theme.colors.blue[5]}
           />
           // const start = {x: connection.from.left + AtomWidth, y: connection.from.top + AtomHeight / 2}
           // const end = {x: connection.to.left, y: (connection.to.top + AtomHeight / 2)}

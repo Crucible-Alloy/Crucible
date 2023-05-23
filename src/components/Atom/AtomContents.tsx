@@ -10,12 +10,14 @@ import { ATOM, CONNECTION } from "../../utils/constants"
 import ConnectionNode from "./ConnectionNode";
 import EditAtomModal from "./EditAtomModal";
 import ConnDependencyModal from "./ConnDependencyModal";
+import HighArityConn from "./HighArityConn";
 
 interface Props {
   atom: AtomWithSource;
   contentsBeingDragged: boolean;
+  atoms: AtomWithSource[];
 }
-export function AtomContents({ atom, contentsBeingDragged }: Props) {
+export function AtomContents({ atom, contentsBeingDragged, atoms }: Props) {
   const [acceptTypes, setAcceptTypes] = useState<string[]>([]);
   const [modalOpened, setModalOpened] = useState<boolean>(false);
   const [dependsModalOpened, setDependsModalOpened] = useState<boolean>(false);
@@ -229,14 +231,21 @@ export function AtomContents({ atom, contentsBeingDragged }: Props) {
             <Flex justify={'space-between'}>
               <Text color={'white'} weight={400}>{atom.srcAtom.label.split('/').at(-1)}</Text>
             </Flex>
-            {atom.srcAtom.fromRelations.map((rel) => (
-              <ConnectionNode color={theme.colors.gray[5]} name={rel.label} atom={atom} relation={rel} />
-            ))}
+            {atom.srcAtom.fromRelations.map((rel) => {
+              if (rel.arityCount > 2) {
+                return <>
+                  <HighArityConn color={theme.colors.gray[5]} name={rel.label} atom={atom} relation={rel} toggleModal={setDependsModalOpened} setFrom={setFromAtom}/>
+                  <ConnDependencyModal setModalOpened={setDependsModalOpened} opened={dependsModalOpened} relation={rel} fromAtom={fromAtom} atoms={atoms}/>
+                </>
+              } else {
+                return <ConnectionNode color={theme.colors.gray[5]} name={rel.label} atom={atom} relation={rel} />
+              }
+            })}
           </div>
         </Group>
       </Paper>
       <EditAtomModal setModalOpened={setModalOpened} opened={modalOpened}  atom={atom}/>
-      <ConnDependencyModal setModalOpened={setDependsModalOpened} opened={dependsModalOpened} fromAtom={fromAtom} toAtom={atom} connDependency={connDependency}/>
+
     </Stack>
   ) : (
     <Paper

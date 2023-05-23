@@ -28,6 +28,7 @@ const constants = {
 
   CREATE_ATOM: "create-atom",
   CREATE_CONNECTION: "make-connection",
+  CREATE_HIGH_ARITY_CONNECTION: "create-high-arity-connection",
   CREATE_DEPENDENT_CONNECTION: "create-dependent-connection",
 
   UPDATE_ATOM: "update-atom",

@@ -49,6 +49,7 @@ import {
   GET_TO_RELATIONS,
   UPDATE_ATOM_NICK,
   CREATE_DEPENDENT_CONNECTION,
+  CREATE_HIGH_ARITY_CONNECTION,
 } from "./utils/constants";
 import { Project, Relation, Test } from "@prisma/client";
 import { NewProject } from "./validation/formValidation";
@@ -322,6 +323,44 @@ const api = {
 
     return new Promise((resolve) => {
       ipcRenderer.once(`${CREATE_CONNECTION}-resp`, (event, resp) =>
+        resolve(resp)
+      );
+    });
+  },
+
+  /* Given a From and To atom, create a connection between them */
+  createHighConnection: (
+    args: {
+      projectID: number;
+      testID: number;
+      atomOneID: number;
+      atomTwoID: number;
+      atomThreeID: number;
+      relation: Relation
+    } ) => {
+    console.log("Hello from preload.js")
+    ipcRenderer.send(CREATE_HIGH_ARITY_CONNECTION, args );
+
+    return new Promise((resolve) => {
+      ipcRenderer.once(`${CREATE_HIGH_ARITY_CONNECTION}-resp`, (event, resp) =>
+        resolve(resp)
+      );
+    });
+  },
+
+  helloWorld: ( {projectID, testID, atomOneID, atomTwoID, atomThreeID, relation} : {
+      projectID: number;
+      testID: number;
+      atomOneID: number;
+      atomTwoID: number;
+      atomThreeID: number;
+      relation: Relation;
+    } ) => {
+      console.log('before')
+      ipcRenderer.send(CREATE_HIGH_ARITY_CONNECTION, {projectID, testID, atomOneID, atomTwoID, atomThreeID, relation})
+      console.log('after')
+      return new Promise((resolve) => {
+      ipcRenderer.once(`${CREATE_HIGH_ARITY_CONNECTION}-resp`, (event, resp) =>
         resolve(resp)
       );
     });
