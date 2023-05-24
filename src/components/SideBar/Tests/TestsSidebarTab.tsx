@@ -1,7 +1,8 @@
 import {
+  Affix,
   Button,
   Center,
-  Container,
+  Container, Divider,
   ScrollArea,
   Stack,
   Title,
@@ -35,52 +36,42 @@ function TestsSidebarTab({ projectID }: Props) {
   }
 
   return (
-    <Container style={{ height: "100vh" }}>
+    <Container style={{ height: "100vh", width: '240px', position: 'absolute' }}>
+      <Title pb={'sm'} size={'md'}>Your Tests</Title>
       {tests.length > 0 ? (
-        <Stack sx={{ height: "100vh" }}>
+        <>
+        <Stack sx={{height: '100%', width: '100%', position: 'relative'}} justify={'flex-start'} p={0}>
           <ScrollArea offsetScrollbars>
             {Object.entries(tests).map(([, value]) => (
-              <Container
-                key={value.id}
-                p={"xs"}
-                styles={(theme) => ({
-                  root: {
-                    borderRadius: 8,
-                    width: SIDEBAR_WIDTH - 50,
-
-                    "&:hover": {
-                      backgroundColor: theme.colors.gray[1],
-                    },
-                  },
-                })}
-              >
+              <>
                 <TestListItem
                   test={value}
                   handleRowClick={() => handleRowClick(value.id, projectID)}
                 />
-              </Container>
+                <Divider/>
+              </>
             ))}
           </ScrollArea>
-          <Button
-            sx={{ position: "absolute", bottom: 16 }}
-            onClick={() => setModalOpened((o) => !o)}
-          >
-            New Test
-          </Button>
         </Stack>
+        <Button
+          sx={{width: '240px', position: 'fixed', bottom: 16}}
+          onClick={() => setModalOpened((o) => !o)}
+        >
+          New Test
+        </Button>
+        </>
       ) : (
         <Center sx={{ height: "60vh" }}>
-          <Stack>
+          <Stack justify={'space-around'}>
             <Title order={4} color={"dimmed"} align={"center"}>
               You don't have any tests!
             </Title>
+            <Button
+              onClick={() => setModalOpened((o) => !o)}
+            >
+              New Test
+            </Button>
           </Stack>
-          <Button
-            sx={{ position: "fixed", bottom: 0 }}
-            onClick={() => setModalOpened((o) => !o)}
-          >
-            New Test
-          </Button>
         </Center>
       )}
       <NewTestModal

@@ -15,6 +15,7 @@ function ProjectListItem({ project }: Props) {
     <>
       <Grid
         p={"xs"}
+        m={0}
         sx={(theme) => ({
           borderRadius: theme.radius.sm,
           "&:hover": {

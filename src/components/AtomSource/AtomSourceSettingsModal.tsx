@@ -58,48 +58,49 @@ function AtomSourceSettingsModal({
         />
       </Input.Wrapper>
 
-      <Input.Wrapper
-        mt={"xs"}
-        label={"Atom Shape"}
-        description={"The shape of the atom as it appears on the canvas."}
-      >
-        <SegmentedControl
-          size={"xs"}
-          mt={"xs"}
-          mb={"sm"}
-          value={shapeValue}
-          onChange={(e) => handleShapeChange(e)}
-          data={[
-            {
-              label: (
-                <Center>
-                  <IconRectangle size={16} />
-                  <Box ml={10}>Rectangle</Box>
-                </Center>
-              ),
-              value: "rectangle",
-            },
-            {
-              label: (
-                <Center>
-                  <IconCircle size={16} />
-                  <Box ml={10}>Circle</Box>
-                </Center>
-              ),
-              value: "circle",
-            },
-            {
-              label: (
-                <Center>
-                  <IconTriangle size={16} />
-                  <Box ml={10}>Triangle</Box>
-                </Center>
-              ),
-              value: "triangle",
-            },
-          ]}
-        />
-      </Input.Wrapper>
+      // TODO: Add alternative shapes for atoms. Segmented control predefined below.
+      {/*<Input.Wrapper*/}
+      {/*  mt={"xs"}*/}
+      {/*  label={"Atom Shape"}*/}
+      {/*  description={"The shape of the atom as it appears on the canvas."}*/}
+      {/*>*/}
+      {/*  <SegmentedControl*/}
+      {/*    size={"xs"}*/}
+      {/*    mt={"xs"}*/}
+      {/*    mb={"sm"}*/}
+      {/*    value={shapeValue}*/}
+      {/*    onChange={(e) => handleShapeChange(e)}*/}
+      {/*    data={[*/}
+      {/*      {*/}
+      {/*        label: (*/}
+      {/*          <Center>*/}
+      {/*            <IconRectangle size={16} />*/}
+      {/*            <Box ml={10}>Rectangle</Box>*/}
+      {/*          </Center>*/}
+      {/*        ),*/}
+      {/*        value: "rectangle",*/}
+      {/*      },*/}
+      {/*      {*/}
+      {/*        label: (*/}
+      {/*          <Center>*/}
+      {/*            <IconCircle size={16} />*/}
+      {/*            <Box ml={10}>Circle</Box>*/}
+      {/*          </Center>*/}
+      {/*        ),*/}
+      {/*        value: "circle",*/}
+      {/*      },*/}
+      {/*      {*/}
+      {/*        label: (*/}
+      {/*          <Center>*/}
+      {/*            <IconTriangle size={16} />*/}
+      {/*            <Box ml={10}>Triangle</Box>*/}
+      {/*          </Center>*/}
+      {/*        ),*/}
+      {/*        value: "triangle",*/}
+      {/*      },*/}
+      {/*    ]}*/}
+      {/*  />*/}
+      {/*</Input.Wrapper>*/}
     </Modal>
   );
 }

@@ -9,6 +9,16 @@ import { WebpackPlugin } from '@electron-forge/plugin-webpack';
 import { mainConfig } from './webpack.main.config';
 import { rendererConfig } from './webpack.renderer.config';
 import * as path from "path";
+//
+// contents: [{
+//   x: 192,
+//   y: 240,
+//   type: "link",
+//   name: 'Crucible',
+//   path: `${process.cwd()}/out/Crucible-darwin-x64/Crucible.app`
+// },
+//   { x: 466, y: 240, type: "link", name: "applications", path: "/Applications" }
+// ]
 
 const config: ForgeConfig = {
   packagerConfig: {
@@ -26,7 +36,7 @@ const config: ForgeConfig = {
   makers: [new MakerSquirrel({
     authors: "Adam Emerson",
     name: "Crucible",
-  }), new MakerDMG({name: "Crucible"}, ['darwin']), new MakerRpm({}), new MakerDeb({})],
+  }), new MakerDMG({name: "Crucible", icon: './src/full_logo/icon.icns', overwrite: true, }, ['darwin']), new MakerRpm({}), new MakerDeb({})],
   plugins: [
     new WebpackPlugin({
       mainConfig,

@@ -250,7 +250,7 @@ if (process.platform == 'win32') {
   }
 }
 
-const isDev = true;
+const isDev = false;
 let prisma: PrismaClient;
 
 if (isDev) {
@@ -860,12 +860,6 @@ app.whenReady().then(() => {
     createASketchMenu();
     createProjectSelectWindow();
 
-    // on macOS
-    // const reactDevToolsPath = path.join(
-    //   os.homedir(),
-    //   "/Library/Application Support/Google/Chrome/Profile 1/Extensions/fmkadmapgofadopljbjfkapdkoienihi/4.25.0_0"
-    // );
-
     app.whenReady().then(async () => {
       // await session.defaultSession.loadExtension(reactDevToolsPath);
     });
@@ -1014,14 +1008,25 @@ ipcMain.on(
       return;
     }
 
+    // Grab project to compare for relations and connections that don't appear in test
+    const project = await prisma.project.findFirst({where: {id: number.parse(projectID)}, include: {atoms: true, relations: true}})
+
     const atomTypes = new Set<string>();
     const connectionTypes = new Set<string>();
+
     test.atoms.forEach((atom) => atomTypes.add(atom.srcAtom.label));
     test.connections.forEach((conn) =>
       connectionTypes.add(conn.connLabel.label)
     );
+
     const connTypeArr = [...connectionTypes];
     const atomTypeArr = [...atomTypes];
+
+    const unusedAtoms = project.atoms.filter((a) => !atomTypeArr.includes(a.label))
+    const unusedConns = project.relations.filter((r) => !connTypeArr.includes(r.label))
+
+    console.log("Unused Atoms: ", unusedAtoms)
+    console.log("Unused Relations: ", unusedConns)
 
     // For each type in the test, add its atoms to the command string.
     for (let i = 0; i < atomTypeArr.length; i++) {
@@ -1056,39 +1061,36 @@ ipcMain.on(
       cmd += ` and ${type}=`;
 
       const connections = test.connections.filter(
-        (conn) => conn.connLabel.label === type
+        (conn) => conn.connLabel.label === type && conn.order !== 2
       );
 
       for (let j = 0; j < connections.length; j++) {
         const conn = connections[j];
 
+
         if (conn.connLabel.arityCount > 2) {
-          // check connections for one matching dependsOn signature and fromID === the fromID of conn
-          console.log(conn.connLabel.dependsOn)
-          const matches = test.connections.filter(c => c.connLabel.type == conn.connLabel.dependsOn && c.fromID == conn.fromID)
-
-          console.log("Matches: ", matches)
-
-          if (matches.length) {
-            cmd += `${matches[0].from.nickname.replace(
-              " ",
-              ""
-            )}->${matches[0].to.nickname.replace(
-              " ",
-              "")}->${conn.to.nickname.replace(" ", "")}`;
+          if (conn.order === 1)
+          {
+            // Arity of 3 connections
+            cmd += `${conn.fromNick.replace(" ", "")}->${conn.toNick.replace(" ", "")}->${conn.finalNick.replace(" ", "")}`;
           }
         } else {
-          cmd += `${conn.from.nickname.replace(
-            " ",
-            ""
-          )}->${conn.to.nickname.replace(" ", "")}`;
+          // Arity of 2
+          cmd += `${conn.fromNick.replace(" ", "")}->${conn.toNick.replace(" ", "")}`;
         }
-
         if (j < connections.length - 1) cmd += "+";
       }
     }
 
-    console.log("getting preds");
+    // Explicitly declare no for missing atoms and relations
+    for (let i = 0; i < unusedAtoms.length; i++) {
+      cmd += ` and no ${unusedAtoms[i].label.split('/')[1]}`
+    }
+
+    for (let i = 0; i < unusedConns.length; i++) {
+      cmd += ` and no ${unusedConns[i].label}`
+    }
+
     // Now the predicates
     const preds = await prisma.predInstance.findMany({
       where: {
@@ -1099,7 +1101,7 @@ ipcMain.on(
       },
       include: {
         params: true,
-        predicate: true,
+        predicate: {include: {params: true}},
       },
     });
 
@@ -1107,15 +1109,18 @@ ipcMain.on(
       console.log("in preds loop");
       const pred = preds[i];
       cmd += pred.state ? " and " : " and not ";
-      cmd += `${pred.predicate.name}[`;
-      for (let j = 0; j < pred.params.length; j++) {
-        const param = pred.params[j];
-        const atomNick = test.atoms.filter((atom) => atom.id === param.atom);
-        console.log(atomNick);
-        cmd += `${atomNick[0].nickname}`;
-        if (j < pred.params.length - 1) cmd += ",";
+      cmd += `${pred.predicate.name}`;
+      if (pred.predicate.params.length > 0) {
+        cmd += "["
+        for (let j = 0; j < pred.params.length; j++) {
+          const param = pred.params[j];
+          const atomNick = test.atoms.filter((atom) => atom.id === param.atom);
+          console.log(atomNick);
+          cmd += `${atomNick[0].nickname}`;
+          if (j < pred.params.length - 1) cmd += ",";
+        }
+        cmd += "]";
       }
-      cmd += "]";
       if (i < preds.length - 1) cmd += " ";
     }
 
@@ -1137,20 +1142,27 @@ ipcMain.on(
     const reqBody = JSON.stringify({
       path: test.project.alloyFile,
       command: cmd,
-      maximum: (maxAtoms + highArityCount.length + 1).toString(),
+      scope: (maxAtoms).toString(),
+      maxSeq: (countArray.reduce((a, b) => a + b, 0)).toString(),
     });
 
     const apiRequest = axios.post(`http://localhost:${PORT_NUMBER}/tests`, reqBody, {
       headers: { "Content-Type": "application/json" },
-    });
+    })
 
     apiRequest.then((data: AxiosResponse) => {
       if (data.data) {
         data.data.includes("Unsatisfiable")
           ? event.sender.send(`${RUN_TEST}-${testID}-resp`, "Fail")
-          : event.sender.send(`${RUN_TEST}-${testID}-resp`, "Pass");
+          : event.sender.send(`${RUN_TEST}-${testID}-resp`, "Pass")
       }
       console.log(`RUNTIME FOR Execution: ${Date.now() - start} ms`)
+    }).catch((error) => {
+      if (error.response) {
+        console.log("Error")
+        event.sender.send(`${RUN_TEST}-${testID}-resp`, "Error")
+        return
+      }
     });
   }
 );
@@ -1525,11 +1537,13 @@ ipcMain.on(
         toID: number.parse(atomTwo.id),
         fromNick: atomOne.nickname,
         toNick: atomTwo.nickname,
+        finalNick: atomThree.nickname,
         fromLabel: relation.fromLabel,
         toLabel: relation.toLabel,
         label: relation.label,
         projectID: number.parse(projectID),
         testID: number.parse(testID),
+        order: 1,
       },
     });
 
@@ -1547,7 +1561,8 @@ ipcMain.on(
           label: relation.label,
           projectID: number.parse(projectID),
           testID: number.parse(testID),
-          dependID: connectionOne.id
+          dependID: connectionOne.id,
+          order: 2,
         },
       });
     }
@@ -1811,11 +1826,6 @@ async function thirtySixAndSixtyCV() {
     test = testResp.test
   }
 
-  // insert atoms
-  const users = []
-  const ids = []
-  const work = []
-  const institutions = []
 
   for (let i = 0; i < 9; i++) {
     await prisma.atom.create({data: {top: 0, left: 0, nickname: `user${i}`, srcID: userSrc.id, testID: test.id}})
@@ -1879,12 +1889,6 @@ async function fortyEightAndEightyCV() {
     test = testResp.test
   }
 
-  // insert atoms
-  const users = []
-  const ids = []
-  const work = []
-  const institutions = []
-
   for (let i = 0; i < 12; i++) {
     await prisma.atom.create({data: {top: 0, left: 0, nickname: `user${i}`, srcID: userSrc.id, testID: test.id}})
     await prisma.atom.create({data: {top: 0, left: 0, nickname: `work${i}`, srcID: workSrc.id, testID: test.id}})
@@ -1943,12 +1947,6 @@ async function buildBenchmarkTests() {
   if (testResp.test) {
     test = testResp.test
   }
-
-  // insert atoms
-  const users = []
-  const ids = []
-  const work = []
-  const institutions = []
 
   for (let i = 0; i < 15; i++) {
     await prisma.atom.create({data: {top: 0, left: 0, nickname: `user${i}`, srcID: userSrc.id, testID: test.id}})

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ActionIcon, Grid, Group, Text } from "@mantine/core";
+import {ActionIcon, Container, Grid, Group, Stack, Text} from "@mantine/core";
 import { IconPlayerPlay, IconSettings } from "@tabler/icons";
 import { Test } from "@prisma/client";
 
@@ -12,8 +12,9 @@ function TestListItem({ test, handleRowClick }: Props) {
   const [settingsModal, setSettingsModal] = useState<boolean>(false);
 
   return (
-    <Grid
+    <Container
       p={"xs"}
+      m={0}
       sx={(theme) => ({
         borderRadius: theme.radius.sm,
         "&:hover": {
@@ -22,9 +23,9 @@ function TestListItem({ test, handleRowClick }: Props) {
         },
       })}
     >
-      <Grid.Col m={"sx"} span={"auto"} onClick={handleRowClick}>
         <Group
           position={"left"}
+          onClick={handleRowClick}
           styles={(theme) => ({
             root: {
               borderRadius: 8,
@@ -42,25 +43,24 @@ function TestListItem({ test, handleRowClick }: Props) {
             {test.name}
           </Text>
         </Group>
-      </Grid.Col>
-      <Grid.Col span={4} m={"sx"}>
-        <Group position={"right"}>
-          <ActionIcon color={"gray"} variant={"subtle"} size={16}>
-            <IconPlayerPlay />
-          </ActionIcon>
-          <ActionIcon
-            color={"gray"}
-            variant={"subtle"}
-            size={16}
-            onClick={() => {
-              setSettingsModal(true);
-            }}
-          >
-            <IconSettings />
-          </ActionIcon>
-        </Group>
-      </Grid.Col>
-    </Grid>
+      {/*<Grid.Col span={4} m={"sx"}>*/}
+      {/*  /!*<Group position={"right"}>*!/*/}
+      {/*  /!*  <ActionIcon color={"gray"} variant={"subtle"} size={16}>*!/*/}
+      {/*  /!*    <IconPlayerPlay />*!/*/}
+      {/*  /!*  </ActionIcon>*!/*/}
+      {/*  /!*  <ActionIcon*!/*/}
+      {/*  /!*    color={"gray"}*!/*/}
+      {/*  /!*    variant={"subtle"}*!/*/}
+      {/*  /!*    size={16}*!/*/}
+      {/*  /!*    onClick={() => {*!/*/}
+      {/*  /!*      setSettingsModal(true);*!/*/}
+      {/*  /!*    }}*!/*/}
+      {/*  /!*  >*!/*/}
+      {/*  /!*    <IconSettings />*!/*/}
+      {/*  /!*  </ActionIcon>*!/*/}
+      {/*  /!*</Group>*!/*/}
+      {/*</Grid.Col>*/}
+    </Container>
   );
   /* TODO: Test Settings Modal
             - Rename test

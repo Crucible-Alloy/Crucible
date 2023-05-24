@@ -8,6 +8,6 @@ export const plugins = [
   new CopyPlugin({patterns: [
       {from: './src/JARs/*'},
       {from: './src/full_logo/*'},
-      // {from: './prisma/schema.prisma'}, // Comment out for local development, leave in for packaging.
+      {from: './prisma/schema.prisma'}, // Comment out for local development, leave in for packaging.
     ]}),
 ];

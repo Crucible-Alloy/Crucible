@@ -1,4 +1,4 @@
-import { IconCheck, IconPlayerPlay, IconX } from "@tabler/icons";
+import {IconAlertTriangle, IconCheck, IconPlayerPlay, IconX} from "@tabler/icons";
 import { Tooltip, ActionIcon } from "@mantine/core";
 import React, { useState } from "react";
 import { showNotification } from "@mantine/notifications";
@@ -21,12 +21,20 @@ function TestPlayBtn({ disabled, projectID, testID }: Props) {
           icon: <IconCheck />,
         });
         setRunning(false);
-      } else {
+      } else if (data === "Fail") {
         showNotification({
           title: "Failed",
           message: `The test is unsatisfiable`,
           color: "red",
           icon: <IconX />,
+        });
+        setRunning(false);
+      } else {
+        showNotification({
+          title: "Error",
+          message: `There was an error running your test.`,
+          color: "red",
+          icon: <IconAlertTriangle />,
         });
         setRunning(false);
       }

@@ -116,7 +116,7 @@ export const ProjectSelect = () => {
         {/*TODO: Fix scroll area so that all projects are visible. */}
 
           <Stack mr={"xl"}>
-            <ScrollArea.Autosize maxHeight={400}>
+            <ScrollArea.Autosize maxHeight={450} scrollbarSize={10}>
             {projects.length > 0 ? (
               projects.map((project: Project) => (
                 <ProjectListItem project={project} key={project.id} />
