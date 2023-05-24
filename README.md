@@ -9,7 +9,7 @@ Crucible is a no-code testing suite designed to streamline the production of AUn
 ## What is AUnit?
 
 AUnit is a testing framework for Alloy. In lieu of ad-hoc validation practices, AUnit establishes
-a formal specification for unit tests in Alloy.  [NEED MORE ON AUNIT HERE]
+a formal specification for unit tests in Alloy.
 
 # Installation
 
