@@ -55,7 +55,7 @@ import { Project, Relation, Test } from "@prisma/client";
 import { NewProject } from "./validation/formValidation";
 import { AtomWithSource, PredInstanceWithParams, TestWithCanvas } from "./main";
 
-unhandled();
+// unhandled();
 export interface ElectronAPI {
   getHomeDirectory: () => Promise<string>;
   validateProjectName: (projectName: string) => Promise<boolean>;

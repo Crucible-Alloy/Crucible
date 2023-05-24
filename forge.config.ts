@@ -24,7 +24,7 @@ const config: ForgeConfig = {
   packagerConfig: {
     appBundleId: "com.crucible.app",
     appCopyright: "Copyright © 2023 Crucible",
-    icon: path.join(__dirname, 'src/full_logo/', 'icon.icns'),
+    icon: '/src/full_logo/icon',
     extraResource: [
       "./node_modules/.prisma",
       "./prisma",

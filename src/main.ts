@@ -68,7 +68,7 @@ import {
 } from "./utils/constants";
 
 import unhandled from "electron-unhandled";
-unhandled();
+// unhandled();
 
 const treeKill = require("tree-kill");
 const path = require("path");
@@ -225,19 +225,19 @@ const handleSquirrelEvent = function() {
   switch (squirrelEvent) {
 
     case '--squirrel-install':
-      install(app.quit);
+      install(app.exit());
       return true;
 
     case '--squirrel-updated':
-      install(app.quit);
+      install(app.exit());
       return true;
 
     case '--squirrel-obsolete':
-      app.quit();
+      app.exit();
       return true;
 
     case '--squirrel-uninstall':
-      uninstall(app.quit);
+      uninstall(app.exit());
       return true;
   }
 
@@ -259,12 +259,7 @@ if (isDev) {
 
 } else {
   process.env.PRISMA_QUERY_ENGINE_LIBRARY = path.join(__dirname, 'native_modules', 'client', 'query_engine-darwin.dylib.node');
-
-  prisma = new PrismaClient({datasources: {
-      db: {
-        url: `file:${path.join(process.resourcesPath, 'prisma/dev.db')}`,
-      },
-    }});
+  prisma = new PrismaClient();
 }
 
 
@@ -690,30 +685,6 @@ function createASketchMenu() {
         isMac ? { role: "close" } : { role: "quit" },
       ],
     },
-    // { role: 'editMenu' }
-    {
-      label: "Edit",
-      submenu: [
-        { role: "undo" },
-        { role: "redo" },
-        { type: "separator" },
-        { role: "cut" },
-        { role: "copy" },
-        { role: "paste" },
-        ...(isMac
-          ? [
-              { role: "pasteAndMatchStyle" },
-              { role: "delete" },
-              { role: "selectAll" },
-              { type: "separator" },
-              {
-                label: "Speech",
-                submenu: [{ role: "startSpeaking" }, { role: "stopSpeaking" }],
-              },
-            ]
-          : [{ role: "delete" }, { type: "separator" }, { role: "selectAll" }]),
-      ],
-    },
     // { role: 'viewMenu' }
     {
       label: "View",
@@ -751,7 +722,7 @@ function createASketchMenu() {
         {
           label: "Learn More",
           click: async () => {
-            await shell.openExternal("https://electronjs.org");
+            await shell.openExternal("https://github.com/crucible-alloy/crucible");
           },
         },
       ],
@@ -1022,7 +993,7 @@ ipcMain.on(
     const connTypeArr = [...connectionTypes];
     const atomTypeArr = [...atomTypes];
 
-    const unusedAtoms = project.atoms.filter((a) => !atomTypeArr.includes(a.label))
+    const unusedAtoms = project.atoms.filter((a) => !atomTypeArr.includes(a.label) && !a.isAbstract)
     const unusedConns = project.relations.filter((r) => !connTypeArr.includes(r.label))
 
     console.log("Unused Atoms: ", unusedAtoms)
