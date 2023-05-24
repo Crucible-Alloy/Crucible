@@ -14,7 +14,7 @@ a formal specification for unit tests in Alloy.  [NEED MORE ON AUNIT HERE]
 # Installation
 
 ## Requirements
-Currently, distributions of Crucible are available for Windows and MacOS.  The installer for either platform can be downloaded at the releases page in this repository.
+Currently, distributions of Crucible are available for Windows and MacOS.  The installer for either platform can be downloaded at the [releases page](https://github.com/Crucible-Alloy/Crucible/releases) in this repository.
 
 Because Crucible runs the AlloyAnalyzer, Java 18 is required and should be set in the home path of your environment.
 
