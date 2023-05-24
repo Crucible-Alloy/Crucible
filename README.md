@@ -20,6 +20,9 @@ Because Crucible runs the AlloyAnalyzer, Java 18 is required and should be set i
 
 Alternatively, you can clone this repository and run Crucible in development mode. For more on this see the Developing For Crucible section below.
 
+### Note for MacOS Users
+Upon running the application for the first time, users will receive a security warning and the application will close.  To open the app successfully, after the initial run, navigate to the System Preferences -> Privacy and Security page, and select "Open Anyway".
+
 # Getting Started
 
 Getting started with Crucible is as simple as loading in your existing Alloy scripts.  For more information, see the walkthrough below:
