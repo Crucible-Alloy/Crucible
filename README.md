@@ -1,6 +1,8 @@
 ![Crucible Logo](src/full_logo/logo_2x.png)
 ### A graphical testing suite for [AUnit](https://kaiyuanw.github.io/papers/paper5-icst18.pdf) and [Alloy](https://alloytools.org).
 
+## The Paper
+The work related to Crucible was published at ISSRE '23 and the full paper [can be found here](https://ieeexplore.ieee.org/document/10299937) 
 
 ## What is Crucible?
 
